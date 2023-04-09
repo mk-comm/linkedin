@@ -1,0 +1,27 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                                                                                                    if not interested => move to others
+                           message is new?=>yes=>message is a part of a sequence => yes => check with openai => return interested/not interested => if interested = mark unreead
+                                          =>no=>()                               => no  => mark it read/unread based on conversation status => ()
+
+
+start_browser {
+    Timeout => Proxy is not working
+    ReceiverClosed => session cookie expired
+}
+
+send message {
+    ObjectNotFound => no message button on the page => can't send message to this profile
+    InvalidParams => button was pressed but text input is not visible => can't send message to this profile
+}

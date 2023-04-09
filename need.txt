@@ -1,0 +1,8 @@
+1. linkedin limit case is not covered
+2. add the app in google server - done
+3. "in your connection pool" case right now is every that button connect not found
+4. random delay - done
+
+
+add difference between session_cookie expired and proxy is not working
+add linkedin limit case
