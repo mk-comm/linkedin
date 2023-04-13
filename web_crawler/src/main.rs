@@ -7,6 +7,7 @@ use crate::actions::connection::connection;
 use crate::actions::scrap_conversations::scrap;
 use crate::actions::send_message::send_message;
 use crate::actions::withdraw_connection::withdraw;
+use crate::actions::scrap_connections::scrap_connections;
 use structs::entry::Entry;
 use tokio::task;
 
@@ -52,6 +53,38 @@ async fn scrap_conversations(json: web::Json<Entry>) -> HttpResponse {
     }
     */
     HttpResponse::Ok().body("Scrapping started!")
+}
+
+#[post("/scrap_connection")]
+async fn scrap_connection(json: web::Json<Entry>) -> HttpResponse {
+    let message_id = json.message_id.clone();
+    let webhook = json.webhook.clone();
+    let user_id = json.user_id.clone();
+    tokio::spawn(async move {
+        let api = scrap_connections(json.into_inner());
+        match api.await {
+            Ok(_) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "message": message_id,
+                    "result": "Connections was scraped",
+                    "user_id": user_id,
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+            Err(error) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "message": message_id,
+                    "result": error.to_string(),
+                    "user_id": user_id,
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+        }
+    });
+
+    HttpResponse::Ok().body("Scraping connections started!")
 }
 
 #[post("/withdraw_connection")]
@@ -164,6 +197,7 @@ async fn main() -> std::io::Result<()> {
             .service(scrap_conversations)
             .service(message)
             .service(withdraw_connection)
+            .service(scrap_connection)
     })
     .bind(address)?
     .run()

@@ -12,7 +12,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
     
     //path to  local browser
 
-    let path = Path::new("/opt/homebrew/bin/chromium");
+    //let path = Path::new("/opt/homebrew/bin/chromium");
 
 
 
@@ -26,7 +26,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
 
     let playwright = Playwright::initialize().await?;
 
-    //playwright.prepare()?; // Install browsers uncomment on production
+    playwright.prepare()?; // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
@@ -34,7 +34,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         .launcher()
         .proxy(proxy)
         .headless(false)
-        .executable(path)
+        //.executable(path)
         .launch()
         .await?;
     
