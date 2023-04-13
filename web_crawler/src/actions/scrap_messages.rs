@@ -199,6 +199,7 @@ async fn check_message(message: &Message, full_name: &FullName, conversation: &C
                             "api_key": conversation.api_key,
                             "first": full_name.first_name,
                             "last": full_name.last_name,
+                            "entity_urn": message.url_send_from,
                     });
             let res = client.post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_check_message").json(&payload).send().await.unwrap();
             let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce

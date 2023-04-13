@@ -22,16 +22,17 @@ async fn scrap_conversations(json: web::Json<Entry>) -> HttpResponse {
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
 
-        let spawn = task::spawn_local(async move {
+        let _spawn = task::spawn_local(async move {
             let api = scrap(json.into_inner());
             match api.await {
-                Ok(_) => println!("Scraping was successful!"),
+                Ok(_) => println!("Scraping messages was successful!"),
                 Err(error) => {
                     let client = reqwest::Client::new();
                     let payload = json!({
                         "message": message_id,
                         "result": error.to_string(),
                         "user_id": user_id,
+                        "error": "yes",
                     });
                     let _res = client.post(webhook).json(&payload).send().await;
                 },
@@ -63,21 +64,14 @@ async fn scrap_connection(json: web::Json<Entry>) -> HttpResponse {
     tokio::spawn(async move {
         let api = scrap_connections(json.into_inner());
         match api.await {
-            Ok(_) => {
-                let client = reqwest::Client::new();
-                let payload = json!({
-                    "message": message_id,
-                    "result": "Connections was scraped",
-                    "user_id": user_id,
-                });
-                let _res = client.post(webhook).json(&payload).send().await;
-            }
+            Ok(_) => println!("Scraping connections was successful!"),
             Err(error) => {
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
                     "result": error.to_string(),
                     "user_id": user_id,
+                    "error": "yes",
                 });
                 let _res = client.post(webhook).json(&payload).send().await;
             }
@@ -133,6 +127,7 @@ async fn message(json: web::Json<Entry>) -> HttpResponse {
                     "message": message_id,
                     "result": "Message was sent",
                     "user_id": user_id,
+                    "error": "no",
                 });
                 let _res = client.post(webhook).json(&payload).send().await;
             }
@@ -142,6 +137,7 @@ async fn message(json: web::Json<Entry>) -> HttpResponse {
                     "message": message_id,
                     "result": error.to_string(),
                     "user_id": user_id,
+                    "error": "yes",
                 });
                 let _res = client.post(webhook).json(&payload).send().await;
             }

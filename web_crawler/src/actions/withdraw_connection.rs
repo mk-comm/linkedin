@@ -1,11 +1,10 @@
-use playwright::api::ElementHandle;
+
 
 use crate::{actions::start_browser::start_browser, actions::wait::wait, structs::entry::Entry, structs::candidate::Candidate};
 
 
 pub async fn withdraw(entry: Entry) -> Result<(), playwright::Error> {
 
-    let api_key = entry.user_id.clone();
 
     let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), entry.message.clone());
     

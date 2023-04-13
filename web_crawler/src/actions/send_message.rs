@@ -33,8 +33,8 @@ let search_input = browser.page
         None => {
             wait(1, 5); // random delay
             browser.browser.close().await?; // close browser
-            return Err(playwright::Error::InitializationError);
-        } // if search input is not found, means page was not loaded and sessuion cookie is not valid
+            return Err(playwright::Error::ReceiverClosed);
+        } // if search input is not found, means page was not loaded and session cookie is not valid
     };
 
 // go to candidate page
@@ -63,7 +63,7 @@ let message_button = match message_button {
     Err(_) => {
             wait(1, 5); // random delay
             browser.browser.close().await?;
-            return Err(playwright::Error::Timeout)
+            return Err(playwright::Error::ObjectNotFound)
               },
             
 };

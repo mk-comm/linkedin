@@ -1,5 +1,5 @@
 use playwright::Playwright;
-use std::path::Path;
+//use std::path::Path;
 
 
 use playwright::api::{Cookie, ProxySettings, Viewport};
@@ -8,6 +8,8 @@ use std::{collections::HashMap};
 use crate::structs::browser::BrowserConfig;
 use crate::structs::user::User;
 use crate::structs::entry::Entry;
+
+use super::wait::wait;
 pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Error> {
     
     //path to  local browser
@@ -16,7 +18,12 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
 
 
 
-    let user = User::new(entry.user_agent, entry.session_cookie, entry.user_id);
+    let mut user = User::new(entry.user_agent, entry.session_cookie, entry.user_id);
+
+    if user.user_agent.is_empty() {
+        user.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36".to_string()
+    } // use default user agent if not provided
+
     let proxy = ProxySettings {
         server: entry.ip,
         username: Some(entry.username),
@@ -33,7 +40,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
     let browser = chromium
         .launcher()
         .proxy(proxy)
-        .headless(false)
+        .headless(true)
         //.executable(path)
         .launch()
         .await?;
@@ -68,9 +75,13 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         .goto_builder("https://www.google.com/")
         .goto()
         .await;
+
+    wait(1, 4);
+
     match &build_proxy {
         Ok(_) => print!("Proxy is working"),
         Err(_) => {
+            wait(1, 3);
             browser.close().await?;
             return Err(playwright::Error::Timeout)
         },
@@ -83,6 +94,8 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         .goto_builder("https://www.linkedin.com/feed/")
         .goto()
         .await?;
+
+    wait(1, 4);
     
     let search_input = page
         .query_selector("input[class=search-global-typeahead__input]")
@@ -90,6 +103,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
     match &search_input {
         Some(_) => print!("ok"),
         None => {
+            wait(1, 3);
             browser.close().await?;
             return Err(playwright::Error::ReceiverClosed) // if error when session cookie expired
         },
