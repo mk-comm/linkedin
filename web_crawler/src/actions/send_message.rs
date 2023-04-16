@@ -46,7 +46,7 @@ wait(3, 15); // random delay
 browser.page.wait_for_selector_builder("div.pv-top-card-v2-ctas"); // wait until the block with buttons is loaded
 
 let message_button = browser.page
-    .query_selector("button.entry-point.pvs-profile-actions__action")
+    .query_selector("div.entry-point.pvs-profile-actions__action")
     .await;
 
 
@@ -113,6 +113,7 @@ match send {
    
 }
 
+wait(5, 7);
 browser.browser.close().await?;
 Ok(())
 }

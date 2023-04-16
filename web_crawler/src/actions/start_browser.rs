@@ -68,7 +68,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
     context.add_cookies(&[cookie]).await?;
 
     //testing proxy by visiting google.com
-
+    wait(3, 7);
     let page_proxy = context.new_page().await?;
 
     let build_proxy = page_proxy
@@ -89,13 +89,15 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
 
 
     let page = context.new_page().await?;
-
+    
     let build = page
-        .goto_builder("https://www.linkedin.com/feed/")
-        .goto()
+        .goto_builder("https://www.linkedin.com/feed/");
+        
+    let go_to = build.goto()
         .await?;
-
-    wait(1, 4);
+    wait(5, 7);
+    let stop_loading_js = r#"window.stop()"#;
+    page.evaluate(stop_loading_js, ()).await?;
     
     let search_input = page
         .query_selector("input[class=search-global-typeahead__input]")
@@ -118,7 +120,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         browser: browser,
         context: context,
         page: page,
-        build: build.unwrap(),
+        build: go_to.unwrap(),
     };
 
     return Ok(browser_config);
