@@ -33,14 +33,14 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
 
     let playwright = Playwright::initialize().await?;
 
-    playwright.prepare()?; // Install browsers uncomment on production
+    //playwright.prepare()?; // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
     let browser = chromium
         .launcher()
         .proxy(proxy)
-        .headless(true)
+        .headless(false)
         //.executable(path)
         .launch()
         .await?;
@@ -95,9 +95,9 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         
     let go_to = build.goto()
         .await?;
-    wait(5, 7);
-    let stop_loading_js = r#"window.stop()"#;
-    page.evaluate(stop_loading_js, ()).await?;
+    
+    
+    page.evaluate(r#"window.stop()"#, ()).await?;
     
     let search_input = page
         .query_selector("input[class=search-global-typeahead__input]")

@@ -50,8 +50,6 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
     let participant_name_selector =
         Selector::parse("h3.msg-conversation-listitem__participant-names").unwrap();
     let timestamp_selector = Selector::parse("time.msg-conversation-listitem__time-stamp").unwrap();
-    let message_snippet_selector =
-        Selector::parse("p.msg-conversation-card__message-snippet").unwrap();
     let thread_url_selector = Selector::parse("a.msg-conversation-listitem__link").unwrap();
     let unread_selector = Selector::parse(".msg-conversation-card__unread-count").unwrap();
 
@@ -89,15 +87,7 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
             .next()
             .unwrap()
             .text()
-            .collect::<String>();
-        
-        let message_snippet = convo
-            .select(&message_snippet_selector)
-            .next()
-            .unwrap()
-            .text()
-            .collect::<String>();
-        
+            .collect::<String>();      
 
         let unread = match convo.select(&unread_selector).next() {
             Some(_) => true,
@@ -110,7 +100,6 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
             thread_url: thread_url,
             candidate_name,
             timestamp,
-            message_snippet,
             unread: unread,
             api_key: api_key.clone(),
         };

@@ -3,7 +3,6 @@ pub struct Conversation {
     pub thread_url: String,
     pub candidate_name: String,
     pub timestamp: String,
-    pub message_snippet: String,
     pub unread: bool,
     pub api_key: String,
 }
@@ -14,7 +13,6 @@ impl Conversation {
         thread_url: String,
         candidate_name: String,
         timestamp: String,
-        message_snippet: String,
         unread: bool,
         api_key: String,
     ) -> Self {
@@ -23,7 +21,6 @@ impl Conversation {
             thread_url,
             candidate_name,
             timestamp,
-            message_snippet,
             unread,
             api_key,
         }
