@@ -1,22 +1,18 @@
 use playwright::Playwright;
-//use std::path::Path;
-
+use std::path::Path;
 
 use playwright::api::{Cookie, ProxySettings, Viewport};
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use crate::structs::browser::BrowserConfig;
-use crate::structs::user::User;
 use crate::structs::entry::Entry;
+use crate::structs::user::User;
 
 use super::wait::wait;
 pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Error> {
-    
     //path to  local browser
 
-    //let path = Path::new("/opt/homebrew/bin/chromium");
-
-
+    let path = Path::new("/opt/homebrew/bin/chromium");
 
     let mut user = User::new(entry.user_agent, entry.session_cookie, entry.user_id);
 
@@ -41,17 +37,21 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         .launcher()
         .proxy(proxy)
         .headless(false)
-        //.executable(path)
+        .executable(path)
         .launch()
         .await?;
-    
+
     let viewport = Viewport {
         width: 1920,
         height: 1080,
     };
 
-    let context = browser.context_builder().viewport(Some(viewport.clone())).screen(viewport.clone()).build().await?;
-
+    let context = browser
+        .context_builder()
+        .viewport(Some(viewport.clone()))
+        .screen(viewport.clone())
+        .build()
+        .await?;
 
     let mut headers = HashMap::new();
 
@@ -83,22 +83,18 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         Err(_) => {
             wait(1, 3);
             browser.close().await?;
-            return Err(playwright::Error::Timeout)
-        },
+            return Err(playwright::Error::Timeout);
+        }
     } // if error when proxy is not working
 
-
     let page = context.new_page().await?;
-    
-    let build = page
-        .goto_builder("https://www.linkedin.com/feed/");
-        
-    let go_to = build.goto()
-        .await?;
-    
-    
+
+    let build = page.goto_builder("https://www.linkedin.com/feed/");
+
+    let go_to = build.goto().await?;
+
     page.evaluate(r#"window.stop()"#, ()).await?;
-    
+
     let search_input = page
         .query_selector("input[class=search-global-typeahead__input]")
         .await?;
@@ -107,11 +103,11 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         None => {
             wait(1, 3);
             browser.close().await?;
-            return Err(playwright::Error::ReceiverClosed) // if error when session cookie expired
-        },
+            return Err(playwright::Error::ReceiverClosed); // if error when session cookie expired
+        }
     }
-    
-// if error when proxy is not working
+
+    // if error when proxy is not working
 
     let browser_config = BrowserConfig {
         proxy: None,

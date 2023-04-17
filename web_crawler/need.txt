@@ -25,3 +25,13 @@ send message {
     ObjectNotFound => no message button on the page => can't send message to this profile
     InvalidParams => button was pressed but text input is not visible => can't send message to this profile
 }
+
+connect {
+    ObjectNotFound => can't connect, no connect button
+    InvalidParams => some element did not load correctly => resend
+                  => linkedin limit
+}
+
+withdraw {
+    ObjectNotFound => no connection to withdraw
+}

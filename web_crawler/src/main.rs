@@ -4,10 +4,10 @@ use serde_json::json;
 mod actions;
 mod structs;
 use crate::actions::connection::connection;
+use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
 use crate::actions::send_message::send_message;
 use crate::actions::withdraw_connection::withdraw;
-use crate::actions::scrap_connections::scrap_connections;
 use structs::entry::Entry;
 use tokio::task;
 
@@ -17,29 +17,28 @@ async fn index() -> String {
 }
 #[post("/scrap_conversations")]
 async fn scrap_conversations(json: web::Json<Entry>) -> HttpResponse {
-    
     let message_id = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
 
-        let _spawn = task::spawn_local(async move {
-            let api = scrap(json.into_inner());
-            match api.await {
-                Ok(_) => println!("Scraping messages was successful!"),
-                Err(error) => {
-                    let client = reqwest::Client::new();
-                    let payload = json!({
-                        "message": message_id,
-                        "result": error.to_string(),
-                        "user_id": user_id,
-                        "error": "yes",
-                    });
-                    let _res = client.post(webhook).json(&payload).send().await;
-                },
+    let _spawn = task::spawn_local(async move {
+        let api = scrap(json.into_inner());
+        match api.await {
+            Ok(_) => println!("Scraping messages was successful!"),
+            Err(error) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "message": message_id,
+                    "result": error.to_string(),
+                    "user_id": user_id,
+                    "error": "yes",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
             }
-        });
+        }
+    });
     // probably won't return untill finished and cause a timeout
-    /*  
+    /*
     match spawn.await {
         Ok(_) => println!("Scraping started!"),
         Err(error) => {
@@ -95,6 +94,7 @@ async fn withdraw_connection(json: web::Json<Entry>) -> HttpResponse {
                     "message": message_id,
                     "result": "Connection was withdrawn",
                     "user_id": user_id,
+                    "error": "no",
                 });
                 let _res = client.post(webhook).json(&payload).send().await;
             }
@@ -104,6 +104,7 @@ async fn withdraw_connection(json: web::Json<Entry>) -> HttpResponse {
                     "message": message_id,
                     "result": error.to_string(),
                     "user_id": user_id,
+                    "error": "yes",
                 });
                 let _res = client.post(webhook).json(&payload).send().await;
             }
@@ -161,6 +162,7 @@ async fn connect(json: web::Json<Entry>) -> HttpResponse {
                     "message": message_id,
                     "result": "Connection was sent",
                     "user_id": user_id,
+                    "error": "no",
                 });
                 let _res = client.post(webhook).json(&payload).send().await;
             }
@@ -170,6 +172,7 @@ async fn connect(json: web::Json<Entry>) -> HttpResponse {
                     "message": message_id,
                     "result": error.to_string(),
                     "user_id": user_id,
+                    "error": "yes",
                 });
                 let _res = client.post(webhook).json(&payload).send().await;
             }
