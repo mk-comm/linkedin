@@ -32,6 +32,20 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
 
     wait(5, 10);
 
+    let focused = browser
+        .page
+        .query_selector("div.artdeco-tabs.artdeco-tabs--size-t-40.artdeco-tabs--centered.ember-view.msg-focused-inbox-tabs")
+        .await?;
+
+    let focused_inbox = match focused {
+        Some(_) => {
+            true
+        }
+        None => {
+            false
+        }
+    };    
+
     let conversation_list = match browser
         .page
         .query_selector(
@@ -106,7 +120,7 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
     }
 
     for conversation in conversations.values() {
-        scrap_message(conversation, &browser.page).await?;
+        scrap_message(conversation, &browser.page, focused_inbox).await?;
     }
 
     browser.browser.close().await?;

@@ -12,6 +12,7 @@ use std::collections::HashMap;
 pub async fn scrap_message(
     conversation: &Conversation,
     page: &Page,
+    focused_inbox: bool,
 ) -> Result<(), playwright::Error> {
     let conversation_select = match page
         .query_selector(format!("li[id='{}']", conversation.id).as_str())
@@ -122,18 +123,18 @@ pub async fn scrap_message(
                 match create_message(&message, &full_name, &conversation).await {
                     MessageCategory::Interested => {
                         println!("Interested");
-                        mark_unread(&conversation_select).await?;
+                        mark_unread(&conversation_select,focused_inbox).await?;
                         //mark conversation as unread
                     }
                     MessageCategory::NotInterested => {
                         println!("NotInterested");
-                        move_other(&conversation_select).await?;
+                        //move_other(&conversation_select).await?;
                         //move conversation to other
                     }
                     MessageCategory::NotFound => {
                         println!("OpenAI error");
                         if conversation.unread == true {
-                            mark_unread(&conversation_select).await?;
+                            mark_unread(&conversation_select, focused_inbox).await?;
                             //mark conversation as unread
                         }
                         //don't do anything
@@ -142,14 +143,14 @@ pub async fn scrap_message(
             } else {
                 //mark conversation unread if it was unread and return early
                 if conversation.unread == true {
-                    mark_unread(&conversation_select).await?;
+                    mark_unread(&conversation_select, focused_inbox).await?;
                     //mark conversation as unread
                     println!("unread.not part of sequence");
                 }
             }
         } else {
             if conversation.unread == true {
-                mark_unread(&conversation_select).await?;
+                mark_unread(&conversation_select, focused_inbox).await?;
                 //mark conversation as unread
                 println!("unread.not new message");
             }
@@ -236,7 +237,7 @@ async fn check_message(
     }
 }
 
-async fn mark_unread(conversation_element: &ElementHandle) -> Result<(), playwright::Error> {
+async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) -> Result<(), playwright::Error> {
     let dropdown = conversation_element
         .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
         .await?; // find 3 dots button
@@ -259,12 +260,18 @@ async fn mark_unread(conversation_element: &ElementHandle) -> Result<(), playwri
     let inner_container = conversation_element
         .query_selector("div[class=artdeco-dropdown__content-inner]")
         .await?;
-    if inner_container.is_none() {
-        return Ok(());
-    }
+    let inner_container = match inner_container{
+        Some(inner_container) => inner_container,
+        None => return Ok(()),
+    };
 
-    //find mark unread button
-    let mark_unread_button = inner_container.unwrap().query_selector("div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(5)").await?;
+    //find mark unread button;
+
+    let mark_unread_button = if focused_inbox == true {
+        inner_container.query_selector("div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(5)").await?
+    } else {
+        inner_container.query_selector("div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(4)").await?
+    };
 
     //click mark unread button
     match mark_unread_button {
