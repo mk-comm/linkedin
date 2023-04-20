@@ -1,5 +1,5 @@
 use playwright::Playwright;
-use std::path::Path;
+//use std::path::Path;
 
 use playwright::api::{Cookie, ProxySettings, Viewport};
 use std::collections::HashMap;
@@ -12,7 +12,7 @@ use super::wait::wait;
 pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Error> {
     //path to  local browser
 
-    let path = Path::new("/opt/homebrew/bin/chromium");
+    //let path = Path::new("/opt/homebrew/bin/chromium");
 
     let mut user = User::new(entry.user_agent, entry.session_cookie, entry.user_id);
 
@@ -29,7 +29,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
 
     let playwright = Playwright::initialize().await?;
 
-    //playwright.prepare()?; // Install browsers uncomment on production
+    playwright.prepare()?; // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
@@ -37,7 +37,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         .launcher()
         .proxy(proxy)
         .headless(false)
-        .executable(path)
+        //.executable(path)
         .launch()
         .await?;
 
@@ -65,12 +65,19 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         user.session_cookie.as_str(),
         "https://.www.linkedin.com",
     );
-    context.add_cookies(&[cookie]).await?;
+    
+    let cookie_recruiter = Cookie::with_url(
+        "li_a",
+        "AQJ2PTEmY2FwX3NlYXQ9Mjg5MTgyMjk2JmNhcF9hZG1pbj1mYWxzZSZjYXBfa249MjQxNDY4ODAzVrX31MIGxfwXaB2qJdlYI0jdO9k",
+        "https://.www.linkedin.com",
+    );
+    
+    context.add_cookies(&[cookie,cookie_recruiter]).await?;
 
     //testing proxy by visiting google.com
     wait(3, 7);
     let page_proxy = context.new_page().await?;
-
+ 
     let build_proxy = page_proxy
         .goto_builder("https://www.google.com/")
         .goto()
@@ -82,12 +89,16 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         Ok(_) => print!("Proxy is working"),
         Err(_) => {
             wait(1, 3);
+            page_proxy.close(Some(false)).await?;
             browser.close().await?;
+
             return Err(playwright::Error::Timeout);
         }
     } // if error when proxy is not working
 
     let page = context.new_page().await?;
+
+    page_proxy.close(Some(false)).await?; // close proxy page˚
 
     let build = page.goto_builder("https://www.linkedin.com/feed/");
 
@@ -102,6 +113,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
         Some(_) => print!("ok"),
         None => {
             wait(1, 3);
+            page.close(Some(false)).await?;
             browser.close().await?;
             return Err(playwright::Error::ReceiverClosed); // if error when session cookie expired
         }

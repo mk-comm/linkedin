@@ -34,6 +34,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
         }
         None => {
             wait(1, 5); // random delay
+            browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
             return Err(playwright::Error::ReceiverClosed);
         } // if search input is not found, means page was not loaded and session cookie is not valid
@@ -61,12 +62,14 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
             Some(button) => button,
             None => {
                 wait(1, 5); // random delay
+                browser.page.close(Some(false)).await?;
                 browser.browser.close().await?;
                 return Err(playwright::Error::ObjectNotFound);
             } // means there is no message button
         },
         Err(_) => {
             wait(1, 5); // random delay
+            browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             return Err(playwright::Error::ObjectNotFound);
         }
@@ -92,6 +95,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
         }
         None => {
             wait(1, 5); // random delay
+            browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             return Err(playwright::Error::InvalidParams);
         } // means you can't send message to this profile
@@ -111,12 +115,14 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
         }
         None => {
             wait(1, 5); // random delay
+            browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             return Err(playwright::Error::NotObject);
         } // means you can't send message to this profile
     }
 
     wait(5, 7);
+    browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
     Ok(())
 }

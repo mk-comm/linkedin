@@ -29,7 +29,8 @@ send message {
 connect {
     ObjectNotFound => can't connect, no connect button
     InvalidParams => some element did not load correctly => resend
-                  => linkedin limit
+    Channel      => linkedin limit =>mark profile=> resend
+    CallbackNotFound => email needed
 }
 
 withdraw {

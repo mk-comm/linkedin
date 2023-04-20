@@ -123,7 +123,10 @@ pub async fn scrap_message(
                 match create_message(&message, &full_name, &conversation).await {
                     MessageCategory::Interested => {
                         println!("Interested");
-                        mark_unread(&conversation_select,focused_inbox).await?;
+                        if conversation.unread == true {
+                            mark_unread(&conversation_select, focused_inbox).await?;
+                            //mark conversation as unread
+                        }
                         //mark conversation as unread
                     }
                     MessageCategory::NotInterested => {
@@ -287,7 +290,7 @@ async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) 
     }
 }
 
-async fn move_other(conversation_element: &ElementHandle) -> Result<(), playwright::Error> {
+async fn _move_other(conversation_element: &ElementHandle) -> Result<(), playwright::Error> {
     let dropdown = conversation_element
         .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
         .await?; // find 3 dots button

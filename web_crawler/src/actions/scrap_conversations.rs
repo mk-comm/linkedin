@@ -25,6 +25,7 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
         }
         None => {
             wait(1, 5); // random delay
+            browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             return Err(playwright::Error::NotObject);
         }
@@ -55,6 +56,7 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
     {
         Some(conversation_list) => conversation_list,
         None => {
+            browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             return Err(playwright::Error::ObjectNotFound);
         }

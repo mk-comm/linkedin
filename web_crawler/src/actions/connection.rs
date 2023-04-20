@@ -37,6 +37,7 @@ pub async fn connection(entry: Entry) -> Result<(), playwright::Error> {
         }
         None => {
             wait(1, 5); // random delay
+            browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
             return Err(playwright::Error::ReceiverClosed);
         } // if search input is not found, means page was not loaded and sessuion cookie is not valid
@@ -78,37 +79,72 @@ pub async fn connection(entry: Entry) -> Result<(), playwright::Error> {
         }
         None => {
             wait(1, 5);
+            browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             return Err(playwright::Error::ObjectNotFound);
         }
     }
 
+    
+    
     //check if popup to choose "How do you know" appeares
     let popup_how = browser
-        .page
-        .query_selector("button[aria-label='Other']")
-        .await?;
+    .page
+    .query_selector("button[aria-label='Other']")
+    .await?;
 
     match popup_how {
-        Some(popup_how) => {
-            popup_how.click_builder().click().await?; // click on button "Other"
-
-            let connect = browser
-                .page
-                .query_selector("button[aria-label='Connect']")
-                .await?;
-            match connect {
-                Some(connect) => connect.click_builder().click().await?,
-                None => return Err(playwright::Error::InvalidParams),
+    Some(popup_how) => {
+        popup_how.click_builder().click().await?; // click on button "Other"
+        
+        let connect = browser
+        .page
+        .query_selector("button[aria-label='Connect']")
+        .await?;
+    match connect {
+        Some(connect) => connect.click_builder().click().await?,
+                None => {
+                    wait(1, 5);
+                    browser.page.close(Some(false)).await?;
+                    browser.browser.close().await?;
+                    return Err(playwright::Error::InvalidParams)
+                },
             }
         }
         None => (),
     };
+    
 
+    let email_needed = browser.page.query_selector("label[for=email]").await?;
+
+    match email_needed {
+        Some(_) => {
+                wait(1, 5);
+                browser.page.close(Some(false)).await?;
+                browser.browser.close().await?;
+                return Err(playwright::Error::CallbackNotFound)   
+        }
+        None => (),
+    };
+        
+    
+    //artdeco-modal artdeco-modal--layer-default send-invite  
     message(&browser.page, candidate.message.as_str()).await?;
+    wait(3, 7);
+    let connection_limit = browser.page.query_selector("div[class='artdeco-modal artdeco-modal--layer-default ip-fuse-limit-alert']").await?;
 
+    match connection_limit {
+        Some(_) => {
+            wait(1, 5);
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Err(playwright::Error::Channel)
+        }
+        None => (),
+    };
     wait(3, 15); // random delay; // add delay before closing the browser to check things
 
+    browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
     Ok(())
 }

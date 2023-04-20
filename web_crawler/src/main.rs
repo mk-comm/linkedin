@@ -10,7 +10,6 @@ use crate::actions::send_message::send_message;
 use crate::actions::withdraw_connection::withdraw;
 use structs::entry::Entry;
 use tokio::task;
-
 #[get("/")]
 async fn index() -> String {
     "Route is not available!".to_string()
