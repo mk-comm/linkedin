@@ -22,17 +22,18 @@ start_browser {
 }
 
 send message {
-    ObjectNotFound => no message button on the page => can't send message to this profile
-    InvalidParams => button was pressed but text input is not visible => can't send message to this profile
+    ObjectNotFound"Object not found" => no message button on the page => can't send message to this profile
+    InvalidParams"Invalid message" => button was pressed but text input is not visible => can't send message to this profile
+    NotObject => no conversation was opened on the page => restart
 }
 
 connect {
-    ObjectNotFound => can't connect, no connect button
-    InvalidParams => some element did not load correctly => resend
-    Channel      => linkedin limit =>mark profile=> resend
-    CallbackNotFound => email needed
+    ObjectNotFound"Object not found" => can't connect, no connect button
+    InvalidParams"Invalid message" => some element did not load correctly => resend
+    Channel"Failed to send"      => linkedin limit =>mark profile=> resend
+    CallbackNotFound"Callback not found" => email needed
 }
 
 withdraw {
-    ObjectNotFound => no connection to withdraw
+    ObjectNotFound"Object not found" => no connection to withdraw
 }

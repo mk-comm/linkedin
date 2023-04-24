@@ -13,6 +13,7 @@ pub struct Entry {
     pub user_agent: String,
     pub session_cookie: String,
     pub user_id: String,
+    pub entity_urn: String,
 }
 
 impl Entry {
@@ -29,6 +30,7 @@ impl Entry {
         user_agent: String,
         session_cookie: String,
         user_id: String,
+        entity_urn: String,
     ) -> Self {
         Entry {
             message_id,
@@ -42,6 +44,7 @@ impl Entry {
             user_agent,
             session_cookie,
             user_id,
+            entity_urn,
         }
     }
 }

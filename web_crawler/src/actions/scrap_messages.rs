@@ -14,6 +14,7 @@ pub async fn scrap_message(
     page: &Page,
     focused_inbox: bool,
 ) -> Result<(), playwright::Error> {
+    
     let conversation_select = match page
         .query_selector(format!("li[id='{}']", conversation.id).as_str())
         .await?
@@ -201,10 +202,10 @@ async fn create_message(
 
     let category = json_response["response"]["category"].as_str();
     match category {
-        Some("Interested") => return MessageCategory::Interested,
-        Some("Not interested") => return MessageCategory::NotInterested,
-        Some(_) => return MessageCategory::NotFound,
-        None => return MessageCategory::NotFound,
+        Some("Interested") => MessageCategory::Interested,
+        Some("Not interested") => MessageCategory::NotInterested,
+        Some(_) => MessageCategory::NotFound,
+        None => MessageCategory::NotFound,
     }
 }
 

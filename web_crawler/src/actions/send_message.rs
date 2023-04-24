@@ -1,5 +1,6 @@
-use crate::structs::entry::Entry;
 
+use crate::structs::entry::Entry;
+use scraper::{Html, Selector};
 use crate::actions::wait::wait;
 use crate::structs::candidate::Candidate;
 
@@ -11,6 +12,8 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
         entry.linkedin.clone(),
         entry.message.clone(),
     );
+
+    let entity_urn = entry.entity_urn.clone();
 
     let browser = start_browser(entry).await?;
 
@@ -46,7 +49,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
         .goto_builder(candidate.linkedin.as_str())
         .goto()
         .await?;
-    wait(3, 15); // random delay
+    wait(3, 7); // random delay
 
     browser
         .page
@@ -79,8 +82,30 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
     wait(1, 4); // random delay
     message_button.click_builder().click().await?; // click on search input
     wait(2, 5); // random delay
+    // Picking the right conversation
 
-    let regular_input = browser.page
+    // Get the HTML content of the messaging container
+    let pick = browser.page.query_selector("aside.msg-overlay-container").await?.unwrap();
+    let html = pick.inner_html().await?;
+    let conversation_id = find_conversation(html.as_str(), entity_urn.as_str());
+
+    let conversation_select = match browser.page
+    .query_selector(format!("div[id='{}']", conversation_id).as_str())
+    .await?
+{
+    Some(conversation) => {
+        conversation
+    }
+    None =>{
+    wait(1, 5); // random delay
+    browser.page.close(Some(false)).await?;
+    browser.browser.close().await?;
+    return Err(playwright::Error::NotObject);
+    }
+}; // select the conversation that matches the entity_urn
+
+
+    let regular_input = conversation_select
     .query_selector("div.msg-form__contenteditable.t-14.t-black--light.t-normal.flex-grow-1.full-height.notranslate")
     .await?;
 
@@ -101,8 +126,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
         } // means you can't send message to this profile
     }
 
-    let send = browser
-        .page
+    let send = conversation_select
         .query_selector("button.msg-form__send-button.artdeco-button.artdeco-button--1")
         .await?;
 
@@ -117,7 +141,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::NotObject);
+            return Err(playwright::Error::ObjectNotFound);
         } // means you can't send message to this profile
     }
 
@@ -125,4 +149,36 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
     Ok(())
+}
+
+fn find_conversation(html: &str, entity_urn: &str) -> String {
+    
+    // Parse the HTML content and find the required div
+    let document = Html::parse_document(&html);
+    let conv_selector = Selector::parse("div.msg-convo-wrapper").unwrap();
+    let href_selector = Selector::parse("a[href^='/in/']").unwrap();
+   
+    //let code = "/in/ACoAADcTjioB4nj57dk1rAQazWKnfNn4AjQKHNc/"; //target URN
+    let code = format!("/in/{}/", entity_urn); //target URN
+    println!("Code variable: {}", code);
+    let mut correct_div = String::new();
+    for conv_div in document.select(&conv_selector) {
+ 
+        let id = conv_div.value().attr("id").unwrap();
+        println!("{}", id);
+        let href_elem = conv_div.select(&href_selector).next().unwrap();
+    
+        let href = href_elem.value().attr("href").unwrap();
+        println!("Href variable: {}", href);
+    
+        if href == code {
+        //println!(", {}", conv_div.inner_html());
+            correct_div = id.to_owned();
+        //let button = container.query_selector("button[class='msg-form__send-toggle artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view']").await?.unwrap();
+     //   button.click_builder();
+        }
+    }
+
+correct_div
+
 }
