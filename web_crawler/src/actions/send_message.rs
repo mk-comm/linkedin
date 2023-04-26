@@ -92,7 +92,17 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
     message_button.click_builder().click().await?; // click on search input
     wait(2, 5); // random delay
     // Picking the right conversation
+    let inmail_popup = browser.page
+    .query_selector("a.app-aware-link.artdeco-button.artdeco-button--premium")
+    .await?;
 
+    if inmail_popup.is_some() {
+            wait(1, 5); // random delay
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            println!("You have to be premium to send messages to this profile");
+            return Err(playwright::Error::ObjectNotFound);
+    } // Inmail needed to send message to this profile
     // Get the HTML content of the messaging container
     let pick = browser.page.query_selector("aside.msg-overlay-container").await?.unwrap();
     let html = pick.inner_html().await?;
@@ -138,7 +148,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
     let send = conversation_select
         .query_selector("button.msg-form__send-button.artdeco-button.artdeco-button--1")
         .await?;
-
+    
     match send {
         Some(send) => {
             send.hover_builder(); // hover on search input
