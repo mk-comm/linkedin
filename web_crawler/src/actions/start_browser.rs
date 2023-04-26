@@ -1,5 +1,5 @@
 use playwright::Playwright;
-use std::path::Path;
+//use std::path::Path;
 
 use playwright::api::{Cookie, ProxySettings, Viewport};
 use std::collections::HashMap;
@@ -12,7 +12,7 @@ use super::wait::wait;
 pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Error> {
     //path to  local browser
 
-    let path = Path::new("/opt/homebrew/bin/chromium");
+    //let path = Path::new("/opt/homebrew/bin/chromium");
 
     let mut user = User::new(entry.user_agent, entry.session_cookie, entry.user_id);
 
@@ -29,15 +29,15 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
 
     let playwright = Playwright::initialize().await?;
 
-    //playwright.prepare()?; // Install browsers uncomment on production
+    playwright.prepare()?; // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
     let browser = chromium
         .launcher()
         .proxy(proxy)
-        .headless(false)
-        .executable(path)
+        .headless(true)
+        //.executable(path)
         .launch()
         .await?;
 
@@ -86,7 +86,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
     wait(1, 4);
 
     match &build_proxy {
-        Ok(_) => print!("Proxy is working"),
+        Ok(_) => (),
         Err(_) => {
             wait(1, 3);
             page_proxy.close(Some(false)).await?;
@@ -123,11 +123,11 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
 
     let browser_config = BrowserConfig {
         proxy: None,
-        playwright: playwright,
+        playwright,
         browser_type: chromium,
-        browser: browser,
-        context: context,
-        page: page,
+        browser,
+        context,
+        page,
         build: go_to.unwrap(),
     };
 

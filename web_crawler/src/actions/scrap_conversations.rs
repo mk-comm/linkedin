@@ -111,10 +111,10 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
 
         let conversation = Conversation {
             id: id.clone(),
-            thread_url: thread_url,
+            thread_url,
             candidate_name,
             timestamp,
-            unread: unread,
+            unread,
             api_key: api_key.clone(),
         };
 

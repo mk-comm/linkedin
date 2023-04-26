@@ -1,4 +1,4 @@
-
+use playwright::api::Page;
 use crate::structs::entry::Entry;
 use scraper::{Html, Selector};
 use crate::actions::wait::wait;
@@ -12,11 +12,10 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
         entry.linkedin.clone(),
         entry.message.clone(),
     );
-
-    let entity_urn = entry.entity_urn.clone();
+    
 
     let browser = start_browser(entry).await?;
-
+    
     let search_input = browser
         .page
         .query_selector("input[class=search-global-typeahead__input]")
@@ -59,7 +58,17 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
         .page
         .query_selector("div.entry-point.pvs-profile-actions__action")
         .await;
-
+    
+    let entity_urn = match find_entity_run(&browser.page).await {
+        Ok(entity_urn) => entity_urn,
+        Err(_) => {
+            wait(1, 5); // random delay
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Err(playwright::Error::InitializationError);
+        }
+    };
+    
     let message_button = match message_button {
         Ok(button) => match button {
             Some(button) => button,
@@ -125,7 +134,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
             return Err(playwright::Error::InvalidParams);
         } // means you can't send message to this profile
     }
-
+    
     let send = conversation_select
         .query_selector("button.msg-form__send-button.artdeco-button.artdeco-button--1")
         .await?;
@@ -160,7 +169,6 @@ fn find_conversation(html: &str, entity_urn: &str) -> String {
    
     //let code = "/in/ACoAADcTjioB4nj57dk1rAQazWKnfNn4AjQKHNc/"; //target URN
     let code = format!("/in/{}/", entity_urn); //target URN
-    println!("Code variable: {}", code);
     let mut correct_div = String::new();
     for conv_div in document.select(&conv_selector) {
  
@@ -181,4 +189,38 @@ fn find_conversation(html: &str, entity_urn: &str) -> String {
 
 correct_div
 
+}
+
+async fn find_entity_run(page: &Page) -> Result<String, playwright::Error> {
+
+    // Find the target link
+    let link_selector = Selector::parse("a").unwrap();
+    let document = scraper::Html::parse_document(&page.content().await?);
+    let mut entity_urn = String::new();
+
+    for link in document.select(&link_selector) {
+        let href = link.value().attr("href").unwrap_or_default();
+
+        if href.contains("profileUrn=") {
+            let parts: Vec<&str> = href.split("?profileUrn=urn%3Ali%3Afsd_profile%3A").collect();
+
+            if parts.len() > 1 {
+                entity_urn = parts[1].split("&").collect::<Vec<&str>>()[0].to_string();
+
+                if entity_urn.is_empty() {
+                    let parts: Vec<&str> = href.split("?profileUrn=urn%3Ali%3Afs_normalized_profile%3A").collect();
+                    if parts.len() > 1 {
+                        entity_urn = parts[1].split("&").collect::<Vec<&str>>()[0].to_string();
+                    }
+                }
+            }
+
+            if !entity_urn.is_empty() {
+                break;
+            }
+        }
+    }
+
+
+    Ok(entity_urn)
 }
