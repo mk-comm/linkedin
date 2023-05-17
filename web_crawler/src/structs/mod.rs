@@ -5,3 +5,5 @@ pub mod entry;
 pub mod fullname;
 pub mod message;
 pub mod user;
+pub mod inmail_conversation;
+pub mod error;

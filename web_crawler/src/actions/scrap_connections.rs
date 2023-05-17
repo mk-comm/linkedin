@@ -1,9 +1,10 @@
 use crate::actions::start_browser::start_browser;
 use crate::actions::wait::wait;
 use crate::structs::entry::Entry;
+use crate::structs::error::CustomError;
 
 #[allow(dead_code)] // delete later
-pub async fn scrap_connections(entry: Entry) -> Result<(), playwright::Error> {
+pub async fn scrap_connections(entry: Entry) -> Result<(), CustomError> {
     #[allow(dead_code)] // delete later
     //let api_key = entry.user_id.clone();
     let browser = start_browser(entry).await?;

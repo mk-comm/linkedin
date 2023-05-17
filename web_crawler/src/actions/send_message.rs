@@ -3,10 +3,11 @@ use crate::structs::entry::Entry;
 use scraper::{Html, Selector};
 use crate::actions::wait::wait;
 use crate::structs::candidate::Candidate;
+use crate::structs::error::CustomError;
 
 use super::start_browser::start_browser;
 
-pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
+pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
     let candidate = Candidate::new(
         entry.fullname.clone(),
         entry.linkedin.clone(),
@@ -38,7 +39,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
-            return Err(playwright::Error::ReceiverClosed);
+            return Err(playwright::Error::ReceiverClosed.into());
         } // if search input is not found, means page was not loaded and session cookie is not valid
     };
 
@@ -65,7 +66,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::InitializationError);
+            return Err(playwright::Error::InitializationError.into());
         }
     };
     
@@ -76,14 +77,14 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
                 wait(1, 5); // random delay
                 browser.page.close(Some(false)).await?;
                 browser.browser.close().await?;
-                return Err(playwright::Error::ObjectNotFound);
+                return Err(playwright::Error::ObjectNotFound.into());
             } // means there is no message button
         },
         Err(_) => {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::ObjectNotFound);
+            return Err(playwright::Error::ObjectNotFound.into());
         }
     };
 
@@ -101,7 +102,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             println!("You have to be premium to send messages to this profile");
-            return Err(playwright::Error::ObjectNotFound);
+            return Err(playwright::Error::ObjectNotFound.into());
     } // Inmail needed to send message to this profile
     // Get the HTML content of the messaging container
     let pick = browser.page.query_selector("aside.msg-overlay-container").await?.unwrap();
@@ -119,7 +120,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
     wait(1, 5); // random delay
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
-    return Err(playwright::Error::NotObject);
+    return Err(playwright::Error::NotObject.into());
     }
 }; // select the conversation that matches the entity_urn
 
@@ -141,7 +142,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::InvalidParams);
+            return Err(playwright::Error::InvalidParams.into());
         } // means you can't send message to this profile
     }
     
@@ -160,7 +161,7 @@ pub async fn send_message(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::ObjectNotFound);
+            return Err(playwright::Error::ObjectNotFound.into());
         } // means you can't send message to this profile
     }
 

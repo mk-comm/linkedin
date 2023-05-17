@@ -1,9 +1,9 @@
 use crate::{
     actions::start_browser::start_browser, actions::wait::wait, structs::candidate::Candidate,
-    structs::entry::Entry,
+    structs::entry::Entry, structs::error::CustomError,
 };
 
-pub async fn withdraw(entry: Entry) -> Result<(), playwright::Error> {
+pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
     let candidate = Candidate::new(
         entry.fullname.clone(),
         entry.linkedin.clone(),
@@ -35,7 +35,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
-            return Err(playwright::Error::InitializationError);
+            return Err(playwright::Error::InitializationError.into());
         } // if search input is not found, means page was not loaded and sessuion cookie is not valid
     };
 
@@ -63,7 +63,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::ObjectNotFound)
+            return Err(playwright::Error::ObjectNotFound.into())
         },
     };
     //"artdeco-button.artdeco-button--muted.artdeco-button--2.artdeco-button--secondary.ember-view.pvs-profile-actions__action"
@@ -93,7 +93,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), playwright::Error> {
                             wait(1, 5);
                             browser.page.close(Some(false)).await?;
                             browser.browser.close().await?;
-                            return Err(playwright::Error::ObjectNotFound)
+                            return Err(playwright::Error::ObjectNotFound.into())
                         }
                     }
                 }
@@ -119,7 +119,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), playwright::Error> {
                                 wait(1, 3);
                                 browser.page.close(Some(false)).await?;
                                 browser.browser.close().await?; // close browser
-                                return Err(playwright::Error::ObjectNotFound);
+                                return Err(playwright::Error::ObjectNotFound.into());
                             }
                         };
                     }
@@ -131,7 +131,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), playwright::Error> {
             }
         }
         None => {
-            return Err(playwright::Error::ObjectNotFound);
+            return Err(playwright::Error::ObjectNotFound.into());
         }
     }
 

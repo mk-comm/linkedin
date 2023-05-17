@@ -3,13 +3,13 @@ use std::path::Path;
 
 use playwright::api::{Cookie, ProxySettings, Viewport};
 use std::collections::HashMap;
-
+use crate::structs::error::CustomError;
 use crate::structs::browser::BrowserConfig;
 use crate::structs::entry::Entry;
 use crate::structs::user::User;
 
 use super::wait::wait;
-pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Error> {
+pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, CustomError> {
     //path to  local browser
 
     let path = Path::new("/opt/homebrew/bin/chromium");
@@ -68,7 +68,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
     
     let cookie_recruiter = Cookie::with_url(
         "li_a",
-        "AQJ2PTEmY2FwX3NlYXQ9Mjg5MTgyMjk2JmNhcF9hZG1pbj1mYWxzZSZjYXBfa249MjQxNDY4ODAzVrX31MIGxfwXaB2qJdlYI0jdO9k",
+        "AQJ2PTEmY2FwX3NlYXQ9MjkzOTk4MTk2JmNhcF9hZG1pbj10cnVlJmNhcF9rbj00NDA5MjQ1NzZ8KzbvFqPNLLlmmji0bE93MSLrrA",
         "https://.www.linkedin.com",
     );
     
@@ -92,7 +92,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
             page_proxy.close(Some(false)).await?;
             browser.close().await?;
 
-            return Err(playwright::Error::Timeout);
+            return Err(CustomError::ProxyNotWorking);
         }
     } // if error when proxy is not working
 
@@ -115,7 +115,7 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, playwright::Er
             wait(1, 3);
             page.close(Some(false)).await?;
             browser.close().await?;
-            return Err(playwright::Error::ReceiverClosed); // if error when session cookie expired
+            return Err(CustomError::SessionCookieExpired); // if error when session cookie expired
         }
     }
 

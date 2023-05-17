@@ -2,7 +2,7 @@ use crate::actions::wait::wait;
 use crate::structs::conversation::Conversation;
 use crate::structs::fullname::FullName;
 use crate::structs::message::Message;
-
+use crate::structs::browser::BrowserConfig;
 use playwright::api::ElementHandle;
 use playwright::api::Page;
 use scraper::{Html, Selector};
@@ -13,6 +13,7 @@ pub async fn scrap_message(
     conversation: &Conversation,
     page: &Page,
     focused_inbox: bool,
+    browser: &BrowserConfig,
 ) -> Result<(), playwright::Error> {
     
     let conversation_select = match page
@@ -29,6 +30,8 @@ pub async fn scrap_message(
     }; // select the conversation
 
     wait(3, 7);
+
+   
 
     let message_container = page
         .query_selector("ul[class='msg-s-message-list-content list-style-none full-width mbA']")
@@ -62,6 +65,8 @@ pub async fn scrap_message(
     }
 
     println!("conversation_owner_link: {}", &conversation_owner_link);
+
+    check_urn(&conversation_owner_link, browser).await;
 
     let message_container_html = message_container.inner_html().await.unwrap();
 
@@ -334,6 +339,68 @@ async fn _move_other(conversation_element: &ElementHandle) -> Result<(), playwri
         }
     }
 }
+
+async fn check_urn(entity_urn: &str, browser: &BrowserConfig) {
+
+    let client = reqwest::Client::new();
+    let payload = json!({
+            "entity_urn": entity_urn,
+    });
+    let res = client
+        .post("https://overview.tribe.xyz/api/1.1/wf/check_entity_urn")
+        .json(&payload)
+        .send()
+        .await
+        .unwrap();
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+
+    let talent_exist = json_response["response"]["talent_exist"].as_bool().unwrap();
+
+    if talent_exist == true {
+        println!("Talent found");
+    } else {
+        scrap_profile(browser, entity_urn).await;
+    }
+
+}
+
+async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str) -> Result<(), playwright::Error> {
+
+    let page = browser.context.new_page().await?;
+
+    match page
+    .goto_builder(&entity_urn)
+    .goto()
+    .await
+    {
+        Ok(_) => println!("Page loaded"),
+        Err(_) => {
+            page.close(Some(false)).await?;
+            return Err(playwright::Error::ObjectNotFound)
+        },
+    };
+
+    wait(5, 7);
+
+   let contact_info = page.query_selector("a#top-card-text-details-contact-info").await?.unwrap();
+   let url = contact_info.get_attribute("href").await?;
+
+   let client = reqwest::Client::new();
+    let payload = json!({
+            "entity_urn": entity_urn,
+            "linkedin": url,
+    });
+    let _res = client
+        .post("https://overview.tribe.xyz/api/1.1/wf/update_entity_urn")
+        .json(&payload)
+        .send()
+        .await
+        .unwrap();
+    page.close(Some(false)).await?;
+Ok(())
+}
+
+
 
 #[derive(Debug)]
 struct ResponseApi {

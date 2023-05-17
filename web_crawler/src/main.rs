@@ -8,6 +8,8 @@ use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
 use crate::actions::send_message::send_message;
 use crate::actions::withdraw_connection::withdraw;
+use crate::actions::scrap_inmails::scrap_inmails;
+use crate::actions::scrap_profile::scrap_profile;
 use structs::entry::Entry;
 use tokio::task;
 #[get("/")]
@@ -36,21 +38,33 @@ async fn scrap_conversations(json: web::Json<Entry>) -> HttpResponse {
             }
         }
     });
-    // probably won't return untill finished and cause a timeout
-    /*
-    match spawn.await {
-        Ok(_) => println!("Scraping started!"),
-        Err(error) => {
-            let client = reqwest::Client::new();
-            let payload = json!({
-                "message": "".to_string(),
-                "result": "Spawing error: ".to_string() + &error.to_string() + "",
-                "user_id": "".to_string(),
-            });
-            let _res = client.post("https://webhook.site/a177ac41-95f3-4e92-8de9-8bb958635d7b").json(&payload).send().await;
-        },
-    }
-    */
+
+    HttpResponse::Ok().body("Scrapping started!")
+}
+
+#[post("/scrap_inmails")]
+async fn scrap_inmails_conversations(json: web::Json<Entry>) -> HttpResponse {
+    let message_id = json.message_id.clone();
+    let webhook = json.webhook.clone();
+    let user_id = json.user_id.clone();
+
+    let _spawn = task::spawn_local(async move {
+        let api = scrap_inmails(json.into_inner());
+        match api.await {
+            Ok(_) => println!("Scraping messages was successful!"),
+            Err(error) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "message": message_id,
+                    "result": error.to_string(),
+                    "user_id": user_id,
+                    "error": "yes",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+        }
+    });
+
     HttpResponse::Ok().body("Scrapping started!")
 }
 
@@ -147,6 +161,40 @@ async fn message(json: web::Json<Entry>) -> HttpResponse {
     HttpResponse::Ok().body("Sending message started!")
 }
 
+#[post("/scrap_profiles")]
+async fn scrap_profiles(json: web::Json<Entry>) -> HttpResponse {
+    let message_id = json.message_id.clone();
+    let webhook = json.webhook.clone();
+    let user_id = json.user_id.clone();
+    tokio::spawn(async move {
+        let api = scrap_profile(json.into_inner());
+        match api.await {
+            Ok(_) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "message": message_id,
+                    "result": "Profile was scrapped",
+                    "user_id": user_id,
+                    "error": "no",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+            Err(error) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "message": message_id,
+                    "result": error.to_string(),
+                    "user_id": user_id,
+                    "error": "yes",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+        }
+    });
+
+    HttpResponse::Ok().body("Sending message started!")
+}
+
 #[post("/connect")]
 async fn connect(json: web::Json<Entry>) -> HttpResponse {
     let message_id = json.message_id.clone();
@@ -196,6 +244,8 @@ async fn main() -> std::io::Result<()> {
             .service(message)
             .service(withdraw_connection)
             .service(scrap_connection)
+            .service(scrap_inmails_conversations)
+            .service(scrap_profiles)
     })
     .bind(address)?
     .run()

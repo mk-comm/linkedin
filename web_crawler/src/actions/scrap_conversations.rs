@@ -4,10 +4,11 @@ use crate::structs::conversation::Conversation;
 use crate::structs::entry::Entry;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
+use crate::structs::error::CustomError;
 
 use crate::actions::scrap_messages::scrap_message;
 
-pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
+pub async fn scrap(entry: Entry) -> Result<(), CustomError> {
     let api_key = entry.user_id.clone();
 
     let browser = start_browser(entry).await?;
@@ -27,7 +28,7 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::NotObject);
+            return Err(playwright::Error::NotObject.into());
         }
     }
 
@@ -58,7 +59,7 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
         None => {
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::ObjectNotFound);
+            return Err(playwright::Error::ObjectNotFound.into());
         }
     };
 
@@ -122,7 +123,7 @@ pub async fn scrap(entry: Entry) -> Result<(), playwright::Error> {
     }
 
     for conversation in conversations.values() {
-        scrap_message(conversation, &browser.page, focused_inbox).await?;
+        scrap_message(conversation, &browser.page, focused_inbox, &browser).await?;
     }
 
     browser.browser.close().await?;

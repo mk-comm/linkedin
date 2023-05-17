@@ -2,16 +2,18 @@ use playwright::api::Page;
 
 use crate::actions::start_browser::start_browser;
 use crate::structs::entry::Entry;
-
+use crate::structs::error::CustomError;
 use crate::actions::wait::wait;
 use crate::structs::candidate::Candidate;
 
-pub async fn connection(entry: Entry) -> Result<(), playwright::Error> {
+pub async fn connection(entry: Entry) -> Result<(), CustomError> {
     let candidate = Candidate::new(
         entry.fullname.clone(),
         entry.linkedin.clone(),
         entry.message.clone(),
     );
+
+   // return Err(CustomError::ButtonNotFound("Connect button not found".to_string()));
 
     let browser = start_browser(entry).await?;
 
@@ -39,7 +41,7 @@ pub async fn connection(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
-            return Err(playwright::Error::ReceiverClosed);
+            return Err(CustomError::SessionCookieExpired);
         } // if search input is not found, means page was not loaded and sessuion cookie is not valid
     };
 
@@ -81,7 +83,7 @@ pub async fn connection(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::ObjectNotFound);
+            return Err(CustomError::ButtonNotFound("Connect button not found".to_string()));
         }
     }
 
@@ -107,7 +109,7 @@ pub async fn connection(entry: Entry) -> Result<(), playwright::Error> {
                     wait(1, 5);
                     browser.page.close(Some(false)).await?;
                     browser.browser.close().await?;
-                    return Err(playwright::Error::InvalidParams)
+                    return Err(playwright::Error::InvalidParams.into())
                 },
             }
         }
@@ -122,7 +124,7 @@ pub async fn connection(entry: Entry) -> Result<(), playwright::Error> {
                 wait(1, 5);
                 browser.page.close(Some(false)).await?;
                 browser.browser.close().await?;
-                return Err(playwright::Error::CallbackNotFound)   
+                return Err(CustomError::EmailNeeded);   
         }
         None => (),
     };
@@ -138,7 +140,7 @@ pub async fn connection(entry: Entry) -> Result<(), playwright::Error> {
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::Channel)
+            return Err(CustomError::ConnectionLimit);
         }
         None => (),
     };

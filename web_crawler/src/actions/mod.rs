@@ -6,3 +6,5 @@ pub mod send_message;
 pub mod start_browser;
 pub mod wait;
 pub mod withdraw_connection;
+pub mod scrap_inmails;
+pub mod scrap_profile;
