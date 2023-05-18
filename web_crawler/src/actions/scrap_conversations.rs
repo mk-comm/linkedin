@@ -10,10 +10,10 @@ use crate::actions::scrap_messages::scrap_message;
 
 pub async fn scrap(entry: Entry) -> Result<(), CustomError> {
     let api_key = entry.user_id.clone();
-
+    let regular = entry.regular.clone();
     let browser = start_browser(entry).await?;
 
-    wait(300, 700);
+    wait(3, 7);
 
     let messaging_button = browser
         .page
@@ -117,6 +117,7 @@ pub async fn scrap(entry: Entry) -> Result<(), CustomError> {
             timestamp,
             unread,
             api_key: api_key.clone(),
+            enable_ai: regular,
         };
 
         conversations.insert(id, conversation);

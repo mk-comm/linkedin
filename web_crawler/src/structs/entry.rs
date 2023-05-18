@@ -17,6 +17,8 @@ pub struct Entry {
     pub recruiter_stage_interested: String,
     pub recruiter_stage_not_interested: String,
     pub recruiter_session_cookie: String,
+    pub regular: bool,
+    pub recruiter: bool,
 }
 
 impl Entry {
@@ -37,6 +39,8 @@ impl Entry {
         recruiter_stage_interested: String,
         recruiter_stage_not_interested: String,
         recruiter_session_cookie: String,
+        regular: bool,
+        recruiter: bool,
     ) -> Self {
         Entry {
             message_id,
@@ -54,6 +58,8 @@ impl Entry {
             recruiter_stage_interested,
             recruiter_stage_not_interested,
             recruiter_session_cookie,
+            regular,
+            recruiter,
         }
     }
 }

@@ -11,6 +11,7 @@ use crate::structs::error::CustomError;
 
 pub async fn scrap_inmails(entry: Entry) -> Result<(), CustomError> {
 
+let recruiter = entry.recruiter.clone();
 let api_key = entry.user_id.clone();
 let stage_interested = entry.recruiter_stage_interested.clone();
 let stage_not_interested = entry.recruiter_stage_not_interested.clone();
@@ -28,7 +29,7 @@ browser
 
 scrap_stage(&browser, &api_key).await?;
 
-if stage_interested.is_empty() {
+if recruiter == false {
     println!("No stage interested found");
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?;

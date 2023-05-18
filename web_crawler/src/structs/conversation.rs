@@ -5,6 +5,7 @@ pub struct Conversation {
     pub timestamp: String,
     pub unread: bool,
     pub api_key: String,
+    pub enable_ai: bool,
 }
 #[allow(dead_code)]
 impl Conversation {
@@ -15,6 +16,7 @@ impl Conversation {
         timestamp: String,
         unread: bool,
         api_key: String,
+        enable_ai: bool,
     ) -> Self {
         Conversation {
             id,
@@ -23,6 +25,7 @@ impl Conversation {
             timestamp,
             unread,
             api_key,
+            enable_ai,
         }
     }
 }

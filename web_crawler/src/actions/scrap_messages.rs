@@ -206,6 +206,9 @@ async fn create_message(
     let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
 
     let category = json_response["response"]["category"].as_str();
+    if conversation.enable_ai == false {
+        return MessageCategory::NotFound;
+    }
     match category {
         Some("Interested") => MessageCategory::Interested,
         Some("Not interested") => MessageCategory::NotInterested,
