@@ -5,7 +5,7 @@ COPY . .
 RUN cargo build --release
 
 # Second stage - Ubuntu setup
-FROM ubuntu:latest
+FROM ubuntu:22.04
 
 # Install Node.js
 RUN apt-get update && apt-get install -y curl
@@ -44,7 +44,7 @@ RUN apt-get update && \
     libpango1.0-0 \
     libcairo2 \
     wget && \
-    wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1-1ubuntu2.1~18.04.21_amd64.deb && \
+    wget https://mirror.combahton.net/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1-1ubuntu2.1~18.04.21_amd64.deb && \
     dpkg -i libssl1.1_1.1.1-1ubuntu2.1~18.04.21_amd64.deb && \
     rm -f libssl1.1_1.1.1-1ubuntu2.1~18.04.21_amd64.deb && \
     apt-get install -y curl && \

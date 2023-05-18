@@ -1,12 +1,12 @@
 use crate::actions::start_browser::start_browser;
 use playwright::api::Page;
-use scraper::{Html,Selector};
+use scraper::Selector;
 use serde_json::json;
 use crate::actions::wait::wait;
 use crate::structs::candidate::Candidate;
 use crate::structs::entry::Entry;
 use crate::structs::error::CustomError;
-use crate::structs::browser::BrowserConfig;
+
 pub async fn scrap_profile(entry: Entry) -> Result<(), CustomError> {
    let candidate = Candidate::new(
       entry.fullname.clone(),

@@ -1,5 +1,5 @@
 use playwright::Playwright;
-use std::path::Path;
+//use std::path::Path;
 
 use playwright::api::{Cookie, ProxySettings, Viewport};
 use std::collections::HashMap;
@@ -12,7 +12,7 @@ use super::wait::wait;
 pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, CustomError> {
     //path to  local browser
 
-    let path = Path::new("/opt/homebrew/bin/chromium");
+    //let path = Path::new("/opt/homebrew/bin/chromium");
 
     let mut user = User::new(entry.user_agent, entry.session_cookie, entry.user_id);
 
@@ -29,15 +29,15 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, CustomError> {
 
     let playwright = Playwright::initialize().await?;
 
-    //playwright.prepare()?; // Install browsers uncomment on production
+    playwright.prepare(); // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
     let browser = chromium
         .launcher()
         .proxy(proxy)
-        .headless(false)
-        .executable(path)
+        .headless(true)
+        //.executable(path)
         .launch()
         .await?;
 
@@ -68,12 +68,12 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, CustomError> {
     
     let cookie_recruiter = Cookie::with_url(
         "li_a",
-        "AQJ2PTEmY2FwX3NlYXQ9MjkzOTk4MTk2JmNhcF9hZG1pbj10cnVlJmNhcF9rbj00NDA5MjQ1NzZ8KzbvFqPNLLlmmji0bE93MSLrrA",
+        entry.recruiter_session_cookie.as_str(),
         "https://.www.linkedin.com",
     );
     
     context.add_cookies(&[cookie,cookie_recruiter]).await?;
-
+    
     //testing proxy by visiting google.com
     wait(3, 7);
     let page_proxy = context.new_page().await?;

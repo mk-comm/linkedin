@@ -15,7 +15,7 @@ pub async fn scrap_message(
     focused_inbox: bool,
     browser: &BrowserConfig,
 ) -> Result<(), playwright::Error> {
-    
+        
     let conversation_select = match page
         .query_selector(format!("li[id='{}']", conversation.id).as_str())
         .await?

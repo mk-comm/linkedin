@@ -14,6 +14,9 @@ pub struct Entry {
     pub session_cookie: String,
     pub user_id: String,
     pub entity_urn: String,
+    pub recruiter_stage_interested: String,
+    pub recruiter_stage_not_interested: String,
+    pub recruiter_session_cookie: String,
 }
 
 impl Entry {
@@ -31,6 +34,9 @@ impl Entry {
         session_cookie: String,
         user_id: String,
         entity_urn: String,
+        recruiter_stage_interested: String,
+        recruiter_stage_not_interested: String,
+        recruiter_session_cookie: String,
     ) -> Self {
         Entry {
             message_id,
@@ -45,6 +51,9 @@ impl Entry {
             session_cookie,
             user_id,
             entity_urn,
+            recruiter_stage_interested,
+            recruiter_stage_not_interested,
+            recruiter_session_cookie,
         }
     }
 }

@@ -13,7 +13,7 @@ pub async fn scrap(entry: Entry) -> Result<(), CustomError> {
 
     let browser = start_browser(entry).await?;
 
-    wait(3, 7);
+    wait(300, 700);
 
     let messaging_button = browser
         .page
@@ -125,7 +125,7 @@ pub async fn scrap(entry: Entry) -> Result<(), CustomError> {
     for conversation in conversations.values() {
         scrap_message(conversation, &browser.page, focused_inbox, &browser).await?;
     }
-
+    browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
     Ok(())
 }
