@@ -1,5 +1,5 @@
-use crate::structs::browser::BrowserConfig;
-use crate::structs::entry::Entry;
+use crate::structs::browser::{BrowserConfig, BrowserInit};
+use crate::structs::entry::EntryRecruiter;
 use crate::actions::start_browser::start_browser;
 use serde_json::json;
 use scraper::{Html, Selector};
@@ -9,13 +9,24 @@ use crate::structs::inmail_conversation::InmailConversation;
 use crate::structs::error::CustomError;
 
 
-pub async fn scrap_inmails(entry: Entry) -> Result<(), CustomError> {
+pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
 
 let recruiter = entry.recruiter.clone();
 let api_key = entry.user_id.clone();
 let stage_interested = entry.recruiter_stage_interested.clone();
 let stage_not_interested = entry.recruiter_stage_not_interested.clone();
-let browser = start_browser(entry).await?;
+
+let browser_info = BrowserInit {
+    ip: entry.ip,
+    username: entry.username,
+    password: entry.password,
+    user_agent: entry.user_agent,
+    session_cookie: entry.session_cookie,
+    user_id: entry.user_id,
+    recruiter_session_cookie: Some(entry.recruiter_session_cookie),
+    };
+
+let browser = start_browser(browser_info).await?;
 
     // go to candidate page
 browser

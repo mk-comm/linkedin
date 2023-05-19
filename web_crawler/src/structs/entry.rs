@@ -21,6 +21,8 @@ pub struct Entry {
     pub recruiter: bool,
 }
 
+
+
 impl Entry {
     #[allow(dead_code)]
     pub fn new(
@@ -62,4 +64,30 @@ impl Entry {
             recruiter,
         }
     }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EntryRegular {
+    pub ip: String,
+    pub username: String,
+    pub password: String,
+    pub user_agent: String,
+    pub webhook: String,
+    pub user_id: String,
+    pub regular: bool,
+    pub session_cookie: String,
+}
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EntryRecruiter {
+    pub ip: String,
+    pub username: String,
+    pub password: String,
+    pub user_agent: String,
+    pub webhook: String,
+    pub user_id: String,
+    pub recruiter: bool,
+    pub session_cookie: String,
+    pub recruiter_session_cookie: String,
+    pub recruiter_stage_interested: String,
+    pub recruiter_stage_not_interested: String,
 }

@@ -1,4 +1,5 @@
 use playwright::api::Page;
+use crate::structs::browser::BrowserInit;
 
 use crate::actions::start_browser::start_browser;
 use crate::structs::entry::Entry;
@@ -13,9 +14,19 @@ pub async fn connection(entry: Entry) -> Result<(), CustomError> {
         entry.message.clone(),
     );
 
+    let browser_info = BrowserInit {
+        ip: entry.ip,
+        username: entry.username,
+        password: entry.password,
+        user_agent: entry.user_agent,
+        session_cookie: entry.session_cookie,
+        user_id: entry.user_id,
+        recruiter_session_cookie: Some(entry.recruiter_session_cookie),
+        };
+
    // return Err(CustomError::ButtonNotFound("Connect button not found".to_string()));
 
-    let browser = start_browser(entry).await?;
+    let browser = start_browser(browser_info).await?;
 
     let search_input = browser
         .page

@@ -1,5 +1,7 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use serde_json::json;
+use web_crawler::structs::entry::EntryRegular;
+use crate::structs::entry::EntryRecruiter;
 
 mod actions;
 mod structs;
@@ -17,8 +19,7 @@ async fn index() -> String {
     "Route is not available!".to_string()
 }
 #[post("/scrap_conversations")]
-async fn scrap_conversations(json: web::Json<Entry>) -> HttpResponse {
-    let message_id = json.message_id.clone();
+async fn scrap_conversations(json: web::Json<EntryRegular>) -> HttpResponse {
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
 
@@ -29,7 +30,6 @@ async fn scrap_conversations(json: web::Json<Entry>) -> HttpResponse {
             Err(error) => {
                 let client = reqwest::Client::new();
                 let payload = json!({
-                    "message": message_id,
                     "result": error.to_string(),
                     "user_id": user_id,
                     "error": "yes",
@@ -43,8 +43,8 @@ async fn scrap_conversations(json: web::Json<Entry>) -> HttpResponse {
 }
 
 #[post("/scrap_inmails")]
-async fn scrap_inmails_conversations(json: web::Json<Entry>) -> HttpResponse {
-    let message_id = json.message_id.clone();
+async fn scrap_inmails_conversations(json: web::Json<EntryRecruiter>) -> HttpResponse {
+    
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
 
@@ -55,7 +55,6 @@ async fn scrap_inmails_conversations(json: web::Json<Entry>) -> HttpResponse {
             Err(error) => {
                 let client = reqwest::Client::new();
                 let payload = json!({
-                    "message": message_id,
                     "result": error.to_string(),
                     "user_id": user_id,
                     "error": "yes",

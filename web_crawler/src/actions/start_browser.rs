@@ -4,26 +4,25 @@ use std::path::Path;
 use playwright::api::{Cookie, ProxySettings, Viewport};
 use std::collections::HashMap;
 use crate::structs::error::CustomError;
-use crate::structs::browser::BrowserConfig;
-use crate::structs::entry::Entry;
+use crate::structs::browser::{BrowserConfig, BrowserInit};
 use crate::structs::user::User;
 
 use super::wait::wait;
-pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, CustomError> {
+pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
     //path to  local browser
 
     let path = Path::new("/opt/homebrew/bin/chromium");
 
-    let mut user = User::new(entry.user_agent, entry.session_cookie, entry.user_id);
+    let mut user = User::new(browserinfo.user_agent, browserinfo.session_cookie, browserinfo.user_id);
 
     if user.user_agent.is_empty() {
         user.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36".to_string()
     } // use default user agent if not provided
 
     let proxy = ProxySettings {
-        server: entry.ip,
-        username: Some(entry.username),
-        password: Some(entry.password),
+        server: browserinfo.ip,
+        username: Some(browserinfo.username),
+        password: Some(browserinfo.password),
         bypass: None,
     };
 
@@ -66,12 +65,17 @@ pub async fn start_browser(entry: Entry) -> Result<BrowserConfig, CustomError> {
         "https://.www.linkedin.com",
     );
     
-    let cookie_recruiter = Cookie::with_url(
-        "li_a",
-        entry.recruiter_session_cookie.as_str(),
-        "https://.www.linkedin.com",
-    );
-    
+
+    let cookie_recruiter = if browserinfo.recruiter_session_cookie.is_some() {
+        let cookie_recruiter = Cookie::with_url(
+            "li_a",
+            browserinfo.recruiter_session_cookie.unwrap().as_str(),
+            "https://www.linkedin.com"
+        );
+    } //
+
+ // if recruiter cookie is not provided
+        
     context.add_cookies(&[cookie,cookie_recruiter]).await?;
     
     //testing proxy by visiting google.com

@@ -3,6 +3,9 @@ use crate::{
     structs::entry::Entry, structs::error::CustomError,
 };
 
+use crate::structs::browser::BrowserInit;
+
+
 pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
     let candidate = Candidate::new(
         entry.fullname.clone(),
@@ -10,7 +13,17 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
         entry.message.clone(),
     );
 
-    let browser = start_browser(entry).await?;
+    let browser_info = BrowserInit {
+        ip: entry.ip,
+        username: entry.username,
+        password: entry.password,
+        user_agent: entry.user_agent,
+        session_cookie: entry.session_cookie,
+        user_id: entry.user_id,
+        recruiter_session_cookie: Some(entry.recruiter_session_cookie),
+        };
+
+    let browser = start_browser(browser_info).await?;
 
     let search_input = browser
         .page
