@@ -6,7 +6,7 @@ use crate::structs::browser::BrowserInit;
 
 
 #[allow(dead_code)] // delete later
-pub async fn scrap_connections(entry: EntryRegular) -> Result<(), CustomError> {
+pub async fn scrap_connections(entry: Entry) -> Result<(), CustomError> {
     #[allow(dead_code)] // delete later
     //let api_key = entry.user_id.clone();
 

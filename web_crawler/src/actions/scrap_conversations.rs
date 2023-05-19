@@ -2,14 +2,14 @@ use crate::actions::start_browser::start_browser;
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::conversation::Conversation;
-use crate::structs::entry::Entry;
+use crate::structs::entry::EntryRegular;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
 use crate::structs::error::CustomError;
 
 use crate::actions::scrap_messages::scrap_message;
 
-pub async fn scrap(entry: Entry) -> Result<(), CustomError> {
+pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
     let api_key = entry.user_id.clone();
     let regular = entry.regular.clone();
 
@@ -20,7 +20,7 @@ pub async fn scrap(entry: Entry) -> Result<(), CustomError> {
         user_agent: entry.user_agent,
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
-        recruiter_session_cookie: Some(entry.recruiter_session_cookie),
+        recruiter_session_cookie: None,
         };
 
     let browser = start_browser(browser_info).await?;

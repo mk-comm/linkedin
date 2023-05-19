@@ -1,7 +1,7 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use serde_json::json;
-use web_crawler::structs::entry::EntryRegular;
 use crate::structs::entry::EntryRecruiter;
+use crate::structs::entry::EntryRegular;
 
 mod actions;
 mod structs;
