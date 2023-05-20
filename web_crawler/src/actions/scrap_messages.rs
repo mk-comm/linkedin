@@ -29,9 +29,11 @@ pub async fn scrap_message(
         None => return Err(playwright::Error::ObjectNotFound),
     }; // select the conversation
 
+    
+    
     wait(3, 7);
 
-    let linkedin_nick = 
+    
 
     let message_container = page
         .query_selector("ul[class='msg-s-message-list-content list-style-none full-width mbA']")
@@ -63,31 +65,36 @@ pub async fn scrap_message(
         // Handle the case where there is no conversation owner element
         conversation_owner_link = String::new();
     }
-
+    
+    let mut messages: HashMap<String, Message> = HashMap::new(); // list of messages
+    let mut full_text = String::new(); // Conversation text to push to AI
+    let mut new_message = false; // if true and candidate_of_sequence is true evaluate conversation
+    let candidate_of_sequence = scrap_profile(browser, conversation_owner_link.as_str(), &conversation.api_key).await?; // check if candidate is in sequence
     println!("conversation_owner_link: {}", &conversation_owner_link);
 
-    check_urn(&conversation_owner_link, browser).await;
 
+// Selectors for the message container
     let message_container_html = message_container.inner_html().await.unwrap();
-
     let document = Html::parse_document(&message_container_html); // parse html
-
-    let sender_selector =
-        Selector::parse(".msg-s-message-group__meta .msg-s-message-group__profile-link").unwrap();
+    let sender_selector =Selector::parse(".msg-s-message-group__meta .msg-s-message-group__profile-link").unwrap();
     let timestamp_selector = Selector::parse(".msg-s-message-group__meta time").unwrap();
     let content_selector = Selector::parse(".msg-s-event__content p").unwrap();
-    let url_send_from_selector =
-        Selector::parse(".msg-s-event-listitem__link[tabindex=\"0\"]").unwrap();
+    let url_send_from_selector =Selector::parse(".msg-s-event-listitem__link[tabindex=\"0\"]").unwrap();
     let url_send_to_selector = Selector::parse(".msg-s-message-group__meta a").unwrap();
-
-    let mut messages: HashMap<String, Message> = HashMap::new();
-
-    let mut full_text = String::new();
-    
-    let mut new_message = false; // if true evaluate conversation with AI
-
-    let mut part_of_sequence = false; //
-
+//
+let conversation_select = match page
+.query_selector(format!("li[id='{}']", conversation.id).as_str())
+.await?
+{
+Some(conversation) => {
+    conversation.hover_builder();
+    wait(1, 3);
+    conversation.click_builder().click().await?;
+    conversation
+}
+None => return Err(playwright::Error::ObjectNotFound),
+}; // select the conversation
+// Iterate over the message container and create a message 
     for ((((sender, timestamp), content), url_send_from), url_send_to) in document
         .select(&sender_selector)
         .zip(document.select(&timestamp_selector))
@@ -96,24 +103,16 @@ pub async fn scrap_message(
         .zip(document.select(&url_send_to_selector))
     {
         let sender = sender.text().collect::<String>().trim().to_owned();
-
         let full_name = FullName::split_name(&sender);
-
         let timestamp = timestamp.text().collect::<String>().trim().to_owned();
-
         let message_text = content.text().collect::<String>().trim().to_owned();
-
         let url_send_from = url_send_from.value().attr("href").unwrap().to_owned();
-
         let url_send_to = url_send_to.value().attr("href").unwrap().to_owned();
-        println!("conversation_owner: {}", conversation_owner_link);
-        println!("send_from: {}", url_send_from);
         let received: bool = if conversation_owner_link == url_send_from {
             true
         } else {
             false
         };
-        println!("received: {}", received);
         let message = Message {
             sender,
             timestamp,
@@ -130,48 +129,45 @@ pub async fn scrap_message(
         }
         
         // checks if the message is new or was scraped before
-        let check_message: ResponseApi = check_message(&message, &full_name, conversation).await; // check if the message is new mark conversation as new
-        create_message(&message, &full_name, conversation).await;
-        println!("check_message: {:?}", check_message);
-
-        /* 
-        if check_message.new_message == true {
-            if check_message.part_of_sequence == true {
-                create_message(&message, &full_name, &conversation).await
-            } else {
-                //mark conversation unread if it was unread and return early
-                /// Check if candidate a part of a sequence, yes evaluate conversation(mark read on unread) if not mark initial read/unread
-                /// Check if message is new - create new
-
-
-                //
-                ()
-            }
-        } else {
-            ()
+        let check_message = check_message(&message, &full_name, conversation).await; // check if the message is new mark conversation as new
+        if check_message == true && received == true {
+            new_message = true;
+            create_message(&message, &full_name, &conversation).await;
         }
-        */
 
         messages.insert(format!("message_{}", messages.len() + 1), message);
+    
+} // scrap message container end
+println!();
+println!("candidate_name: {}", conversation.candidate_name);
+println!("candidate of sequence: {}", candidate_of_sequence);
+println!("new_message: {}", new_message);
+println!("conversation.enable_ai: {}", conversation.enable_ai);
+println!();
+    if new_message == true && candidate_of_sequence == true && conversation.enable_ai == true{
+        let category = evaluate(full_text.as_str()).await;
+        println!("category: {:?}", category);
+        match category {
+            MessageCategory::Interested => {
+                if conversation.unread == true {
+                    wait(3, 5);
+                    mark_unread(&conversation_select, focused_inbox).await?;
+                    println!("Marked as unread/Interested");
+                }
+            },
+            MessageCategory::NotInterested => {
+                println!("Nothing happened/NotInterested");
+            },
+            MessageCategory::NotFound => {
+                println!("Category NotFound");
+            },
+        }
     }
 
-    //println!("{}" , full_text);
-//////////////////////////////////////////////////////////////////////
-let client = reqwest::Client::new();
-let payload = json!({
-    "text": full_text,
+    if conversation.enable_ai == false && conversation.unread == true {
+        mark_unread(&conversation_select, focused_inbox).await?;
+    }
 
-});
-
-let res = client
-.post("https://overview.tribe.xyz/version-test/api/1.1/wf/zz_conv")
-.json(&payload)
-.send()
-.await
-.unwrap();
-/// 
-/// 
-/// 
     println!("Messages: {:#?}", messages.len());
 
 
@@ -187,8 +183,8 @@ async fn create_message(
     // make an api call to bubble
     // return interested or not interested
 
-    let client = reqwest::Client::new();
-    let payload = json!({
+    let _client = reqwest::Client::new();
+    let _payload = json!({
             "message_text": message.message_text,
             "candidate_entity_urn": message.url_send_from,
             "received": message.received,
@@ -197,35 +193,20 @@ async fn create_message(
             "last": full_name.last_name,
             "conversation_url": conversation.thread_url,
             "api_key": conversation.api_key,
-
     });
-    /*  
-    let res = client
-        .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive")
-        .json(&payload)
-        .send()
-        .await
-        .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
-    *//*
-    let category = json_response["response"]["category"].as_str();
-    if conversation.enable_ai == false {
-        return MessageCategory::NotFound;
-    }
-    match category {
-        Some("Interested") => MessageCategory::Interested,
-        Some("Not interested") => MessageCategory::NotInterested,
-        Some(_) => MessageCategory::NotFound,
-        None => MessageCategory::NotFound,
-    }
-    */
+    let _res = _client
+    .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive")
+    .json(&_payload)
+    .send()
+    .await
+    .unwrap();
 }
 
 async fn check_message(
     message: &Message,
     full_name: &FullName,
     conversation: &Conversation,
-) -> ResponseApi {
+) -> bool {
     let client = reqwest::Client::new();
     let payload = json!({
             "message_text": message.message_text,
@@ -244,13 +225,7 @@ async fn check_message(
     let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
 
     let new_message = json_response["response"]["new_message"].as_bool().unwrap();
-    let part_of_sequence = json_response["response"]["part_of_sequence"]
-        .as_bool()
-        .unwrap();
-    ResponseApi {
-        new_message,
-        part_of_sequence,
-    }
+    new_message
 }
 
 async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) -> Result<(), playwright::Error> {
@@ -347,31 +322,8 @@ async fn _move_other(conversation_element: &ElementHandle) -> Result<(), playwri
     }
 }
 
-async fn check_urn(entity_urn: &str, browser: &BrowserConfig) {
 
-    let client = reqwest::Client::new();
-    let payload = json!({
-            "entity_urn": entity_urn,
-    });
-    let res = client
-        .post("https://overview.tribe.xyz/api/1.1/wf/check_entity_urn")
-        .json(&payload)
-        .send()
-        .await
-        .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
-
-    let talent_exist = json_response["response"]["talent_exist"].as_bool().unwrap();
-
-    if talent_exist == true {
-        println!("Talent found");
-    } else {
-        scrap_profile(browser, entity_urn).await;
-    }
-
-}
-
-async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str) -> Result<String, playwright::Error> {
+async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str) -> Result<bool, playwright::Error> {
 
     let page = browser.context.new_page().await?;
 
@@ -403,21 +355,54 @@ async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str) -> Result<Stri
         .send()
         .await
         .unwrap();
+    // check if candidate is a part of the sequence
+    let client = reqwest::Client::new();
+    let payload = json!({
+            "api_key": api_key,
+            "linkedin": url,
+    });
+    let res = client
+        .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_check_sequence")
+        .json(&payload)
+        .send()
+        .await
+        .unwrap();
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+
+    let candidate_part_of_sequence = json_response["response"]["part_of_sequence"].as_bool().unwrap();
+
     page.close(Some(false)).await?;
-Ok(url.unwrap())
+Ok(candidate_part_of_sequence)
 }
 
 
 
 #[derive(Debug)]
-struct ResponseApi {
-    new_message: bool,
-    part_of_sequence: bool,
-}
-
 enum MessageCategory {
     Interested,
     NotInterested,
     NotFound,
 }
 
+async fn evaluate(full_text: &str) -> MessageCategory {
+    println!("eval started");
+    let client = reqwest::Client::new();
+    let payload = json!({
+            "message_text": full_text,
+    });
+    let res = client
+        .post("https://overview.tribe.xyz/api/1.1/wf/check_inmail")
+        .json(&payload)
+        .send()
+        .await
+        .unwrap();
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+    println!("eval finished {}", json_response);
+    let category = json_response["response"]["category"].as_str();
+    match category {
+        Some("Interested") => MessageCategory::Interested,
+        Some("Not interested") => MessageCategory::NotInterested,
+        Some(_) => MessageCategory::NotFound,
+        None => MessageCategory::NotFound,
+    }
+}

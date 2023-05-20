@@ -11,7 +11,7 @@ use super::wait::wait;
 pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
     //path to  local browser
 
-    //let path = Path::new("/opt/homebrew/bin/chromium");
+    let path = Path::new("/opt/homebrew/bin/chromium");
 
     let mut user = User::new(browserinfo.user_agent, browserinfo.session_cookie, browserinfo.user_id);
 
@@ -28,7 +28,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
 
     let playwright = Playwright::initialize().await?;
 
-    playwright.prepare(); // Install browsers uncomment on production
+    //playwright.prepare(); // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
@@ -36,7 +36,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         .launcher()
         .proxy(proxy)
         .headless(false)
-        //.executable(path)
+        .executable(path)
         .launch()
         .await?;
 
