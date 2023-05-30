@@ -40,7 +40,7 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::NotObject.into());
+            return Err(CustomError::ButtonNotFound("Messaging button not found".to_string()));
         }
     }
 
@@ -71,7 +71,7 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
         None => {
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::ObjectNotFound.into());
+            return Err(CustomError::ButtonNotFound("Conversation list not found".to_string()));
         }
     };
 

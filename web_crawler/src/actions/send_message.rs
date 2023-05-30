@@ -49,7 +49,7 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
-            return Err(playwright::Error::ReceiverClosed.into());
+            return Err(CustomError::ButtonNotFound("Search input not found".to_string()));
         } // if search input is not found, means page was not loaded and session cookie is not valid
     };
 
@@ -63,7 +63,8 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
 
     browser
         .page
-        .wait_for_selector_builder("div.pv-top-card-v2-ctas"); // wait until the block with buttons is loaded
+        .wait_for_selector_builder("div.pv-top-card-v2-ctas")
+        ; // wait until the block with buttons is loaded
 
     let message_button = browser
         .page
@@ -76,7 +77,7 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::InitializationError.into());
+            return Err(CustomError::ButtonNotFound("Entity urn not found".to_string()));
         }
     };
     
@@ -87,14 +88,14 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
                 wait(1, 5); // random delay
                 browser.page.close(Some(false)).await?;
                 browser.browser.close().await?;
-                return Err(playwright::Error::ObjectNotFound.into());
+                return Err(CustomError::ButtonNotFound("Message button not found".to_string()));
             } // means there is no message button
         },
         Err(_) => {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::ObjectNotFound.into());
+            return Err(CustomError::ButtonNotFound("Message button(err) not found".to_string()));
         }
     };
 
@@ -112,7 +113,7 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             println!("You have to be premium to send messages to this profile");
-            return Err(playwright::Error::ObjectNotFound.into());
+            return Err(CustomError::ButtonNotFound("Inmail needed".to_string()));
     } // Inmail needed to send message to this profile
     // Get the HTML content of the messaging container
     let pick = browser.page.query_selector("aside.msg-overlay-container").await?.unwrap();
@@ -130,7 +131,7 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
     wait(1, 5); // random delay
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
-    return Err(playwright::Error::NotObject.into());
+    return Err(CustomError::ButtonNotFound("Conversation not found".to_string()));
     }
 }; // select the conversation that matches the entity_urn
 
@@ -152,7 +153,7 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::InvalidParams.into());
+            return Err(CustomError::ButtonNotFound("Input not found".to_string()));
         } // means you can't send message to this profile
     }
     
@@ -171,7 +172,7 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::ObjectNotFound.into());
+            return Err(CustomError::ButtonNotFound("Send button not found".to_string()));
         } // means you can't send message to this profile
     }
 

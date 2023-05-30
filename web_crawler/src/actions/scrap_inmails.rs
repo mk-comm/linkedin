@@ -41,10 +41,10 @@ browser
 scrap_stage(&browser, &api_key).await?;
 
 if recruiter == false {
-    println!("No stage interested found");
+    println!("Inmails is false");
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
-    return Err(playwright::Error::NotObject.into());
+    return Ok(());
 }
 
 let conversation_list = match browser.page.query_selector("div.thread-list.visible").await? {
@@ -55,7 +55,7 @@ let conversation_list = match browser.page.query_selector("div.thread-list.visib
          wait(1, 5); // random delay
          browser.page.close(Some(false)).await?;
          browser.browser.close().await?; // close browser
-         return Err(playwright::Error::ReceiverClosed.into());
+         return Err(CustomError::ButtonNotFound("Conversation list inmails not found".to_string()));
       } // if search input is not found, means page was not loaded and sessuion cookie is not valid
    };
 
@@ -135,7 +135,7 @@ let document = Html::parse_document(conversation_list.inner_html().await?.as_str
             conversation.click_builder().click().await?;
             conversation
         }
-        None => return Err(playwright::Error::NotObject.into()),
+        None => return Err(CustomError::ButtonNotFound("Conversation not found".to_string())),
     }; // select the conversation
 
         let messages_container = match browser.page.query_selector("div._messages-container_1j60am._divider_lvf5de").await? {
@@ -144,7 +144,7 @@ let document = Html::parse_document(conversation_list.inner_html().await?.as_str
                wait(1, 5); // random delay
                browser.page.close(Some(false)).await?;
                browser.browser.close().await?; // close browser
-               return Err(playwright::Error::ReceiverClosed.into());
+               return Err(CustomError::ButtonNotFound("Messaging container inmails not found".to_string()));
             } // if search input is not found, means page was not loaded and sessuion cookie is not valid
          };
          let html = messages_container.inner_html().await?;
@@ -170,7 +170,7 @@ browser.browser.close().await?;
 Ok(())
 }
 
-fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String, playwright::Error> {
+fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String, CustomError> {
     
     
 

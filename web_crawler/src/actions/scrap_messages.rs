@@ -8,13 +8,14 @@ use playwright::api::Page;
 use scraper::{Html, Selector};
 use serde_json::json;
 use std::collections::HashMap;
+use crate::structs::error::CustomError;
 
 pub async fn scrap_message(
     conversation: &Conversation,
     page: &Page,
     focused_inbox: bool,
     browser: &BrowserConfig,
-) -> Result<(), playwright::Error> {
+) -> Result<(), CustomError> {
         
     let conversation_select = match page
         .query_selector(format!("li[id='{}']", conversation.id).as_str())
@@ -26,7 +27,7 @@ pub async fn scrap_message(
             conversation.click_builder().click().await?;
             conversation
         }
-        None => return Err(playwright::Error::ObjectNotFound),
+        None => return Err(CustomError::ButtonNotFound("Conversation select not found".to_string())),
     }; // select the conversation
 
     
@@ -82,18 +83,13 @@ pub async fn scrap_message(
     let url_send_from_selector =Selector::parse(".msg-s-event-listitem__link[tabindex=\"0\"]").unwrap();
     let url_send_to_selector = Selector::parse(".msg-s-message-group__meta a").unwrap();
 //
-let conversation_select = match page
-.query_selector(format!("li[id='{}']", conversation.id).as_str())
-.await?
-{
-Some(conversation) => {
-    conversation.hover_builder();
-    wait(1, 3);
-    conversation.click_builder().click().await?;
-    conversation
-}
-None => return Err(playwright::Error::ObjectNotFound),
-}; // select the conversation
+
+conversation_select.hover_builder();
+wait(1, 3);
+conversation_select.click_builder().click().await?;
+
+
+ // select the conversation
 // Iterate over the message container and create a message 
     for ((((sender, timestamp), content), url_send_from), url_send_to) in document
         .select(&sender_selector)
@@ -228,7 +224,7 @@ async fn check_message(
     new_message
 }
 
-async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) -> Result<(), playwright::Error> {
+async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) -> Result<(), CustomError> {
     let dropdown = conversation_element
         .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
         .await?; // find 3 dots button
@@ -273,12 +269,12 @@ async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) 
         }
         None => {
             println!("Unread button not found");
-            Err(playwright::Error::ObjectNotFound)
+            Err(CustomError::ButtonNotFound("Unread button in dropdown not found".to_string()))
         }
     }
 }
 
-async fn _move_other(conversation_element: &ElementHandle) -> Result<(), playwright::Error> {
+async fn _move_other(conversation_element: &ElementHandle) -> Result<(), CustomError> {
     let dropdown = conversation_element
         .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
         .await?; // find 3 dots button
@@ -317,13 +313,13 @@ async fn _move_other(conversation_element: &ElementHandle) -> Result<(), playwri
         }
         None => {
             println!("Move to other button not found");
-            Err(playwright::Error::ObjectNotFound)
+            Err(CustomError::ButtonNotFound("Move to other in dropdown not found".to_string()))
         }
     }
 }
 
 
-async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str) -> Result<bool, playwright::Error> {
+async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str) -> Result<bool, CustomError> {
 
     let page = browser.context.new_page().await?;
 
@@ -335,7 +331,7 @@ async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str)
         Ok(_) => println!("Page loaded"),
         Err(_) => {
             page.close(Some(false)).await?;
-            return Err(playwright::Error::ObjectNotFound)
+            return Err(CustomError::ButtonNotFound("Entity page is not loaded".to_string()))
         },
     };
 

@@ -1,7 +1,7 @@
 use playwright::Playwright;
 use std::path::Path;
 
-use playwright::api::{Cookie, ProxySettings, Viewport};
+use playwright::api::{Cookie, ProxySettings, Viewport, Response};
 use std::collections::HashMap;
 use crate::structs::error::CustomError;
 use crate::structs::browser::{BrowserConfig, BrowserInit};
@@ -36,6 +36,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         .launcher()
         .proxy(proxy)
         .headless(false)
+        
         .executable(path)
         .launch()
         .await?;
@@ -44,6 +45,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         width: 1920,
         height: 1080,
     };
+    
 
     let context = browser
         .context_builder()
@@ -110,17 +112,40 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     let page = context.new_page().await?;
 
     page_proxy.close(Some(false)).await?; // close proxy page˚
-
+    
     let build = page.goto_builder("https://www.linkedin.com/feed/");
-
-    let go_to = build.goto().await?;
+    let go_to = build.goto().await;
+    let mut x = 0;
+    if go_to.is_err() {
+        
+        while x <= 3 {
+            wait(1, 3);
+            let build = page.goto_builder("https://www.linkedin.com/feed/")
+            .goto().await;
+            if build.is_ok() {
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(1, 3);
+                page.close(Some(false)).await?;
+                browser.close().await?;
+                return Err(CustomError::ButtonNotFound("Feed is not loading".to_string())); // if error means page is not loading
+            }
+            x += 1;
+            println!("retrying to load page")
+        }
+        wait(1, 3);
+    }
 
     page.evaluate(r#"window.stop()"#, ()).await?;
 
-    let search_input = page
-        .query_selector("input[class=search-global-typeahead__input]")
+
+    wait(3, 7);
+
+    let profile = page
+        .query_selector("div.feed-identity-module__actor-meta.break-words")
         .await?;
-    match &search_input {
+    
+    match &profile {
         Some(_) => (),
         None => {
             wait(1, 3);
@@ -139,7 +164,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         browser,
         context,
         page,
-        build: go_to.unwrap(),
+        build: go_to.unwrap().unwrap(),
     };
 
     return Ok(browser_config);
