@@ -322,18 +322,26 @@ async fn _move_other(conversation_element: &ElementHandle) -> Result<(), CustomE
 async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str) -> Result<bool, CustomError> {
 
     let page = browser.context.new_page().await?;
-
-    match page
+    let mut x = 0;
+    if page
     .goto_builder(&entity_urn)
     .goto()
-    .await
+    .await.is_err()
     {
-        Ok(_) => println!("Page loaded"),
-        Err(_) => {
-            page.close(Some(false)).await?;
-            return Err(CustomError::ButtonNotFound("Entity page is not loaded".to_string()))
-        },
-    };
+        while x <= 3 {
+            wait(3, 6);
+            let build = page.goto_builder(&entity_urn)
+            .goto().await;
+            if build.is_ok() {
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(1, 3);
+                page.close(Some(false)).await?;
+                return Err(CustomError::ButtonNotFound("Scrap page is not loaded".to_string())) // if error means page is not loading
+            }
+            x += 1;
+    }
+    }
 
     wait(5, 7);
 

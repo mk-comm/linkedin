@@ -119,7 +119,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     if go_to.is_err() {
         
         while x <= 3 {
-            wait(1, 3);
+            wait(3, 6);
             let build = page.goto_builder("https://www.linkedin.com/feed/")
             .goto().await;
             if build.is_ok() {

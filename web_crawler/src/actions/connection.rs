@@ -57,11 +57,36 @@ pub async fn connection(entry: Entry) -> Result<(), CustomError> {
     };
 
     // go to candidate page
-    browser
+    let go_to = browser
         .page
         .goto_builder(candidate.linkedin.as_str())
         .goto()
-        .await?;
+        .await;
+    let mut x = 0;
+        if go_to.is_err() {
+        
+            while x <= 3 {
+                wait(3, 6);
+                let build = browser
+                .page
+                .goto_builder(candidate.linkedin.as_str())
+                .goto()
+                .await;
+                if build.is_ok() {
+                    break;
+                } else if build.is_err() && x == 3 {
+                    wait(3, 6);
+                    browser.page.close(Some(false)).await?;
+                    browser.browser.close().await?; // close browser
+                    return Err(CustomError::ButtonNotFound("Candidate page is not loading/Connection".to_string())); // if error means page is not loading
+                }
+                x += 1;
+                println!("retrying to load page")
+            }
+            wait(1, 3);
+        }
+
+
     wait(3, 15); // random delay
                  //check if connect button is present
 
