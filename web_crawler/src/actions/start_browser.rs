@@ -76,7 +76,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         None => {
             Cookie::with_url(
                 "li_a",
-                "not present",
+                "1",
                 "https://www.linkedin.com",
             )
         }
@@ -110,10 +110,11 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     } // if error when proxy is not working
 
     let page = context.new_page().await?;
-
+    wait(1, 3);
     page_proxy.close(Some(false)).await?; // close proxy page˚
-    
+    wait(1, 3);
     let build = page.goto_builder("https://www.linkedin.com/feed/");
+    wait(1, 3);
     let go_to = build.goto().await;
     let mut x = 0;
     if go_to.is_err() {
@@ -136,7 +137,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         wait(1, 3);
     }
 
-    page.evaluate(r#"window.stop()"#, ()).await?;
+    //page.evaluate(r#"window.stop()"#, ()).await?;
 
 
     wait(3, 7);

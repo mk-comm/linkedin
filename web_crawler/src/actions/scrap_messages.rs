@@ -136,11 +136,11 @@ conversation_select.click_builder().click().await?;
 } // scrap message container end
 println!();
 println!("candidate_name: {}", conversation.candidate_name);
-println!("candidate of sequence: {}", candidate_of_sequence);
+//println!("candidate of sequence: {}", candidate_of_sequence);
 println!("new_message: {}", new_message);
 println!("conversation.enable_ai: {}", conversation.enable_ai);
 println!();
-    if new_message == true && candidate_of_sequence == true && conversation.enable_ai == true{
+    if new_message == true && candidate_of_sequence == Some(true) && conversation.enable_ai == true{
         let category = evaluate(full_text.as_str()).await;
         println!("category: {:?}", category);
         match category {
@@ -319,7 +319,7 @@ async fn _move_other(conversation_element: &ElementHandle) -> Result<(), CustomE
 }
 
 
-async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str) -> Result<bool, CustomError> {
+async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str) -> Result<Option<bool>, CustomError> {
 
     let page = browser.context.new_page().await?;
     let mut x = 0;
@@ -337,7 +337,7 @@ async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str)
             } else if build.is_err() && x == 3 {
                 wait(1, 3);
                 page.close(Some(false)).await?;
-                return Err(CustomError::ButtonNotFound("Scrap page is not loaded".to_string())) // if error means page is not loading
+                return Ok(None) // if error means page is not loading
             }
             x += 1;
     }
@@ -376,7 +376,7 @@ async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str)
     let candidate_part_of_sequence = json_response["response"]["part_of_sequence"].as_bool().unwrap();
 
     page.close(Some(false)).await?;
-Ok(candidate_part_of_sequence)
+Ok(Some(candidate_part_of_sequence))
 }
 
 
