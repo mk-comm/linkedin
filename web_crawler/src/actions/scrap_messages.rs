@@ -136,7 +136,7 @@ conversation_select.click_builder().click().await?;
 } // scrap message container end
 println!();
 println!("candidate_name: {}", conversation.candidate_name);
-//println!("candidate of sequence: {}", candidate_of_sequence);
+println!("candidate of sequence: {:?}", candidate_of_sequence);
 println!("new_message: {}", new_message);
 println!("conversation.enable_ai: {}", conversation.enable_ai);
 println!();
@@ -145,7 +145,11 @@ println!();
         println!("category: {:?}", category);
         match category {
             MessageCategory::Interested => {
+                mark_star(&conversation_select, focused_inbox).await?;
                 if conversation.unread == true {
+                    conversation_select.hover_builder();
+                    wait(1, 3);
+                    conversation_select.click_builder().click().await?;
                     wait(3, 5);
                     mark_unread(&conversation_select, focused_inbox).await?;
                     println!("Marked as unread/Interested");
@@ -163,6 +167,15 @@ println!();
     if conversation.enable_ai == false && conversation.unread == true {
         mark_unread(&conversation_select, focused_inbox).await?;
     }
+
+    if conversation.enable_ai == true && conversation.unread == true && new_message == false {
+        conversation_select.hover_builder();
+        wait(1, 3);
+        conversation_select.click_builder().click().await?;
+        mark_unread(&conversation_select, focused_inbox).await?;
+    }
+
+    
 
     println!("Messages: {:#?}", messages.len());
 
@@ -262,6 +275,56 @@ async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) 
 
     //click mark unread button
     match mark_unread_button {
+        Some(button) => {
+            wait(1, 3);
+            button.click_builder().click().await?;
+            Ok(())
+        }
+        None => {
+            println!("Unread button not found");
+            Err(CustomError::ButtonNotFound("Unread button in dropdown not found".to_string()))
+        }
+    }
+}
+
+async fn mark_star(conversation_element: &ElementHandle, focused_inbox: bool) -> Result<(), CustomError> {
+    let dropdown = conversation_element
+        .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
+        .await?; // find 3 dots button
+
+    // click the dropdown
+    match dropdown {
+        Some(dropdown) => {
+            dropdown.hover_builder();
+            wait(1, 3);
+            match dropdown.click_builder().click().await {
+                Ok(_) => println!("dropdown clicked"),
+                Err(_) => return Ok(()),
+            };
+            wait(1, 3)
+        }
+        None => println!("Dropdown variable is not found: "),
+    }
+
+    //find container for the buttons inside dropdown
+    let inner_container = conversation_element
+        .query_selector("div[class=artdeco-dropdown__content-inner]")
+        .await?;
+    let inner_container = match inner_container{
+        Some(inner_container) => inner_container,
+        None => return Ok(()),
+    };
+
+    //find mark unread button;
+
+    let mark_star_button = if focused_inbox == true {
+        inner_container.query_selector("div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(2)").await?
+    } else {
+        inner_container.query_selector("div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(1)").await?
+    };
+
+    //click mark unread button
+    match mark_star_button {
         Some(button) => {
             wait(1, 3);
             button.click_builder().click().await?;

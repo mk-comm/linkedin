@@ -26,7 +26,7 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
     let browser = start_browser(browser_info).await?;
 
     wait(3, 7);
-
+    /*
     let messaging_button = browser
         .page
         .query_selector("a.global-nav__primary-link:has-text('Messaging')")
@@ -43,9 +43,35 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
             return Err(CustomError::ButtonNotFound("Messaging button not found".to_string()));
         }
     }
+    */
+    
+    
+    wait(1, 3);
 
-    wait(5, 10);
-
+    let build = browser.page.goto_builder("https://www.linkedin.com/messaging/thread/2-NjhlODRmMzUtZTZkYi00MDNjLThmNzMtMDJlNm44RmMjU1NDY2XzAxMw==/");
+    wait(1, 3);
+    let go_to = build.goto().await;
+    let mut x = 0;
+    if go_to.is_err() {
+        
+        while x <= 3 {
+            wait(3, 6);
+            let build = browser.page.goto_builder("https://www.linkedin.com/messaging/thread/2-NjhlODRmMzUNm44RmMjU1NDY2XzAxMw==/")
+            .goto().await;
+            if build.is_ok() {
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(1, 3);
+                browser.page.close(Some(false)).await?;
+                browser.browser.close().await?;
+                return Err(CustomError::ButtonNotFound("Conversation page is not loading".to_string())); // if error means page is not loading
+            }
+            x += 1;
+            println!("retrying to load page")
+        }
+        wait(6, 9);
+    }
+    wait(6, 9);
     let focused = browser
         .page
         .query_selector("div.artdeco-tabs.artdeco-tabs--size-t-40.artdeco-tabs--centered.ember-view.msg-focused-inbox-tabs")

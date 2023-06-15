@@ -31,21 +31,22 @@ let browser = start_browser(browser_info).await?;
     // go to candidate page
 browser
         .page   
-        .goto_builder("https://www.linkedin.com/talent/inbox/0/main/")
+        .goto_builder("https://www.linkedin.com/talent/inbox/0/main/id/2-MTBiZjJhZTMtNTNlNi00NDRjLddWJmZGQtYTg5MTk4ZjA5MWExXzAxMg==")
         .goto()
         .await?;
         
-    wait(7, 12); // random delay
+    wait(7, 10); // random delay
                  //check if connect button is present
 
 scrap_stage(&browser, &api_key).await?;
-
+/*
 if recruiter == false {
-    println!("Inmails is false");
+    println!("Inmails is disabled for this user");
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
     return Ok(());
 }
+*/
 
 let conversation_list = match browser.page.query_selector("div.thread-list.visible").await? {
       Some(conversation_list) => {
@@ -60,7 +61,7 @@ let conversation_list = match browser.page.query_selector("div.thread-list.visib
    };
 
 
-//wait(300, 500);
+wait(3, 5);
 
 let mut conversations: HashMap<String, InmailConversation> = HashMap::new(); // hashmap to store conversations
 
@@ -75,16 +76,11 @@ let document = Html::parse_document(conversation_list.inner_html().await?.as_str
    
     for conversation in document.select(&conversation_selector) {
 
-        
-
-
-
         let id = conversation
             .select(&url_selector)
             .next()
             .map(|element| element.value().attr("id"))
             .unwrap_or(Some("Not found"));
-        println!("id: {:?}", id.unwrap());
         
        
         let name = conversation
@@ -121,6 +117,27 @@ let document = Html::parse_document(conversation_list.inner_html().await?.as_str
          
          
     }
+    //println!("conversations: {:?}", conversations);
+
+    if let Some(conversation) = conversations.iter().find_map(|(_, conv)| if !conv.unread { Some(conv) } else { None }) {
+        println!("Conversations: {:?}", conversation);
+        
+        if let Ok(Some(conv_element)) = conversation_list.query_selector(&format!("a[id='{}']", conversation.id)).await {
+            conv_element.hover_builder();
+            wait(1, 3);
+            conv_element.click_builder().click().await?;
+            wait(5, 9);
+            scrap_stage(&browser, &api_key).await?;
+        }
+    };
+
+    if recruiter == false {
+        println!("Inmails is disabled for this user");
+        browser.page.close(Some(false)).await?;
+        browser.browser.close().await?;
+        return Ok(());
+    }
+
 
     for conversation in conversations.values() {
         wait(3, 7);
@@ -191,7 +208,7 @@ fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String,
        }
    
        if let Some(timestamp_element) = message_element.select(&timestamp_selector).next() {
-           let timestamp = timestamp_element.inner_html();
+           let _timestamp = timestamp_element.inner_html();
            //println!("Timestamp: {}", timestamp);
        }
        let mut message_text = String::new();

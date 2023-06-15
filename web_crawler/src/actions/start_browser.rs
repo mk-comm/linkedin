@@ -1,7 +1,7 @@
 use playwright::Playwright;
 use std::path::Path;
 
-use playwright::api::{Cookie, ProxySettings, Viewport, Response};
+use playwright::api::{Cookie, ProxySettings, Viewport};
 use std::collections::HashMap;
 use crate::structs::error::CustomError;
 use crate::structs::browser::{BrowserConfig, BrowserInit};

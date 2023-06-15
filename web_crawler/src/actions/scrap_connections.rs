@@ -1,6 +1,6 @@
 use crate::actions::start_browser::start_browser;
 use crate::actions::wait::wait;
-use crate::structs::entry::{Entry, EntryRegular};
+use crate::structs::entry::{Entry};
 use crate::structs::error::CustomError;
 use crate::structs::browser::BrowserInit;
 
