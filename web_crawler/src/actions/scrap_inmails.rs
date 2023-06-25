@@ -27,7 +27,7 @@ let browser_info = BrowserInit {
     };
 
 let browser = start_browser(browser_info).await?;
-
+wait(7, 10); // random delay
     // go to candidate page
 browser
         .page   
@@ -35,7 +35,7 @@ browser
         .goto()
         .await?;
         
-    wait(7, 10); // random delay
+wait(7, 10); // random delay
                  //check if connect button is present
 
 scrap_stage(&browser, &api_key).await?;

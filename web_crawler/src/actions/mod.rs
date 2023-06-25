@@ -8,3 +8,4 @@ pub mod wait;
 pub mod withdraw_connection;
 pub mod scrap_inmails;
 pub mod scrap_profile;
+pub mod send_inmails;

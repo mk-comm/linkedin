@@ -6,6 +6,7 @@ use crate::structs::entry::EntryRegular;
 mod actions;
 mod structs;
 use crate::actions::connection::connection;
+use crate::actions::send_inmails::send_inmails;
 use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
 use crate::actions::send_message::send_message;
@@ -13,6 +14,7 @@ use crate::actions::withdraw_connection::withdraw;
 use crate::actions::scrap_inmails::scrap_inmails;
 use crate::actions::scrap_profile::scrap_profile;
 use structs::entry::Entry;
+use structs::entry::EntrySendInmail;
 use tokio::task;
 #[get("/")]
 async fn index() -> String {
@@ -228,6 +230,40 @@ async fn connect(json: web::Json<Entry>) -> HttpResponse {
     HttpResponse::Ok().body("Sending connection started!")
 }
 
+#[post("/send_inmail")]
+async fn send_inmail(json: web::Json<EntrySendInmail>) -> HttpResponse {
+    let message_id = json.message_id.clone();
+    let webhook = json.webhook.clone();
+    let user_id = json.user_id.clone();
+    tokio::spawn(async move {
+        let api = send_inmails(json.into_inner());
+        match api.await {
+            Ok(_) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "message": message_id,
+                    "result": "Inmail was sent",
+                    "user_id": user_id,
+                    "error": "no",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+            Err(error) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "message": message_id,
+                    "result": error.to_string(),
+                    "user_id": user_id,
+                    "error": "yes",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+        }
+    });
+
+    HttpResponse::Ok().body("Sending Inmail started!")
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let port = match std::env::var("PORT") {
@@ -245,6 +281,7 @@ async fn main() -> std::io::Result<()> {
             .service(scrap_connection)
             .service(scrap_inmails_conversations)
             .service(scrap_profiles)
+            .service(send_inmail)
     })
     .bind(address)?
     .run()

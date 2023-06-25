@@ -24,7 +24,6 @@ pub async fn connection(entry: Entry) -> Result<(), CustomError> {
         recruiter_session_cookie: Some(entry.recruiter_session_cookie),
         };
 
-   // return Err(CustomError::ButtonNotFound("Connect button not found".to_string()));
 
     let browser = start_browser(browser_info).await?;
 

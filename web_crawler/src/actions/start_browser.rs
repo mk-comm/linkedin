@@ -10,7 +10,8 @@ use crate::structs::user::User;
 use super::wait::wait;
 pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
     //path to  local browser
-
+    println!("{}", browserinfo.user_agent);
+    
     let path = Path::new("/opt/homebrew/bin/chromium");
 
     let mut user = User::new(browserinfo.user_agent, browserinfo.session_cookie, browserinfo.user_id);

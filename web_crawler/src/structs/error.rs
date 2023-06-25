@@ -6,9 +6,11 @@ pub enum CustomError {
    PlaywrightError(Arc<playwright::Error>),
    ButtonNotFound(String),
    SessionCookieExpired,
+   RecruiterSessionCookieExpired,
    ProxyNotWorking,
    EmailNeeded,
    ConnectionLimit,
+   ProfileNotFound,
 }
 
 impl fmt::Display for CustomError {
@@ -17,6 +19,8 @@ impl fmt::Display for CustomError {
          CustomError::PlaywrightError(e) => write!(f, "{}", e),
          CustomError::ButtonNotFound(e) => write!(f, "{}", e),
          CustomError::SessionCookieExpired => write!(f, "Session cookie expired"),
+         CustomError::RecruiterSessionCookieExpired => write!(f, "Recruiter Session cookie expired"),
+         CustomError::ProfileNotFound => write!(f, "Profile not found"),
          CustomError::EmailNeeded => write!(f, "Email needed"),
          CustomError::ConnectionLimit => write!(f, "Connection limit"),
          CustomError::ProxyNotWorking => write!(f, "Proxy not working"),
