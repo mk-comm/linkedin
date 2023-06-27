@@ -1,6 +1,7 @@
 use crate::structs::browser::{BrowserConfig, BrowserInit};
 use crate::structs::entry::EntryRecruiter;
 use crate::actions::start_browser::start_browser;
+use crate::structs::fullname::FullName;
 use serde_json::json;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
@@ -35,10 +36,27 @@ browser
         .goto()
         .await?;
         
-wait(7, 10); // random delay
+wait(4, 10); 
+
+let nav_bar = browser
+.page
+.query_selector("div[class='global-nav__right']")
+.await?;
+
+match &nav_bar {
+   Some(_) => println!("nav bar is present"),
+   None => {
+       wait(1, 3);
+       browser.page.close(Some(false)).await?;
+       browser.browser.close().await?;
+       return Err(CustomError::RecruiterSessionCookieExpired); // if error when session cookie expired
+   }
+}
+
+// random delay
                  //check if connect button is present
 
-scrap_stage(&browser, &api_key).await?;
+//scrap_stage(&browser, &api_key).await?;
 /*
 if recruiter == false {
     println!("Inmails is disabled for this user");
@@ -90,11 +108,13 @@ let document = Html::parse_document(conversation_list.inner_html().await?.as_str
             .unwrap_or("Not found".to_string())
             .trim()
             .to_string();
+
         let url = conversation
             .select(&url_selector)
             .next()
             .map(|element| element.value().attr("href"))
             .unwrap_or(Some("Not found"));
+
          let unread = match conversation.select(&unread_selector).next() {
             Some(_) => true,
             None => false,
@@ -166,7 +186,8 @@ let document = Html::parse_document(conversation_list.inner_html().await?.as_str
          };
          let html = messages_container.inner_html().await?;
          let text = scrap_message(conversation.clone(), html.as_str()).unwrap();
-         let result = check_message(text.as_str()).await;
+         let full_name = FullName::split_name(conversation.candidate_name.as_str());
+         let result = check_message(text.as_str(), &api_key, full_name ).await;
          println!("{:?}", result);
          match result {
             MessageCategory::Interested => {
@@ -201,7 +222,7 @@ fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String,
 
    for message_element in document.select(&message_id_selector) {
     
-    let mut sender_full_name = String::new();
+        let mut sender_full_name = String::new();
        if let Some(sender_element) = message_element.select(&sender_name_selector).next() {
            sender_full_name = sender_element.inner_html();
            //println!("Sender Full Name: {}", sender_full_name);
@@ -229,11 +250,14 @@ fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String,
     Ok(full_text)
 }
 
-async fn check_message(text: &str) -> MessageCategory {
+async fn check_message(text: &str, api: &str, name: FullName) -> MessageCategory {
     //println!("{}", text);
     let client = reqwest::Client::new();
     let payload = json!({
             "message_text": text,
+            "first": name.first_name,
+            "last": name.last_name,
+            "api_key": api
 
     });
     let res = client
