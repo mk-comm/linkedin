@@ -12,6 +12,7 @@ pub struct BrowserConfig {
     pub build: Response,
 }
 
+#[derive(Debug)]
 pub struct BrowserInit {
     pub ip: String,
     pub username: String,

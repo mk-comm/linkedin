@@ -32,15 +32,18 @@ pub async fn scrap_message(
 
     
     
-    wait(3, 7);
+    wait(7, 10);
 
     
 
-    let message_container = page
-        .query_selector("ul[class='msg-s-message-list-content list-style-none full-width mbA']")
-        .await
-        .unwrap()
-        .unwrap(); // select the message container
+    let message_container = if let Some(container) = page
+    .query_selector("ul[class='msg-s-message-list-content list-style-none full-width mbA']")
+    .await? {
+        container
+    } else {
+        return Ok(()); // if there is no message container return
+    };
+         // select the message container
 
     let owner_container = page
         .clone()
@@ -71,7 +74,6 @@ pub async fn scrap_message(
     let mut full_text = String::new(); // Conversation text to push to AI
     let mut new_message = false; // if true and candidate_of_sequence is true evaluate conversation
     let candidate_of_sequence = scrap_profile(browser, conversation_owner_link.as_str(), &conversation.api_key).await?; // check if candidate is in sequence
-    println!("conversation_owner_link: {}", &conversation_owner_link);
 
 
 // Selectors for the message container
@@ -134,15 +136,11 @@ conversation_select.click_builder().click().await?;
         messages.insert(format!("message_{}", messages.len() + 1), message);
     
 } // scrap message container end
-println!();
-println!("candidate_name: {}", conversation.candidate_name);
-println!("candidate of sequence: {:?}", candidate_of_sequence);
-println!("new_message: {}", new_message);
-println!("conversation.enable_ai: {}", conversation.enable_ai);
-println!();
+let full_name = FullName::split_name(conversation.candidate_name.as_str());
+
+
     if new_message == true && candidate_of_sequence == Some(true) && conversation.enable_ai == true{
-        let category = evaluate(full_text.as_str()).await;
-        println!("category: {:?}", category);
+        let category = evaluate(full_text.as_str(), &conversation.api_key, full_name).await;
         match category {
             MessageCategory::Interested => {
                 mark_star(&conversation_select, focused_inbox).await?;
@@ -176,11 +174,6 @@ println!();
     }
 
     
-
-    println!("Messages: {:#?}", messages.len());
-
-
-    println!("Scraping message done succesfuly");
     Ok(())
 }
 
@@ -248,12 +241,12 @@ async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) 
             dropdown.hover_builder();
             wait(1, 3);
             match dropdown.click_builder().click().await {
-                Ok(_) => println!("dropdown clicked"),
+                Ok(_) => (),
                 Err(_) => return Ok(()),
             };
             wait(1, 3)
         }
-        None => println!("Dropdown variable is not found: "),
+        None => (),
     }
 
     //find container for the buttons inside dropdown
@@ -281,7 +274,6 @@ async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) 
             Ok(())
         }
         None => {
-            println!("Unread button not found");
             Err(CustomError::ButtonNotFound("Unread button in dropdown not found".to_string()))
         }
     }
@@ -298,12 +290,12 @@ async fn mark_star(conversation_element: &ElementHandle, focused_inbox: bool) ->
             dropdown.hover_builder();
             wait(1, 3);
             match dropdown.click_builder().click().await {
-                Ok(_) => println!("dropdown clicked"),
+                Ok(_) => (),
                 Err(_) => return Ok(()),
             };
             wait(1, 3)
         }
-        None => println!("Dropdown variable is not found: "),
+        None => (),
     }
 
     //find container for the buttons inside dropdown
@@ -331,7 +323,6 @@ async fn mark_star(conversation_element: &ElementHandle, focused_inbox: bool) ->
             Ok(())
         }
         None => {
-            println!("Unread button not found");
             Err(CustomError::ButtonNotFound("Unread button in dropdown not found".to_string()))
         }
     }
@@ -348,12 +339,12 @@ async fn _move_other(conversation_element: &ElementHandle) -> Result<(), CustomE
             dropdown.hover_builder();
             wait(1, 3);
             match dropdown.click_builder().click().await {
-                Ok(_) => println!("dropdown clicked"),
+                Ok(_) => (),
                 Err(_) => return Ok(()),
             };
             wait(1, 3)
         }
-        None => println!("Dropdown variable is not found: "),
+        None => (),
     }
 
     //find container for the buttons inside dropdown
@@ -375,7 +366,6 @@ async fn _move_other(conversation_element: &ElementHandle) -> Result<(), CustomE
             Ok(())
         }
         None => {
-            println!("Move to other button not found");
             Err(CustomError::ButtonNotFound("Move to other in dropdown not found".to_string()))
         }
     }
@@ -451,11 +441,13 @@ enum MessageCategory {
     NotFound,
 }
 
-async fn evaluate(full_text: &str) -> MessageCategory {
-    println!("eval started");
+async fn evaluate(full_text: &str, api: &str, name: FullName) -> MessageCategory {
     let client = reqwest::Client::new();
     let payload = json!({
             "message_text": full_text,
+            "first": name.first_name,
+            "last": name.last_name,
+            "api_key": api
     });
     let res = client
         .post("https://overview.tribe.xyz/api/1.1/wf/check_inmail")
@@ -464,7 +456,6 @@ async fn evaluate(full_text: &str) -> MessageCategory {
         .await
         .unwrap();
     let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
-    println!("eval finished {}", json_response);
     let category = json_response["response"]["category"].as_str();
     match category {
         Some("Interested") => MessageCategory::Interested,

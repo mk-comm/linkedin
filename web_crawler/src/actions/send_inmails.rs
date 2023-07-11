@@ -158,7 +158,7 @@ let nav_bar = browser
 .await?;
 
 match &nav_bar {
-   Some(_) => println!("nav bar is present"),
+   Some(_) => (),
    None => {
        wait(1, 3);
        browser.page.close(Some(false)).await?;
@@ -173,7 +173,7 @@ let profile_block = browser
 .await?;
 
 match &profile_block {
-   Some(_) => println!("profile_block is present"),
+   Some(_) => (),
    None => {
        wait(1, 3);
        browser.page.close(Some(false)).await?;

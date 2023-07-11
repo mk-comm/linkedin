@@ -11,6 +11,8 @@ pub enum CustomError {
    EmailNeeded,
    ConnectionLimit,
    ProfileNotFound,
+   //ActixError(ActixError),
+   //IoError(IoError),
 }
 
 impl fmt::Display for CustomError {
@@ -24,6 +26,8 @@ impl fmt::Display for CustomError {
          CustomError::EmailNeeded => write!(f, "Email needed"),
          CustomError::ConnectionLimit => write!(f, "Connection limit"),
          CustomError::ProxyNotWorking => write!(f, "Proxy not working"),
+         //CustomError::ActixError(e) => write!(f, "{}", e),
+         //CustomError::IoError(e) => write!(f, "{}", e),
       }
    }
    }
@@ -39,3 +43,5 @@ impl fmt::Display for CustomError {
       CustomError::PlaywrightError(err.into())
    }
 }
+
+

@@ -10,6 +10,7 @@ use crate::structs::inmail_conversation::InmailConversation;
 use crate::structs::error::CustomError;
 
 
+#[tracing::instrument]
 pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
 
 let recruiter = entry.recruiter.clone();
@@ -44,7 +45,7 @@ let nav_bar = browser
 .await?;
 
 match &nav_bar {
-   Some(_) => println!("nav bar is present"),
+   Some(_) => {},
    None => {
        wait(1, 3);
        browser.page.close(Some(false)).await?;
@@ -137,10 +138,10 @@ let document = Html::parse_document(conversation_list.inner_html().await?.as_str
          
          
     }
-    //println!("conversations: {:?}", conversations);
+
 
     if let Some(conversation) = conversations.iter().find_map(|(_, conv)| if !conv.unread { Some(conv) } else { None }) {
-        println!("Conversations: {:?}", conversation);
+
         
         if let Ok(Some(conv_element)) = conversation_list.query_selector(&format!("a[id='{}']", conversation.id)).await {
             conv_element.hover_builder();
@@ -188,7 +189,6 @@ let document = Html::parse_document(conversation_list.inner_html().await?.as_str
          let text = scrap_message(conversation.clone(), html.as_str()).unwrap();
          let full_name = FullName::split_name(conversation.candidate_name.as_str());
          let result = check_message(text.as_str(), &api_key, full_name ).await;
-         println!("{:?}", result);
          match result {
             MessageCategory::Interested => {
                change_stage(&stage_interested, &browser).await?;
@@ -225,20 +225,19 @@ fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String,
         let mut sender_full_name = String::new();
        if let Some(sender_element) = message_element.select(&sender_name_selector).next() {
            sender_full_name = sender_element.inner_html();
-           //println!("Sender Full Name: {}", sender_full_name);
+ 
        }
    
        if let Some(timestamp_element) = message_element.select(&timestamp_selector).next() {
            let _timestamp = timestamp_element.inner_html();
-           //println!("Timestamp: {}", timestamp);
+
        }
        let mut message_text = String::new();
        if let Some(message_text_element) = message_element.select(&message_text_selector).next() {
            message_text = message_text_element.inner_html();
-           //println!("Message Text: {}", message_text);
+           
        }
-       //println!("sender: {}", sender_full_name);
-       //println!("candidate: {}", conversation.candidate_name);
+
        if conversation.candidate_name.trim() == sender_full_name.trim() {
             full_text.push_str(format!("Candidate: {} \n", message_text).as_str());
        } else {
@@ -251,7 +250,7 @@ fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String,
 }
 
 async fn check_message(text: &str, api: &str, name: FullName) -> MessageCategory {
-    //println!("{}", text);
+
     let client = reqwest::Client::new();
     let payload = json!({
             "message_text": text,
@@ -269,7 +268,7 @@ async fn check_message(text: &str, api: &str, name: FullName) -> MessageCategory
     let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
 
     let category = json_response["response"]["category"].as_str();
-    println!("{:?}", category);
+
     match category {
         Some("Interested") => MessageCategory::Interested,
         Some("Not interested") => MessageCategory::NotInterested,
@@ -295,21 +294,17 @@ async fn change_stage(stage: &str, browser: &BrowserConfig) ->Result<(), CustomE
                     if text.trim() == stage.trim() {
                         item.click_builder().click().await?;
                         break;
-                    } else {
                     }
-                    println!("text: {}", text);
                 },
-                None => println!("No matching span found in this item"),
+                None => (),
             }
         }
     }
-    print!("Stage changed to {}", stage);
 Ok(())
 
 }
 
 async fn scrap_stage(browser: &BrowserConfig, api_key: &str) ->Result<(), CustomError> {
-    println!("Scraping stage started");
     let button_dropdown = browser.page.query_selector("div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-right.ember-view").await?;
     if button_dropdown.is_some() {
         button_dropdown.unwrap().click_builder().click().await?;
@@ -334,11 +329,11 @@ async fn scrap_stage(browser: &BrowserConfig, api_key: &str) ->Result<(), Custom
     .await
     .unwrap();
                 },
-                None => println!("No matching span found in this item"),
+                None => (),
             }
         }
     }
-    println!("Scraping stage ended");
+
 Ok(())
 
 }

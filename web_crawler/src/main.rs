@@ -3,6 +3,8 @@ use serde_json::json;
 use crate::structs::entry::EntryRecruiter;
 use crate::structs::entry::EntryRegular;
 
+use tracing::{info};
+
 mod actions;
 mod structs;
 use crate::actions::connection::connection;
@@ -43,10 +45,10 @@ async fn scrap_conversations(json: web::Json<EntryRegular>) -> HttpResponse {
 
     HttpResponse::Ok().body("Scrapping started!")
 }
-
+#[tracing::instrument]
 #[post("/scrap_inmails")]
 async fn scrap_inmails_conversations(json: web::Json<EntryRecruiter>) -> HttpResponse {
-    
+    info!("This is some additional information");
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
 
@@ -266,6 +268,7 @@ async fn send_inmail(json: web::Json<EntrySendInmail>) -> HttpResponse {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    tracing_subscriber::fmt::init();
     let port = match std::env::var("PORT") {
         Ok(val) => val,
         Err(_e) => "8080".to_string(),

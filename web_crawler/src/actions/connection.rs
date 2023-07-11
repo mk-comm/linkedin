@@ -89,19 +89,38 @@ pub async fn connection(entry: Entry) -> Result<(), CustomError> {
     wait(3, 15); // random delay
                  //check if connect button is present
 
-    let block = browser
+    let block_option = browser
         .page
         .query_selector("div.pvs-profile-actions")
-        .await?
-        .unwrap();
+        .await?;
+    
+    let block = match block_option {
+        Some(block) => block,
+        None => {
+            wait(1, 5);
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Err(CustomError::ButtonNotFound("block button not found".to_string()));
+        }
+    };
+        
+    
 
     let connect_button = block.query_selector("li-icon[type=connect]").await?;
 
-    let more = block
+    let more_option = block
         .query_selector("button[aria-label='More actions']")
-        .await?
-        .unwrap();
+        .await?;
 
+    let more = match more_option {
+        Some(more) => more,
+        None => {
+            wait(1, 5);
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Err(CustomError::ButtonNotFound("More button not found".to_string()));
+        }
+    };
     more.hover_builder();
     wait(1, 4);
     more.click_builder().click().await?;

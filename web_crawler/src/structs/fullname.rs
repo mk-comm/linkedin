@@ -10,7 +10,7 @@ impl FullName {
         let parts: Vec<&str> = full_name.split_whitespace().collect();
         let first_name = parts[0].to_string();
         let last_name = parts[1..].join(" ");
-        let full_name = full_name.to_string();
+        let full_name = full_name.trim().to_string();
         FullName {
             first_name,
             last_name,

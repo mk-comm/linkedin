@@ -6,11 +6,12 @@ use std::collections::HashMap;
 use crate::structs::error::CustomError;
 use crate::structs::browser::{BrowserConfig, BrowserInit};
 use crate::structs::user::User;
-
+use tracing::{info, instrument};
 use super::wait::wait;
+#[instrument]
 pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
+    info!("Starting browser");
     //path to  local browser
-    println!("{}", browserinfo.user_agent);
     
     let path = Path::new("/opt/homebrew/bin/chromium");
 
@@ -116,13 +117,14 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     wait(1, 3);
     let build = page.goto_builder("https://www.linkedin.com/feed/");
     wait(1, 3);
-    let go_to = build.goto().await;
+    
+    let go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> = build.goto().await;
     let mut x = 0;
     if go_to.is_err() {
         
         while x <= 3 {
             wait(3, 6);
-            let build = page.goto_builder("https://www.linkedin.com/feed/")
+            let build: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> = page.goto_builder("https://www.linkedin.com/feed/")
             .goto().await;
             if build.is_ok() {
                 break;
@@ -136,10 +138,12 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
             println!("retrying to load page")
         }
         wait(1, 3);
+    } else {
+        wait(1, 3);
     }
 
     //page.evaluate(r#"window.stop()"#, ()).await?;
-
+  
 
     wait(3, 7);
 
