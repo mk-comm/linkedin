@@ -25,7 +25,7 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
 
     let browser = start_browser(browser_info).await?;
 
-    wait(3, 7);
+    wait(3, 11);
     /*
     let messaging_button = browser
         .page
@@ -46,10 +46,10 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
     */
     
     
-    wait(1, 3);
+    wait(1, 12);
 
     let build = browser.page.goto_builder("https://www.linkedin.com/messaging/thread/2-NjhlODRmMzUtZTZkYi00MDNjLThmNzMtMDJlNm44RmMjU1NDY2XzAxMw==/");
-    wait(1, 3);
+    wait(1, 8);
     let go_to = build.goto().await;
     let mut x = 0;
     if go_to.is_err() {

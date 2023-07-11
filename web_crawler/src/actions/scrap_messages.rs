@@ -23,7 +23,7 @@ pub async fn scrap_message(
     {
         Some(conversation) => {
             conversation.hover_builder();
-            wait(1, 3);
+            wait(1, 7);
             conversation.click_builder().click().await?;
             conversation
         }
@@ -32,7 +32,7 @@ pub async fn scrap_message(
 
     
     
-    wait(7, 10);
+    wait(7, 19);
 
     
 
@@ -87,7 +87,7 @@ pub async fn scrap_message(
 //
 
 conversation_select.hover_builder();
-wait(1, 3);
+wait(1, 9);
 conversation_select.click_builder().click().await?;
 
 
@@ -146,7 +146,7 @@ let full_name = FullName::split_name(conversation.candidate_name.as_str());
                 mark_star(&conversation_select, focused_inbox).await?;
                 if conversation.unread == true {
                     conversation_select.hover_builder();
-                    wait(1, 3);
+                    wait(1, 7);
                     conversation_select.click_builder().click().await?;
                     wait(3, 5);
                     mark_unread(&conversation_select, focused_inbox).await?;
@@ -388,7 +388,7 @@ async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str)
             if build.is_ok() {
                 break;
             } else if build.is_err() && x == 3 {
-                wait(1, 3);
+                wait(1, 7);
                 page.close(Some(false)).await?;
                 return Ok(None) // if error means page is not loading
             }
@@ -396,7 +396,7 @@ async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str)
     }
     }
 
-    wait(5, 7);
+    wait(5, 12);
 
    let contact_info = page.query_selector("a#top-card-text-details-contact-info").await?.unwrap();
    let url = contact_info.get_attribute("href").await?;
