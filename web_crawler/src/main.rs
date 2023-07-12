@@ -17,6 +17,7 @@ use crate::actions::scrap_inmails::scrap_inmails;
 use crate::actions::scrap_profile::scrap_profile;
 use structs::entry::Entry;
 use structs::entry::EntrySendInmail;
+use structs::entry::EntrySendConnection;
 use tokio::task;
 #[get("/")]
 async fn index() -> String {
@@ -199,7 +200,7 @@ async fn scrap_profiles(json: web::Json<Entry>) -> HttpResponse {
 }
 
 #[post("/connect")]
-async fn connect(json: web::Json<Entry>) -> HttpResponse {
+async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
     let message_id = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();

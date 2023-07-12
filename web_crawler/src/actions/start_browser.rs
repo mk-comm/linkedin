@@ -1,19 +1,19 @@
 use playwright::Playwright;
-use std::path::Path;
+//use std::path::Path;
 
 use playwright::api::{Cookie, ProxySettings, Viewport};
 use std::collections::HashMap;
 use crate::structs::error::CustomError;
 use crate::structs::browser::{BrowserConfig, BrowserInit};
 use crate::structs::user::User;
-use tracing::{info, instrument};
+use tracing::{info};
 use super::wait::wait;
-#[instrument]
+
 pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
     info!("Starting browser");
     //path to  local browser
     
-    let path = Path::new("/opt/homebrew/bin/chromium");
+  //  let path = Path::new("/opt/homebrew/bin/chromium");
 
     let mut user = User::new(browserinfo.user_agent, browserinfo.session_cookie, browserinfo.user_id);
 
@@ -30,16 +30,16 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
 
     let playwright = Playwright::initialize().await?;
 
-    //playwright.prepare(); // Install browsers uncomment on production
+    let _ = playwright.prepare(); // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
     let browser = chromium
         .launcher()
         .proxy(proxy)
-        .headless(false)
+        .headless(true)
         
-        .executable(path)
+        //.executable(path)
         .launch()
         .await?;
 
@@ -78,7 +78,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         None => {
             Cookie::with_url(
                 "li_a",
-                "1",
+                "79cb93e0632ed9960f88cbdd1e3361d4a9e64fbe",
                 "https://www.linkedin.com",
             )
         }
@@ -118,7 +118,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     let build = page.goto_builder("https://www.linkedin.com/feed/");
     wait(1, 3);
     
-    let go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> = build.goto().await;
+    let mut go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> = build.goto().await;
     let mut x = 0;
     if go_to.is_err() {
         
@@ -127,6 +127,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
             let build: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> = page.goto_builder("https://www.linkedin.com/feed/")
             .goto().await;
             if build.is_ok() {
+                go_to = build;
                 break;
             } else if build.is_err() && x == 3 {
                 wait(1, 3);
@@ -145,7 +146,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     //page.evaluate(r#"window.stop()"#, ()).await?;
   
 
-    wait(3, 7);
+    wait(7, 14);
 
     let profile = page
         .query_selector("div.feed-identity-module__actor-meta.break-words")

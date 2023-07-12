@@ -1,13 +1,17 @@
 use playwright::api::Page;
 use crate::structs::browser::BrowserInit;
-
+use tracing::{info, instrument};
 use crate::actions::start_browser::start_browser;
-use crate::structs::entry::Entry;
+use crate::structs::entry::{EntrySendConnection};
 use crate::structs::error::CustomError;
 use crate::actions::wait::wait;
 use crate::structs::candidate::Candidate;
+#[instrument]
+pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
+    info!("Sending connection request to {}" , entry.fullname);
+    //path to  local browser
 
-pub async fn connection(entry: Entry) -> Result<(), CustomError> {
+
     let candidate = Candidate::new(
         entry.fullname.clone(),
         entry.linkedin.clone(),
@@ -21,7 +25,7 @@ pub async fn connection(entry: Entry) -> Result<(), CustomError> {
         user_agent: entry.user_agent,
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
-        recruiter_session_cookie: Some(entry.recruiter_session_cookie),
+        recruiter_session_cookie: None,
         };
 
 
@@ -86,7 +90,7 @@ pub async fn connection(entry: Entry) -> Result<(), CustomError> {
         }
 
 
-    wait(3, 15); // random delay
+    wait(7, 21); // random delay
                  //check if connect button is present
 
     let block_option = browser
@@ -103,8 +107,6 @@ pub async fn connection(entry: Entry) -> Result<(), CustomError> {
             return Err(CustomError::ButtonNotFound("block button not found".to_string()));
         }
     };
-        
-    
 
     let connect_button = block.query_selector("li-icon[type=connect]").await?;
 
@@ -186,6 +188,19 @@ pub async fn connection(entry: Entry) -> Result<(), CustomError> {
     
     //artdeco-modal artdeco-modal--layer-default send-invite  
     message(&browser.page, candidate.message.as_str()).await?;
+    wait(4, 8);
+    let pending_button = block.query_selector("li-icon[type=clock]").await?;
+
+    match pending_button {
+        Some(_) => {
+            wait(1, 5);
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Ok(());
+        }
+        None => (),
+    };
+
     wait(3, 7);
     let connection_limit = browser.page.query_selector("div[class='artdeco-modal artdeco-modal--layer-default ip-fuse-limit-alert']").await?;
 
@@ -234,6 +249,6 @@ async fn message(page: &Page, message: &str) -> Result<(), playwright::Error> {
         Some(send) => send.click_builder().click().await?, // click on button "Send"
         None => return Err(playwright::Error::InvalidParams),
     };
-
+    
     Ok(())
 }
