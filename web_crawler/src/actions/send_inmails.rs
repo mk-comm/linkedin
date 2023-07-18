@@ -166,8 +166,8 @@ match &nav_bar {
    }
 }
 
-wait(50, 600);
-wait(2, 4);
+
+wait(6, 16);
 let profile_block = browser
 .page
 .query_selector("div[class='topcard-condensed__content-top topcard-condensed__content-top--profile-size-7']")
@@ -249,9 +249,9 @@ match text_input {
   };
 
   let send_button = browser
-.page
-.query_selector("button[class='msg-cmpt__button--small compose-actions__submit-button']")
-.await?;
+    .page
+    .query_selector("button[class='msg-cmpt__button--small compose-actions__submit-button']")
+    .await?;
 
 match send_button {
  Some(button) => {

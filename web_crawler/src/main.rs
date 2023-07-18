@@ -2,8 +2,8 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use serde_json::json;
 use crate::structs::entry::EntryRecruiter;
 use crate::structs::entry::EntryRegular;
+use tracing::{error, info};
 
-use tracing::{info};
 
 mod actions;
 mod structs;
@@ -201,13 +201,15 @@ async fn scrap_profiles(json: web::Json<Entry>) -> HttpResponse {
 
 #[post("/connect")]
 async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
+    println!("{:?}", json);
+    info!("Received request to connect");
     let message_id = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     tokio::spawn(async move {
-        let api = connection(json.into_inner());
-        match api.await {
+        match connection(json.into_inner()).await {
             Ok(_) => {
+                info!("Connection sent successfully");
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
@@ -218,6 +220,7 @@ async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
                 let _res = client.post(webhook).json(&payload).send().await;
             }
             Err(error) => {
+                error!("Error sending connection: {}", error);
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
@@ -235,6 +238,7 @@ async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
 
 #[post("/send_inmail")]
 async fn send_inmail(json: web::Json<EntrySendInmail>) -> HttpResponse {
+    println!("{:?}", json);
     let message_id = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();

@@ -93,16 +93,21 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     wait(3, 7);
     let page_proxy = context.new_page().await?;
  
-    let build_proxy = page_proxy
+    let _build_proxy = page_proxy
         .goto_builder("https://www.google.com/")
         .goto()
         .await;
 
     wait(1, 4);
 
-    match &build_proxy {
-        Ok(_) => (),
-        Err(_) => {
+    let google_search = page_proxy
+    .query_selector("div.RNNXgb")
+    .await?;
+
+    match google_search {
+        Some(_) => println!("proxy is working"),
+        None => {
+            println!("proxy is not working");
             wait(1, 3);
             page_proxy.close(Some(false)).await?;
             browser.close().await?;
@@ -110,11 +115,13 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
             return Err(CustomError::ProxyNotWorking);
         }
     } // if error when proxy is not working
-
+    
+    page_proxy.close(Some(false)).await?;
+    
     let page = context.new_page().await?;
-    wait(1, 3);
-    page_proxy.close(Some(false)).await?; // close proxy page˚
-    wait(1, 3);
+    wait(1, 5);
+     // close proxy page˚
+
     let build = page.goto_builder("https://www.linkedin.com/feed/");
     wait(1, 3);
     
@@ -163,7 +170,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     }
 
     // if error when proxy is not working
-
+    wait(2000, 3000);
     let browser_config = BrowserConfig {
         proxy: None,
         playwright,
