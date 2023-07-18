@@ -47,10 +47,8 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
         }
         None => {
             wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?; // close browser
-            return Err(CustomError::ButtonNotFound("Search input not found".to_string()));
-        } // if search input is not found, means page was not loaded and session cookie is not valid
+
+        } 
     };
 
     // go to candidate page

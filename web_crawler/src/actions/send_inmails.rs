@@ -59,14 +59,12 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         }
         None => {
             wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?; // close browser
-            return Err(CustomError::SessionCookieExpired);
         } // if search input is not found, means page was not loaded and sessuion cookie is not valid
     };
 
+
     // go to candidate page
-    let go_to = browser
+    let mut go_to = browser
         .page
         .goto_builder(candidate.linkedin.as_str())
         .goto()
@@ -82,12 +80,13 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                 .goto()
                 .await;
                 if build.is_ok() {
+                    go_to = build;
                     break;
                 } else if build.is_err() && x == 3 {
                     wait(3, 6);
                     browser.page.close(Some(false)).await?;
                     browser.browser.close().await?; // close browser
-                    return Err(CustomError::ButtonNotFound("Candidate page is not loading/Connection".to_string())); // if error means page is not loading
+                    return Err(CustomError::ButtonNotFound("Candidate page is not loading/Inmail_regular".to_string())); // if error means page is not loading
                 }
                 x += 1;
                 println!("retrying to load page")
@@ -121,9 +120,8 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
 */
 let entity_urn = find_entity_run(&browser.page).await?;
 let url = format!("https://www.linkedin.com/talent/profile/{}?trk=FLAGSHIP_VIEW_IN_RECRUITER", entity_urn);
-
 // go to candidate page
-let go_to = browser
+let mut _go_to = browser
 .page
 .goto_builder(url.as_str())
 .goto()
@@ -139,6 +137,7 @@ if go_to.is_err() {
         .goto()
         .await;
         if build.is_ok() {
+            _go_to = build;
             break;
         } else if build.is_err() && x == 3 {
             wait(3, 6);
@@ -166,6 +165,8 @@ match &nav_bar {
        return Err(CustomError::RecruiterSessionCookieExpired); // if error when session cookie expired
    }
 }
+
+wait(50, 600);
 wait(2, 4);
 let profile_block = browser
 .page

@@ -46,10 +46,8 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
         }
         None => {
             wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?; // close browser
-            return Err(playwright::Error::InitializationError.into());
-        } // if search input is not found, means page was not loaded and sessuion cookie is not valid
+
+        } 
     };
 
     // go to candidate page
@@ -76,7 +74,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(playwright::Error::ObjectNotFound.into())
+            return Err(CustomError::ButtonNotFound("Block not found/Withdraw".to_string()));
         },
     };
     //"artdeco-button.artdeco-button--muted.artdeco-button--2.artdeco-button--secondary.ember-view.pvs-profile-actions__action"
@@ -106,7 +104,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
                             wait(1, 5);
                             browser.page.close(Some(false)).await?;
                             browser.browser.close().await?;
-                            return Err(playwright::Error::ObjectNotFound.into())
+                            return Err(CustomError::ButtonNotFound("Withdraw icon not found/Withdraw".to_string()));
                         }
                     }
                 }
@@ -132,7 +130,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
                                 wait(1, 3);
                                 browser.page.close(Some(false)).await?;
                                 browser.browser.close().await?; // close browser
-                                return Err(playwright::Error::ObjectNotFound.into());
+                                return Err(CustomError::ButtonNotFound("Dropdown not found/Withdraw".to_string()));
                             }
                         };
                     }
@@ -144,7 +142,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
             }
         }
         None => {
-            return Err(playwright::Error::ObjectNotFound.into());
+            return Err(CustomError::ButtonNotFound("Withdown button not found/Withdraw".to_string()));
         }
     }
 

@@ -31,6 +31,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
 
     let browser = start_browser(browser_info).await?;
 
+
     let search_input = browser
         .page
         .query_selector("input[class=search-global-typeahead__input]")
@@ -53,12 +54,8 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
         None => {
             wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?; // close browser
-            return Err(CustomError::SessionCookieExpired);
-        } // if search input is not found, means page was not loaded and sessuion cookie is not valid
+        } //
     };
-
     // go to candidate page
     let go_to = browser
         .page
@@ -199,7 +196,9 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
             return Ok(());
         }
         None => (),
-    };
+    };  
+
+    
 
     wait(3, 7);
     let connection_limit = browser.page.query_selector("div[class='artdeco-modal artdeco-modal--layer-default ip-fuse-limit-alert']").await?;
@@ -219,8 +218,9 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     browser.browser.close().await?;
     Ok(())
 }
-
+#[instrument]
 async fn message(page: &Page, message: &str) -> Result<(), playwright::Error> {
+
     //press button add note
     let add_note = page
         .query_selector("button[aria-label='Add a note']")
@@ -229,6 +229,7 @@ async fn message(page: &Page, message: &str) -> Result<(), playwright::Error> {
         Some(add_note) => add_note.click_builder().click().await?, // click on button "Other"
         None => return Err(playwright::Error::InvalidParams),
     };
+    info!("Filling in the message field");
     //find input for note
     let text_input = page.query_selector("textarea[id=custom-message]").await?;
     match text_input {
@@ -246,9 +247,11 @@ async fn message(page: &Page, message: &str) -> Result<(), playwright::Error> {
                 //press button send
     let send = page.query_selector("button[aria-label='Send now']").await?;
     match send {
-        Some(send) => send.click_builder().click().await?, // click on button "Send"
+        Some(send) => {
+            send.click_builder().click().await?; // click on button "Send"
+            return Ok(()); // return Ok
+        }
         None => return Err(playwright::Error::InvalidParams),
     };
     
-    Ok(())
 }

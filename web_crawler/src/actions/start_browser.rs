@@ -1,5 +1,5 @@
 use playwright::Playwright;
-//use std::path::Path;
+use std::path::Path;
 
 use playwright::api::{Cookie, ProxySettings, Viewport};
 use std::collections::HashMap;
@@ -13,7 +13,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     info!("Starting browser");
     //path to  local browser
     
-  //  let path = Path::new("/opt/homebrew/bin/chromium");
+    let path = Path::new("/opt/homebrew/bin/chromium");
 
     let mut user = User::new(browserinfo.user_agent, browserinfo.session_cookie, browserinfo.user_id);
 
@@ -30,16 +30,16 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
 
     let playwright = Playwright::initialize().await?;
 
-    let _ = playwright.prepare(); // Install browsers uncomment on production
+    //let _ = playwright.prepare(); // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
     let browser = chromium
         .launcher()
         .proxy(proxy)
-        .headless(true)
+        .headless(false)
         
-        //.executable(path)
+        .executable(path)
         .launch()
         .await?;
 
