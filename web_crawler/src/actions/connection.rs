@@ -92,7 +92,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
 
     let block_option = browser
         .page
-        .query_selector("div.pvs-profile-actions")
+        .query_selector("div.pv-top-card-v2-ctas")
         .await?;
     
     let block = match block_option {
@@ -104,9 +104,10 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
             return Err(CustomError::ButtonNotFound("block button not found".to_string()));
         }
     };
-
+    
     let connect_button = block.query_selector("li-icon[type=connect]").await?;
 
+ 
     let more_option = block
         .query_selector("button[aria-label='More actions']")
         .await?;

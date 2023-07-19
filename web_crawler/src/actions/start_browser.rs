@@ -170,7 +170,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     }
 
     // if error when proxy is not working
-    wait(2000, 3000);
+
     let browser_config = BrowserConfig {
         proxy: None,
         playwright,
@@ -180,6 +180,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         page,
         build: go_to.unwrap().unwrap(),
     };
+
 
     return Ok(browser_config);
 }
