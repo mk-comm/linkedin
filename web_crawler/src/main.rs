@@ -2,6 +2,7 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use serde_json::json;
 use crate::structs::entry::EntryRecruiter;
 use crate::structs::entry::EntryRegular;
+use crate::structs::entry::EntryScrapConnection;
 use tracing::{error, info};
 
 
@@ -73,8 +74,7 @@ async fn scrap_inmails_conversations(json: web::Json<EntryRecruiter>) -> HttpRes
 }
 
 #[post("/scrap_connection")]
-async fn scrap_connection(json: web::Json<Entry>) -> HttpResponse {
-    let message_id = json.message_id.clone();
+async fn scrap_connection(json: web::Json<EntryScrapConnection>) -> HttpResponse {
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     tokio::spawn(async move {
@@ -84,7 +84,6 @@ async fn scrap_connection(json: web::Json<Entry>) -> HttpResponse {
             Err(error) => {
                 let client = reqwest::Client::new();
                 let payload = json!({
-                    "message": message_id,
                     "result": error.to_string(),
                     "user_id": user_id,
                     "error": "yes",
@@ -132,7 +131,7 @@ async fn withdraw_connection(json: web::Json<Entry>) -> HttpResponse {
 }
 
 #[post("/message")]
-async fn message(json: web::Json<Entry>) -> HttpResponse {
+async fn message(json: web::Json<EntrySendConnection>) -> HttpResponse {
     let message_id = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();

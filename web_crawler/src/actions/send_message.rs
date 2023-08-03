@@ -1,5 +1,5 @@
 use playwright::api::Page;
-use crate::structs::entry::Entry;
+use crate::structs::entry::EntrySendConnection;
 use scraper::{Html, Selector};
 use crate::actions::wait::wait;
 use crate::structs::candidate::Candidate;
@@ -8,7 +8,7 @@ use crate::structs::browser::BrowserInit;
 
 use super::start_browser::start_browser;
 
-pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
+pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError> {
     let candidate = Candidate::new(
         entry.fullname.clone(),
         entry.linkedin.clone(),
@@ -22,7 +22,7 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
         user_agent: entry.user_agent,
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
-        recruiter_session_cookie: Some(entry.recruiter_session_cookie),
+        recruiter_session_cookie: None,
         };
 
     let browser = start_browser(browser_info).await?;
@@ -117,6 +117,7 @@ pub async fn send_message(entry: Entry) -> Result<(), CustomError> {
     let pick = browser.page.query_selector("aside.msg-overlay-container").await?.unwrap();
     let html = pick.inner_html().await?;
     let conversation_id = find_conversation(html.as_str(), entity_urn.as_str());
+    println!("conversation_id: {}", conversation_id);
 
     let conversation_select = match browser.page
     .query_selector(format!("div[id='{}']", conversation_id).as_str())
@@ -187,7 +188,6 @@ fn find_conversation(html: &str, entity_urn: &str) -> String {
     let conv_selector = Selector::parse("div.msg-convo-wrapper").unwrap();
     let href_selector = Selector::parse("a[href^='/in/']").unwrap();
    
-    //let code = "/in/ACoAADcTjioB4nj57dk1rAQazWKnfNn4AjQKHNc/"; //target URN
     let code = format!("/in/{}/", entity_urn); //target URN
     let mut correct_div = String::new();
     for conv_div in document.select(&conv_selector) {
@@ -197,7 +197,6 @@ fn find_conversation(html: &str, entity_urn: &str) -> String {
         let href_elem = conv_div.select(&href_selector).next().unwrap();
     
         let href = href_elem.value().attr("href").unwrap();
-        println!("Href variable: {}", href);
     
         if href == code {
         //println!(", {}", conv_div.inner_html());
@@ -212,35 +211,85 @@ correct_div
 }
 
 async fn find_entity_run(page: &Page) -> Result<String, playwright::Error> {
-
-    // Find the target link
     let link_selector = Selector::parse("a").unwrap();
     let document = scraper::Html::parse_document(&page.content().await?);
     let mut entity_urn = String::new();
 
     for link in document.select(&link_selector) {
         let href = link.value().attr("href").unwrap_or_default();
-
         if href.contains("profileUrn=") {
-            let parts: Vec<&str> = href.split("?profileUrn=urn%3Ali%3Afsd_profile%3A").collect();
 
+            let parts: Vec<&str> = href.split("?profileUrn=urn%3Ali%3Afsd_profile%3A").collect();
             if parts.len() > 1 {
                 entity_urn = parts[1].split("&").collect::<Vec<&str>>()[0].to_string();
-
                 if entity_urn.is_empty() {
                     let parts: Vec<&str> = href.split("?profileUrn=urn%3Ali%3Afs_normalized_profile%3A").collect();
                     if parts.len() > 1 {
                         entity_urn = parts[1].split("&").collect::<Vec<&str>>()[0].to_string();
                     }
-                }
+                } 
             }
-
             if !entity_urn.is_empty() {
                 break;
             }
         }
     }
 
-
+    if entity_urn.is_empty() {
+        entity_urn = print_elements_with_datalet_in_id(document.html().as_str());
+    }
     Ok(entity_urn)
+}
+
+fn print_elements_with_datalet_in_id(html: &str) -> String {
+
+    // Parse the document
+    let document = Html::parse_document(html);
+
+    // Create a Selector for elements with an 'id' attribute
+    let selector = Selector::parse("[id]").unwrap();
+
+    let mut right_id = String::new();
+    // Iterate over elements matching the selector
+    for element in document.select(&selector) {
+
+        if let Some(id_attr) = element.value().attr("id") {
+            if id_attr.contains("datalet") && element.html().contains("/voyager/api/identity/dash/profile") {
+
+                let element_html: String = element.html();
+                match element_html.find("bpr-guid-") {
+                    Some(start) => {
+                        match element_html[start..].find("\"") {
+                            Some(end) => {
+                                let end = end + start;
+                                right_id = format!("[id={}]",&element_html[start..end]);
+                            },
+                            None => println!("Could not find end quote"),
+                        }
+                    },
+                    None => println!("Could not find 'bpr-guid-'"),
+                }
+            }
+        }
+    }
+
+    let entity_id_selector = Selector::parse(&right_id).unwrap();
+    let mut entity_urn = String::new();
+    for element in document.select(&entity_id_selector) {
+        let text = element.html();
+        let text_str = text.as_str();
+
+        if let Some(start) = text_str.find("\"*elements\":[\"urn:li:fsd_profile:") {
+            let start = start + "\"*elements\":[\"urn:li:fsd_profile:".len();
+            if let Some(end) = text_str[start..].find("\"") {
+                let end = start + end;
+                entity_urn = text_str[start..end].to_string();
+                
+            }
+        }
+    }
+    
+    entity_urn
+
+
 }

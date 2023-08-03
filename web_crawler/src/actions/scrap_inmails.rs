@@ -54,6 +54,7 @@ match &nav_bar {
    }
 }
 
+
 // random delay
                  //check if connect button is present
 
@@ -69,7 +70,6 @@ if recruiter == false {
 
 let conversation_list = match browser.page.query_selector("div.thread-list.visible").await? {
       Some(conversation_list) => {
-
         conversation_list},
       None => {
          wait(1, 5); // random delay
@@ -78,17 +78,20 @@ let conversation_list = match browser.page.query_selector("div.thread-list.visib
          return Err(CustomError::ButtonNotFound("Conversation list inmails not found".to_string()));
       } // if search input is not found, means page was not loaded and sessuion cookie is not valid
    };
-
+   
+ 
 
 wait(3, 5);
 
 let mut conversations: HashMap<String, InmailConversation> = HashMap::new(); // hashmap to store conversations
 
-let document = Html::parse_document(conversation_list.inner_html().await?.as_str());
+
+let document = Html::parse_document(conversation_list.inner_html().await?.to_owned().as_str());
 
     let conversation_selector = Selector::parse("._card-container_z8knzq").unwrap();
- 
+
     let name_selector = Selector::parse("._conversation-card-participant-name_z8knzq").unwrap();
+
     let url_selector = Selector::parse("._conversation-link_z8knzq").unwrap();
     let unread_selector = Selector::parse("._unread-badge_z8knzq").unwrap();
     let snippet_selector = Selector::parse("._conversation-snippet_z8knzq").unwrap();

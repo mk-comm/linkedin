@@ -1,12 +1,12 @@
 use playwright::Playwright;
 use std::path::Path;
 
-use playwright::api::{Cookie, ProxySettings, Viewport};
+use playwright::api::{Cookie, ProxySettings, Viewport, Page};
 use std::collections::HashMap;
 use crate::structs::error::CustomError;
 use crate::structs::browser::{BrowserConfig, BrowserInit};
 use crate::structs::user::User;
-use tracing::{info};
+use tracing::info;
 use super::wait::wait;
 
 pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
@@ -154,22 +154,20 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
   
 
     wait(7, 14);
+    let cookie = session_cookie_is_valid(&page).await?;
+    if !cookie {
+        page.reload_builder().reload().await?;
+    }
+    wait(7, 14);
 
-    let profile = page
-        .query_selector("div.feed-identity-module__actor-meta.break-words")
-        .await?;
-    
-    match &profile {
-        Some(_) => (),
-        None => {
-            wait(1, 3);
-            page.close(Some(false)).await?;
-            browser.close().await?;
-            return Err(CustomError::SessionCookieExpired); // if error when session cookie expired
-        }
+    let cookie_second_try = session_cookie_is_valid(&page).await?;
+    if !cookie_second_try  {
+        wait(1, 3);
+        page.close(Some(false)).await?;
+        browser.close().await?;
+        return Err(CustomError::SessionCookieExpired);
     }
 
-    // if error when proxy is not working
 
     let browser_config = BrowserConfig {
         proxy: None,
@@ -182,5 +180,30 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     };
 
 
+    
     return Ok(browser_config);
+}
+
+
+async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
+    let profile = page
+    .query_selector("div.feed-identity-module__actor-meta.break-words")
+    .await?;
+
+    if profile.is_some() {
+        return Ok(true);
+    } else {
+        wait(1, 3);
+        let email_input = page.query_selector("input[name=email-address]").await?;
+        if email_input.is_some() {
+            return Ok(false);
+        } else {
+            let search_bar = page.query_selector("input.search-global-typeahead__input").await?;
+                if search_bar.is_some() {
+                    return Ok(true);
+                } else {
+                    return Ok(false);
+                }
+        }
+    }
 }

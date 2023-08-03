@@ -2,7 +2,7 @@ use playwright::api::Page;
 use crate::structs::browser::BrowserInit;
 use tracing::{info, instrument};
 use crate::actions::start_browser::start_browser;
-use crate::structs::entry::{EntrySendConnection};
+use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
 use crate::actions::wait::wait;
 use crate::structs::candidate::Candidate;

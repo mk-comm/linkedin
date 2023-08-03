@@ -115,3 +115,26 @@ pub struct EntrySendConnection {
 }
 
 */
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EntryScrapConnection {
+    pub ip: String,
+    pub username: String,
+    pub password: String,
+    pub user_agent: String,
+    pub webhook: String,
+    pub user_id: String,
+    pub session_cookie: String,
+}
+
+/* EntryScrapConnection
+{
+    "webhook": "webhook",
+    "ip": "104.239.18.22:5426",
+    "username": "username",
+    "password": "password",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+    "session_cookie": "-cJKYmaFKFjZYydPcD0wV0tKxUBR1U9nTFASLc9a",
+    "user_id": "qePDD2xm7Sap0AgUqexqbUx9WmzfOhoZYhWzcnZHlmM"
+}
+
+*/
