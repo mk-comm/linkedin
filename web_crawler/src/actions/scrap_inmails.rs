@@ -181,19 +181,12 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
                 ))
             }
         }; // select the conversation
-//      
-        let fragment = true;
+           //
+        let _fragment = true;
 
         // needs to be fixed for broken characters
 
-
-
-
-
-
-
-
-//
+        //
         let messages_container = match browser
             .page
             .query_selector("div._messages-container_1j60am._divider_lvf5de")

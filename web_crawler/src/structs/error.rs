@@ -5,6 +5,7 @@ use std::sync::Arc;
 pub enum CustomError {
     PlaywrightError(Arc<playwright::Error>),
     ButtonNotFound(String),
+    ReqwestError(reqwest::Error),
     SessionCookieExpired,
     RecruiterSessionCookieExpired,
     ProxyNotWorking,
@@ -28,6 +29,7 @@ impl fmt::Display for CustomError {
             CustomError::EmailNeeded => write!(f, "Email needed"),
             CustomError::ConnectionLimit => write!(f, "Connection limit"),
             CustomError::ProxyNotWorking => write!(f, "Proxy not working"),
+            CustomError::ReqwestError(e) => write!(f, "{}", e),
             //CustomError::ActixError(e) => write!(f, "{}", e),
             //CustomError::IoError(e) => write!(f, "{}", e),
         }
@@ -43,5 +45,11 @@ impl From<Arc<playwright::Error>> for CustomError {
 impl From<playwright::Error> for CustomError {
     fn from(err: playwright::Error) -> CustomError {
         CustomError::PlaywrightError(err.into())
+    }
+}
+
+impl From<reqwest::Error> for CustomError {
+    fn from(err: reqwest::Error) -> CustomError {
+        CustomError::ReqwestError(err)
     }
 }

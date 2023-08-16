@@ -1,13 +1,12 @@
-use crate::actions::start_browser::start_browser;
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
-use crate::structs::entry::EntryScrapSearchRegular;
 use crate::structs::error::CustomError;
+use crate::{actions::start_browser::start_browser, structs::entry::EntryScrapSearchRecruiter};
 use reqwest;
 use scraper::{Html, Selector};
 use serde_json::json;
 
-pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), CustomError> {
+pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<(), CustomError> {
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -15,7 +14,7 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         user_agent: entry.user_agent,
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
-        recruiter_session_cookie: None,
+        recruiter_session_cookie: Some(entry.recruiter_session_cookie),
     };
 
     let browser = start_browser(browser_info).await?;
@@ -23,6 +22,16 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
     browser.page.goto_builder(&entry.url).goto().await?;
 
     wait(5, 10);
+
+    let pagination = browser
+        .page
+        .query_selector("ol.pagination__list")
+        .await?
+        .unwrap();
+
+    pagination.scroll_into_view_if_needed(Some(1000.0)).await?;
+
+    wait(10000, 20000);
 
     let search_container = browser
         .page

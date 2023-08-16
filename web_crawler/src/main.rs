@@ -12,10 +12,14 @@ use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
 use crate::actions::scrap_inmails::scrap_inmails;
 use crate::actions::scrap_profile::scrap_profile;
+use crate::actions::scrap_recruiter_search::scrap_recruiter_search;
+use crate::actions::scrap_regular_search::scrap_regular_search;
 use crate::actions::send_inmails::send_inmails;
 use crate::actions::send_message::send_message;
 use crate::actions::withdraw_connection::withdraw;
 use structs::entry::Entry;
+use structs::entry::EntryScrapSearchRecruiter;
+use structs::entry::EntryScrapSearchRegular;
 use structs::entry::EntrySendConnection;
 use structs::entry::EntrySendInmail;
 use tokio::task;
@@ -44,7 +48,10 @@ async fn scrap_conversations(json: web::Json<EntryRegular>) -> HttpResponse {
         }
     });
 
-    HttpResponse::Ok().body("Scrapping started!")
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Scraping Conversations started!"
+    }))
 }
 #[tracing::instrument]
 #[post("/scrap_inmails")]
@@ -69,7 +76,10 @@ async fn scrap_inmails_conversations(json: web::Json<EntryRecruiter>) -> HttpRes
         }
     });
 
-    HttpResponse::Ok().body("Scrapping started!")
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Scraping Inmails started!"
+    }))
 }
 
 #[post("/scrap_connection")]
@@ -92,7 +102,66 @@ async fn scrap_connection(json: web::Json<EntryScrapConnection>) -> HttpResponse
         }
     });
 
-    HttpResponse::Ok().body("Scraping connections started!")
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Scraping Connections started!"
+    }))
+}
+
+#[post("/scrap_regular_search")]
+async fn scrap_regular_search_url(json: web::Json<EntryScrapSearchRegular>) -> HttpResponse {
+    let webhook = json.webhook.clone();
+    let user_id = json.user_id.clone();
+    let aisearch = json.aisearch.clone();
+    tokio::spawn(async move {
+        let api = scrap_regular_search(json.into_inner());
+        match api.await {
+            Ok(_) => println!("Scraping regular search was successful!"),
+            Err(error) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "result": error.to_string(),
+                    "aisearch": aisearch,
+                    "user_id": user_id,
+                    "error": "yes",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+        }
+    });
+
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Scraping of regular search started!"
+    }))
+}
+
+#[post("/scrap_recruiter_search")]
+async fn scrap_recruiter_search_url(json: web::Json<EntryScrapSearchRecruiter>) -> HttpResponse {
+    let webhook = json.webhook.clone();
+    let user_id = json.user_id.clone();
+    let aisearch = json.aisearch.clone();
+    tokio::spawn(async move {
+        let api = scrap_recruiter_search(json.into_inner());
+        match api.await {
+            Ok(_) => println!("Scraping recruiter search was successful!"),
+            Err(error) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "result": error.to_string(),
+                    "aisearch": aisearch,
+                    "user_id": user_id,
+                    "error": "yes",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+        }
+    });
+
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Scraping of recruiter search started!"
+    }))
 }
 
 #[post("/withdraw_connection")]
@@ -126,7 +195,10 @@ async fn withdraw_connection(json: web::Json<Entry>) -> HttpResponse {
         }
     });
 
-    HttpResponse::Ok().body("Withdraw started!")
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Withdraw Connection started!"
+    }))
 }
 
 #[post("/message")]
@@ -160,7 +232,10 @@ async fn message(json: web::Json<EntrySendConnection>) -> HttpResponse {
         }
     });
 
-    HttpResponse::Ok().body("Sending message started!")
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Sending Message started!"
+    }))
 }
 
 #[post("/scrap_profiles")]
@@ -194,7 +269,10 @@ async fn scrap_profiles(json: web::Json<Entry>) -> HttpResponse {
         }
     });
 
-    HttpResponse::Ok().body("Sending message started!")
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Scraping profile started!"
+    }))
 }
 
 #[post("/connect")]
@@ -233,7 +311,7 @@ async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
 
     HttpResponse::Ok().json(json!({
         "status": "success",
-        "message": "Sending Connections started!"
+        "message": "Sending Connection started!"
     }))
 }
 
@@ -269,7 +347,10 @@ async fn send_inmail(json: web::Json<EntrySendInmail>) -> HttpResponse {
         }
     });
 
-    HttpResponse::Ok().body("Sending Inmail started!")
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Sending Inmail started!"
+    }))
 }
 
 #[actix_web::main]
@@ -291,6 +372,8 @@ async fn main() -> std::io::Result<()> {
             .service(scrap_inmails_conversations)
             .service(scrap_profiles)
             .service(send_inmail)
+            .service(scrap_regular_search_url)
+            .service(scrap_recruiter_search_url)
     })
     .bind(address)?
     .run()
