@@ -1,24 +1,23 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer};
-use serde_json::json;
 use crate::structs::entry::EntryRecruiter;
 use crate::structs::entry::EntryRegular;
 use crate::structs::entry::EntryScrapConnection;
+use actix_web::{get, post, web, App, HttpResponse, HttpServer};
+use serde_json::json;
 use tracing::{error, info};
-
 
 mod actions;
 mod structs;
 use crate::actions::connection::connection;
-use crate::actions::send_inmails::send_inmails;
 use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
-use crate::actions::send_message::send_message;
-use crate::actions::withdraw_connection::withdraw;
 use crate::actions::scrap_inmails::scrap_inmails;
 use crate::actions::scrap_profile::scrap_profile;
+use crate::actions::send_inmails::send_inmails;
+use crate::actions::send_message::send_message;
+use crate::actions::withdraw_connection::withdraw;
 use structs::entry::Entry;
-use structs::entry::EntrySendInmail;
 use structs::entry::EntrySendConnection;
+use structs::entry::EntrySendInmail;
 use tokio::task;
 #[get("/")]
 async fn index() -> String {
@@ -232,7 +231,10 @@ async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
         }
     });
 
-    HttpResponse::Ok().body("Sending connection started!")
+    HttpResponse::Ok().json(json!({
+        "status": "success",
+        "message": "Sending Connections started!"
+    }))
 }
 
 #[post("/send_inmail")]

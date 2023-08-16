@@ -1,38 +1,38 @@
 use crate::actions::start_browser::start_browser;
-use playwright::api::Page;
-use scraper::{Html, Selector};
-use crate::structs::browser::BrowserInit;
-use serde_json::json;
 use crate::actions::wait::wait;
+use crate::structs::browser::BrowserInit;
 use crate::structs::candidate::Candidate;
 use crate::structs::entry::Entry;
 use crate::structs::error::CustomError;
+use playwright::api::Page;
+use scraper::{Html, Selector};
+use serde_json::json;
 
 pub async fn scrap_profile(entry: Entry) -> Result<(), CustomError> {
-   let candidate = Candidate::new(
-      entry.fullname.clone(),
-      entry.linkedin.clone(),
-      entry.message.clone(),
-  );
-  
-  let browser_info = BrowserInit {
-   ip: entry.ip,
-   username: entry.username,
-   password: entry.password,
-   user_agent: entry.user_agent,
-   session_cookie: entry.session_cookie,
-   user_id: entry.user_id,
-   recruiter_session_cookie: Some(entry.recruiter_session_cookie),
-   };
-   let browser = start_browser(browser_info).await?;
+    let candidate = Candidate::new(
+        entry.fullname.clone(),
+        entry.linkedin.clone(),
+        entry.message.clone(),
+    );
 
-   let search_input = browser
+    let browser_info = BrowserInit {
+        ip: entry.ip,
+        username: entry.username,
+        password: entry.password,
+        user_agent: entry.user_agent,
+        session_cookie: entry.session_cookie,
+        user_id: entry.user_id,
+        recruiter_session_cookie: Some(entry.recruiter_session_cookie),
+    };
+    let browser = start_browser(browser_info).await?;
+
+    let search_input = browser
         .page
         .query_selector("input[class=search-global-typeahead__input]")
         .await?;
-   wait(3, 15); // random delay
+    wait(3, 15); // random delay
                  //focus on search input and fill it with text
-   match search_input {
+    match search_input {
         Some(search_input) => {
             search_input.hover_builder(); // hover on search input
             wait(1, 4); // random delay
@@ -55,7 +55,7 @@ pub async fn scrap_profile(entry: Entry) -> Result<(), CustomError> {
     };
 
     // go to candidate page
-   browser
+    browser
         .page
         .goto_builder(candidate.linkedin.as_str())
         .goto()
@@ -64,24 +64,26 @@ pub async fn scrap_profile(entry: Entry) -> Result<(), CustomError> {
     wait(3, 15); // random delay
 
     let entity_urn = match find_entity_run(&browser.page).await {
-      Ok(entity_urn) => entity_urn,
-      Err(_) => {
-          wait(1, 5); // random delay
-          browser.page.close(Some(false)).await?;
-          browser.browser.close().await?;
-          return Err(playwright::Error::InitializationError.into());
-      }
-  };
+        Ok(entity_urn) => entity_urn,
+        Err(_) => {
+            wait(1, 5); // random delay
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Err(playwright::Error::InitializationError.into());
+        }
+    };
 
-  println!("entity_urn: {}", entity_urn);
-  
-   let contact_info = browser.page.query_selector("a#top-card-text-details-contact-info").await?.unwrap();
-   let url = contact_info.get_attribute("href").await?;
-   println!("url: {}", url.unwrap());
+    println!("entity_urn: {}", entity_urn);
 
+    let contact_info = browser
+        .page
+        .query_selector("a#top-card-text-details-contact-info")
+        .await?
+        .unwrap();
+    let url = contact_info.get_attribute("href").await?;
+    println!("url: {}", url.unwrap());
 
-
-  let client = reqwest::Client::new();
+    let client = reqwest::Client::new();
     let payload = json!({
             "entity_urn": entity_urn,
             "linkedin": candidate.linkedin,
@@ -93,11 +95,11 @@ pub async fn scrap_profile(entry: Entry) -> Result<(), CustomError> {
         .await
         .unwrap();
 
-   wait(5, 7);
-   browser.page.close(Some(false)).await?;
-   browser.browser.close().await?;
+    wait(5, 7);
+    browser.page.close(Some(false)).await?;
+    browser.browser.close().await?;
 
-Ok(())
+    Ok(())
 }
 
 async fn find_entity_run(page: &Page) -> Result<String, playwright::Error> {
@@ -108,16 +110,19 @@ async fn find_entity_run(page: &Page) -> Result<String, playwright::Error> {
     for link in document.select(&link_selector) {
         let href = link.value().attr("href").unwrap_or_default();
         if href.contains("profileUrn=") {
-
-            let parts: Vec<&str> = href.split("?profileUrn=urn%3Ali%3Afsd_profile%3A").collect();
+            let parts: Vec<&str> = href
+                .split("?profileUrn=urn%3Ali%3Afsd_profile%3A")
+                .collect();
             if parts.len() > 1 {
                 entity_urn = parts[1].split("&").collect::<Vec<&str>>()[0].to_string();
                 if entity_urn.is_empty() {
-                    let parts: Vec<&str> = href.split("?profileUrn=urn%3Ali%3Afs_normalized_profile%3A").collect();
+                    let parts: Vec<&str> = href
+                        .split("?profileUrn=urn%3Ali%3Afs_normalized_profile%3A")
+                        .collect();
                     if parts.len() > 1 {
                         entity_urn = parts[1].split("&").collect::<Vec<&str>>()[0].to_string();
                     }
-                } 
+                }
             }
             if !entity_urn.is_empty() {
                 break;
@@ -132,7 +137,6 @@ async fn find_entity_run(page: &Page) -> Result<String, playwright::Error> {
 }
 
 fn print_elements_with_datalet_in_id(html: &str) -> String {
-
     // Parse the document
     let document = Html::parse_document(html);
 
@@ -142,20 +146,20 @@ fn print_elements_with_datalet_in_id(html: &str) -> String {
     let mut right_id = String::new();
     // Iterate over elements matching the selector
     for element in document.select(&selector) {
-
         if let Some(id_attr) = element.value().attr("id") {
-            if id_attr.contains("datalet") && element.html().contains("/voyager/api/identity/dash/profile") {
-
+            if id_attr.contains("datalet")
+                && element
+                    .html()
+                    .contains("/voyager/api/identity/dash/profile")
+            {
                 let element_html: String = element.html();
                 match element_html.find("bpr-guid-") {
-                    Some(start) => {
-                        match element_html[start..].find("\"") {
-                            Some(end) => {
-                                let end = end + start;
-                                right_id = format!("[id={}]",&element_html[start..end]);
-                            },
-                            None => println!("Could not find end quote"),
+                    Some(start) => match element_html[start..].find("\"") {
+                        Some(end) => {
+                            let end = end + start;
+                            right_id = format!("[id={}]", &element_html[start..end]);
                         }
+                        None => println!("Could not find end quote"),
                     },
                     None => println!("Could not find 'bpr-guid-'"),
                 }
@@ -174,12 +178,9 @@ fn print_elements_with_datalet_in_id(html: &str) -> String {
             if let Some(end) = text_str[start..].find("\"") {
                 let end = start + end;
                 entity_urn = text_str[start..end].to_string();
-                
             }
         }
     }
-    
+
     entity_urn
-
-
 }

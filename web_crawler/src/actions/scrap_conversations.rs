@@ -3,9 +3,9 @@ use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::conversation::Conversation;
 use crate::structs::entry::EntryRegular;
+use crate::structs::error::CustomError;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
-use crate::structs::error::CustomError;
 
 use crate::actions::scrap_messages::scrap_message;
 
@@ -21,7 +21,7 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: None,
-        };
+    };
 
     let browser = start_browser(browser_info).await?;
 
@@ -44,8 +44,7 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
         }
     }
     */
-    
-    
+
     wait(1, 12);
 
     let build = browser.page.goto_builder("https://www.linkedin.com/messaging/thread/2-NjhlODRmMzUtZTZkYi00MDNjLThmNzMtMDJlNm44RmMjU1NDY2XzAxMw==/");
@@ -53,7 +52,6 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
     let go_to = build.goto().await;
     let mut x = 0;
     if go_to.is_err() {
-        
         while x <= 3 {
             wait(3, 6);
             let build = browser.page.goto_builder("https://www.linkedin.com/messaging/thread/2-NjhlODRmMzUNm44RmMjU1NDY2XzAxMw==/")
@@ -64,7 +62,9 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
                 wait(1, 3);
                 browser.page.close(Some(false)).await?;
                 browser.browser.close().await?;
-                return Err(CustomError::ButtonNotFound("Conversation page is not loading".to_string())); // if error means page is not loading
+                return Err(CustomError::ButtonNotFound(
+                    "Conversation page is not loading".to_string(),
+                )); // if error means page is not loading
             }
             x += 1;
             println!("retrying to load page")
@@ -78,13 +78,9 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
         .await?;
 
     let focused_inbox = match focused {
-        Some(_) => {
-            true
-        }
-        None => {
-            false
-        }
-    };    
+        Some(_) => true,
+        None => false,
+    };
 
     let conversation_list = match browser
         .page
@@ -97,7 +93,9 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
         None => {
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound("Conversation list not found".to_string()));
+            return Err(CustomError::ButtonNotFound(
+                "Conversation list not found".to_string(),
+            ));
         }
     };
 

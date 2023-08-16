@@ -1,14 +1,14 @@
 use crate::actions::wait::wait;
+use crate::structs::browser::BrowserConfig;
 use crate::structs::conversation::Conversation;
+use crate::structs::error::CustomError;
 use crate::structs::fullname::FullName;
 use crate::structs::message::Message;
-use crate::structs::browser::BrowserConfig;
 use playwright::api::ElementHandle;
 use playwright::api::Page;
 use scraper::{Html, Selector};
 use serde_json::json;
 use std::collections::HashMap;
-use crate::structs::error::CustomError;
 
 pub async fn scrap_message(
     conversation: &Conversation,
@@ -16,7 +16,6 @@ pub async fn scrap_message(
     focused_inbox: bool,
     browser: &BrowserConfig,
 ) -> Result<(), CustomError> {
-        
     let conversation_select = match page
         .query_selector(format!("li[id='{}']", conversation.id).as_str())
         .await?
@@ -27,23 +26,24 @@ pub async fn scrap_message(
             conversation.click_builder().click().await?;
             conversation
         }
-        None => return Err(CustomError::ButtonNotFound("Conversation select not found".to_string())),
+        None => {
+            return Err(CustomError::ButtonNotFound(
+                "Conversation select not found".to_string(),
+            ))
+        }
     }; // select the conversation
 
-    
-    
     wait(7, 19);
 
-    
-
     let message_container = if let Some(container) = page
-    .query_selector("ul[class='msg-s-message-list-content list-style-none full-width mbA']")
-    .await? {
+        .query_selector("ul[class='msg-s-message-list-content list-style-none full-width mbA']")
+        .await?
+    {
         container
     } else {
         return Ok(()); // if there is no message container return
     };
-         // select the message container
+    // select the message container
 
     let owner_container = page
         .clone()
@@ -69,30 +69,35 @@ pub async fn scrap_message(
         // Handle the case where there is no conversation owner element
         conversation_owner_link = String::new();
     }
-    
+
     let mut messages: HashMap<String, Message> = HashMap::new(); // list of messages
     let mut full_text = String::new(); // Conversation text to push to AI
     let mut new_message = false; // if true and candidate_of_sequence is true evaluate conversation
-    let candidate_of_sequence = scrap_profile(browser, conversation_owner_link.as_str(), &conversation.api_key).await?; // check if candidate is in sequence
+    let candidate_of_sequence = scrap_profile(
+        browser,
+        conversation_owner_link.as_str(),
+        &conversation.api_key,
+    )
+    .await?; // check if candidate is in sequence
 
-
-// Selectors for the message container
+    // Selectors for the message container
     let message_container_html = message_container.inner_html().await.unwrap();
     let document = Html::parse_document(&message_container_html); // parse html
-    let sender_selector =Selector::parse(".msg-s-message-group__meta .msg-s-message-group__profile-link").unwrap();
+    let sender_selector =
+        Selector::parse(".msg-s-message-group__meta .msg-s-message-group__profile-link").unwrap();
     let timestamp_selector = Selector::parse(".msg-s-message-group__meta time").unwrap();
     let content_selector = Selector::parse(".msg-s-event__content p").unwrap();
-    let url_send_from_selector =Selector::parse(".msg-s-event-listitem__link[tabindex=\"0\"]").unwrap();
+    let url_send_from_selector =
+        Selector::parse(".msg-s-event-listitem__link[tabindex=\"0\"]").unwrap();
     let url_send_to_selector = Selector::parse(".msg-s-message-group__meta a").unwrap();
-//
+    //
 
-conversation_select.hover_builder();
-wait(1, 9);
-conversation_select.click_builder().click().await?;
+    conversation_select.hover_builder();
+    wait(1, 9);
+    conversation_select.click_builder().click().await?;
 
-
- // select the conversation
-// Iterate over the message container and create a message 
+    // select the conversation
+    // Iterate over the message container and create a message
     for ((((sender, timestamp), content), url_send_from), url_send_to) in document
         .select(&sender_selector)
         .zip(document.select(&timestamp_selector))
@@ -125,7 +130,7 @@ conversation_select.click_builder().click().await?;
         } else {
             full_text.push_str(format!("Recruiter: {}\n", &message.message_text.clone()).as_str())
         }
-        
+
         // checks if the message is new or was scraped before
         let check_message = check_message(&message, &full_name, conversation).await; // check if the message is new mark conversation as new
         if check_message == true && received == true {
@@ -134,12 +139,11 @@ conversation_select.click_builder().click().await?;
         }
 
         messages.insert(format!("message_{}", messages.len() + 1), message);
-    
-} // scrap message container end
-let full_name = FullName::split_name(conversation.candidate_name.as_str());
+    } // scrap message container end
+    let full_name = FullName::split_name(conversation.candidate_name.as_str());
 
-
-    if new_message == true && candidate_of_sequence == Some(true) && conversation.enable_ai == true{
+    if new_message == true && candidate_of_sequence == Some(true) && conversation.enable_ai == true
+    {
         let category = evaluate(full_text.as_str(), &conversation.api_key, full_name).await;
         match category {
             MessageCategory::Interested => {
@@ -152,13 +156,13 @@ let full_name = FullName::split_name(conversation.candidate_name.as_str());
                     mark_unread(&conversation_select, focused_inbox).await?;
                     println!("Marked as unread/Interested");
                 }
-            },
+            }
             MessageCategory::NotInterested => {
                 println!("Nothing happened/NotInterested");
-            },
+            }
             MessageCategory::NotFound => {
                 println!("Category NotFound");
-            },
+            }
         }
     }
 
@@ -173,15 +177,10 @@ let full_name = FullName::split_name(conversation.candidate_name.as_str());
         mark_unread(&conversation_select, focused_inbox).await?;
     }
 
-    
     Ok(())
 }
 
-async fn create_message(
-    message: &Message,
-    full_name: &FullName,
-    conversation: &Conversation,
-)  {
+async fn create_message(message: &Message, full_name: &FullName, conversation: &Conversation) {
     // make an api call to bubble
     // return interested or not interested
 
@@ -197,11 +196,11 @@ async fn create_message(
             "api_key": conversation.api_key,
     });
     let _res = _client
-    .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive")
-    .json(&_payload)
-    .send()
-    .await
-    .unwrap();
+        .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive")
+        .json(&_payload)
+        .send()
+        .await
+        .unwrap();
 }
 
 async fn check_message(
@@ -230,7 +229,10 @@ async fn check_message(
     new_message
 }
 
-async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) -> Result<(), CustomError> {
+async fn mark_unread(
+    conversation_element: &ElementHandle,
+    focused_inbox: bool,
+) -> Result<(), CustomError> {
     let dropdown = conversation_element
         .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
         .await?; // find 3 dots button
@@ -253,7 +255,7 @@ async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) 
     let inner_container = conversation_element
         .query_selector("div[class=artdeco-dropdown__content-inner]")
         .await?;
-    let inner_container = match inner_container{
+    let inner_container = match inner_container {
         Some(inner_container) => inner_container,
         None => return Ok(()),
     };
@@ -273,13 +275,16 @@ async fn mark_unread(conversation_element: &ElementHandle, focused_inbox: bool) 
             button.click_builder().click().await?;
             Ok(())
         }
-        None => {
-            Err(CustomError::ButtonNotFound("Unread button in dropdown not found".to_string()))
-        }
+        None => Err(CustomError::ButtonNotFound(
+            "Unread button in dropdown not found".to_string(),
+        )),
     }
 }
 
-async fn mark_star(conversation_element: &ElementHandle, focused_inbox: bool) -> Result<(), CustomError> {
+async fn mark_star(
+    conversation_element: &ElementHandle,
+    focused_inbox: bool,
+) -> Result<(), CustomError> {
     let dropdown = conversation_element
         .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
         .await?; // find 3 dots button
@@ -302,7 +307,7 @@ async fn mark_star(conversation_element: &ElementHandle, focused_inbox: bool) ->
     let inner_container = conversation_element
         .query_selector("div[class=artdeco-dropdown__content-inner]")
         .await?;
-    let inner_container = match inner_container{
+    let inner_container = match inner_container {
         Some(inner_container) => inner_container,
         None => return Ok(()),
     };
@@ -322,9 +327,9 @@ async fn mark_star(conversation_element: &ElementHandle, focused_inbox: bool) ->
             button.click_builder().click().await?;
             Ok(())
         }
-        None => {
-            Err(CustomError::ButtonNotFound("Unread button in dropdown not found".to_string()))
-        }
+        None => Err(CustomError::ButtonNotFound(
+            "Unread button in dropdown not found".to_string(),
+        )),
     }
 }
 
@@ -365,43 +370,43 @@ async fn _move_other(conversation_element: &ElementHandle) -> Result<(), CustomE
             button.click_builder().click().await?;
             Ok(())
         }
-        None => {
-            Err(CustomError::ButtonNotFound("Move to other in dropdown not found".to_string()))
-        }
+        None => Err(CustomError::ButtonNotFound(
+            "Move to other in dropdown not found".to_string(),
+        )),
     }
 }
 
-
-async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str) -> Result<Option<bool>, CustomError> {
-
+async fn scrap_profile(
+    browser: &BrowserConfig,
+    entity_urn: &str,
+    api_key: &str,
+) -> Result<Option<bool>, CustomError> {
     let page = browser.context.new_page().await?;
     let mut x = 0;
-    if page
-    .goto_builder(&entity_urn)
-    .goto()
-    .await.is_err()
-    {
+    if page.goto_builder(&entity_urn).goto().await.is_err() {
         while x <= 3 {
             wait(3, 6);
-            let build = page.goto_builder(&entity_urn)
-            .goto().await;
+            let build = page.goto_builder(&entity_urn).goto().await;
             if build.is_ok() {
                 break;
             } else if build.is_err() && x == 3 {
                 wait(1, 7);
                 page.close(Some(false)).await?;
-                return Ok(None) // if error means page is not loading
+                return Ok(None); // if error means page is not loading
             }
             x += 1;
-    }
+        }
     }
 
     wait(5, 12);
 
-   let contact_info = page.query_selector("a#top-card-text-details-contact-info").await?.unwrap();
-   let url = contact_info.get_attribute("href").await?;
+    let contact_info = page
+        .query_selector("a#top-card-text-details-contact-info")
+        .await?
+        .unwrap();
+    let url = contact_info.get_attribute("href").await?;
 
-   let client = reqwest::Client::new();
+    let client = reqwest::Client::new();
     let payload = json!({
             "entity_urn": entity_urn,
             "linkedin": url,
@@ -426,13 +431,13 @@ async fn scrap_profile(browser: &BrowserConfig, entity_urn: &str, api_key: &str)
         .unwrap();
     let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
 
-    let candidate_part_of_sequence = json_response["response"]["part_of_sequence"].as_bool().unwrap();
+    let candidate_part_of_sequence = json_response["response"]["part_of_sequence"]
+        .as_bool()
+        .unwrap();
 
     page.close(Some(false)).await?;
-Ok(Some(candidate_part_of_sequence))
+    Ok(Some(candidate_part_of_sequence))
 }
-
-
 
 #[derive(Debug)]
 enum MessageCategory {

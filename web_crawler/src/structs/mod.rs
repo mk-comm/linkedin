@@ -1,10 +1,10 @@
 pub mod browser;
 pub mod candidate;
+pub mod connection;
 pub mod conversation;
 pub mod entry;
+pub mod error;
 pub mod fullname;
+pub mod inmail_conversation;
 pub mod message;
 pub mod user;
-pub mod inmail_conversation;
-pub mod error;
-pub mod connection;

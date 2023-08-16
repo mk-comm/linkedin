@@ -5,7 +5,6 @@ use crate::{
 
 use crate::structs::browser::BrowserInit;
 
-
 pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
     let candidate = Candidate::new(
         entry.fullname.clone(),
@@ -21,7 +20,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: Some(entry.recruiter_session_cookie),
-        };
+    };
 
     let browser = start_browser(browser_info).await?;
 
@@ -46,8 +45,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
         }
         None => {
             wait(1, 5); // random delay
-
-        } 
+        }
     };
 
     // go to candidate page
@@ -74,8 +72,10 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound("Block not found/Withdraw".to_string()));
-        },
+            return Err(CustomError::ButtonNotFound(
+                "Block not found/Withdraw".to_string(),
+            ));
+        }
     };
     //"artdeco-button.artdeco-button--muted.artdeco-button--2.artdeco-button--secondary.ember-view.pvs-profile-actions__action"
     //"artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-left.ember-view"
@@ -104,7 +104,9 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
                             wait(1, 5);
                             browser.page.close(Some(false)).await?;
                             browser.browser.close().await?;
-                            return Err(CustomError::ButtonNotFound("Withdraw icon not found/Withdraw".to_string()));
+                            return Err(CustomError::ButtonNotFound(
+                                "Withdraw icon not found/Withdraw".to_string(),
+                            ));
                         }
                     }
                 }
@@ -130,7 +132,9 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
                                 wait(1, 3);
                                 browser.page.close(Some(false)).await?;
                                 browser.browser.close().await?; // close browser
-                                return Err(CustomError::ButtonNotFound("Dropdown not found/Withdraw".to_string()));
+                                return Err(CustomError::ButtonNotFound(
+                                    "Dropdown not found/Withdraw".to_string(),
+                                ));
                             }
                         };
                     }
@@ -142,7 +146,9 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
             }
         }
         None => {
-            return Err(CustomError::ButtonNotFound("Withdown button not found/Withdraw".to_string()));
+            return Err(CustomError::ButtonNotFound(
+                "Withdown button not found/Withdraw".to_string(),
+            ));
         }
     }
 

@@ -1,21 +1,25 @@
 use playwright::Playwright;
 use std::path::Path;
 
-use playwright::api::{Cookie, ProxySettings, Viewport, Page};
-use std::collections::HashMap;
-use crate::structs::error::CustomError;
-use crate::structs::browser::{BrowserConfig, BrowserInit};
-use crate::structs::user::User;
-use tracing::info;
 use super::wait::wait;
+use crate::structs::browser::{BrowserConfig, BrowserInit};
+use crate::structs::error::CustomError;
+use crate::structs::user::User;
+use playwright::api::{Cookie, Page, ProxySettings, Viewport};
+use std::collections::HashMap;
+use tracing::info;
 
 pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
     info!("Starting browser");
     //path to  local browser
-    
+
     let path = Path::new("/opt/homebrew/bin/chromium");
 
-    let mut user = User::new(browserinfo.user_agent, browserinfo.session_cookie, browserinfo.user_id);
+    let mut user = User::new(
+        browserinfo.user_agent,
+        browserinfo.session_cookie,
+        browserinfo.user_id,
+    );
 
     if user.user_agent.is_empty() {
         user.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36".to_string()
@@ -38,7 +42,6 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         .launcher()
         .proxy(proxy)
         .headless(false)
-        
         .executable(path)
         .launch()
         .await?;
@@ -47,7 +50,6 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         width: 1920,
         height: 1080,
     };
-    
 
     let context = browser
         .context_builder()
@@ -68,31 +70,24 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         user.session_cookie.as_str(),
         "https://.www.linkedin.com",
     );
-    
+
     let cookie_recruiter = match browserinfo.recruiter_session_cookie {
-        Some(cookie) => Cookie::with_url(
+        Some(cookie) => Cookie::with_url("li_a", cookie.as_str(), "https://www.linkedin.com"),
+        None => Cookie::with_url(
             "li_a",
-            cookie.as_str(),
+            "79cb93e0632ed9960f88cbdd1e3361d4a9e64fbe",
             "https://www.linkedin.com",
         ),
-        None => {
-            Cookie::with_url(
-                "li_a",
-                "79cb93e0632ed9960f88cbdd1e3361d4a9e64fbe",
-                "https://www.linkedin.com",
-            )
-        }
     };
 
+    // if recruiter cookie is not provided
 
- // if recruiter cookie is not provided
-        
-    context.add_cookies(&[cookie,cookie_recruiter]).await?;
-    
+    context.add_cookies(&[cookie, cookie_recruiter]).await?;
+
     //testing proxy by visiting google.com
     wait(3, 7);
     let page_proxy = context.new_page().await?;
- 
+
     let _build_proxy = page_proxy
         .goto_builder("https://www.google.com/")
         .goto()
@@ -100,9 +95,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
 
     wait(1, 4);
 
-    let google_search = page_proxy
-    .query_selector("div.RNNXgb")
-    .await?;
+    let google_search = page_proxy.query_selector("div.RNNXgb").await?;
 
     match google_search {
         Some(_) => println!("proxy is working"),
@@ -115,24 +108,29 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
             return Err(CustomError::ProxyNotWorking);
         }
     } // if error when proxy is not working
-    
+
     page_proxy.close(Some(false)).await?;
-    
+
     let page = context.new_page().await?;
     wait(1, 5);
-     // close proxy page˚
+    // close proxy page˚
 
     let build = page.goto_builder("https://www.linkedin.com/feed/");
     wait(1, 3);
-    
-    let mut go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> = build.goto().await;
+
+    let mut go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> =
+        build.goto().await;
     let mut x = 0;
     if go_to.is_err() {
-        
         while x <= 3 {
             wait(3, 6);
-            let build: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> = page.goto_builder("https://www.linkedin.com/feed/")
-            .goto().await;
+            let build: Result<
+                Option<playwright::api::Response>,
+                std::sync::Arc<playwright::Error>,
+            > = page
+                .goto_builder("https://www.linkedin.com/feed/")
+                .goto()
+                .await;
             if build.is_ok() {
                 go_to = build;
                 break;
@@ -140,7 +138,9 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
                 wait(1, 3);
                 page.close(Some(false)).await?;
                 browser.close().await?;
-                return Err(CustomError::ButtonNotFound("Feed is not loading".to_string())); // if error means page is not loading
+                return Err(CustomError::ButtonNotFound(
+                    "Feed is not loading".to_string(),
+                )); // if error means page is not loading
             }
             x += 1;
             println!("retrying to load page")
@@ -151,7 +151,6 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     }
 
     //page.evaluate(r#"window.stop()"#, ()).await?;
-  
 
     wait(7, 14);
     let cookie = session_cookie_is_valid(&page).await?;
@@ -161,13 +160,12 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     wait(7, 14);
 
     let cookie_second_try = session_cookie_is_valid(&page).await?;
-    if !cookie_second_try  {
+    if !cookie_second_try {
         wait(1, 3);
         page.close(Some(false)).await?;
         browser.close().await?;
         return Err(CustomError::SessionCookieExpired);
     }
-
 
     let browser_config = BrowserConfig {
         proxy: None,
@@ -178,17 +176,14 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         page,
         build: go_to.unwrap().unwrap(),
     };
-
-
-    
+    wait(10000, 20000);
     return Ok(browser_config);
 }
 
-
 async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
     let profile = page
-    .query_selector("div.feed-identity-module__actor-meta.break-words")
-    .await?;
+        .query_selector("div.feed-identity-module__actor-meta.break-words")
+        .await?;
 
     if profile.is_some() {
         return Ok(true);
@@ -198,12 +193,14 @@ async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
         if email_input.is_some() {
             return Ok(false);
         } else {
-            let search_bar = page.query_selector("input.search-global-typeahead__input").await?;
-                if search_bar.is_some() {
-                    return Ok(true);
-                } else {
-                    return Ok(false);
-                }
+            let search_bar = page
+                .query_selector("input.search-global-typeahead__input")
+                .await?;
+            if search_bar.is_some() {
+                return Ok(true);
+            } else {
+                return Ok(false);
+            }
         }
     }
 }

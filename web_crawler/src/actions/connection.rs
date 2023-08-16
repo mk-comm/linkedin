@@ -1,16 +1,15 @@
-use playwright::api::Page;
-use crate::structs::browser::BrowserInit;
-use tracing::{info, instrument};
 use crate::actions::start_browser::start_browser;
+use crate::actions::wait::wait;
+use crate::structs::browser::BrowserInit;
+use crate::structs::candidate::Candidate;
 use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
-use crate::actions::wait::wait;
-use crate::structs::candidate::Candidate;
+use playwright::api::Page;
+use tracing::{info, instrument};
 #[instrument]
 pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
-    info!("Sending connection request to {}" , entry.fullname);
+    info!("Sending connection request to {}", entry.fullname);
     //path to  local browser
-
 
     let candidate = Candidate::new(
         entry.fullname.clone(),
@@ -26,11 +25,9 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: None,
-        };
-
+    };
 
     let browser = start_browser(browser_info).await?;
-
 
     let search_input = browser
         .page
@@ -63,29 +60,29 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         .goto()
         .await;
     let mut x = 0;
-        if go_to.is_err() {
-        
-            while x <= 3 {
-                wait(3, 6);
-                let build = browser
+    if go_to.is_err() {
+        while x <= 3 {
+            wait(3, 6);
+            let build = browser
                 .page
                 .goto_builder(candidate.linkedin.as_str())
                 .goto()
                 .await;
-                if build.is_ok() {
-                    break;
-                } else if build.is_err() && x == 3 {
-                    wait(3, 6);
-                    browser.page.close(Some(false)).await?;
-                    browser.browser.close().await?; // close browser
-                    return Err(CustomError::ButtonNotFound("Candidate page is not loading/Connection".to_string())); // if error means page is not loading
-                }
-                x += 1;
-                println!("retrying to load page")
+            if build.is_ok() {
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(3, 6);
+                browser.page.close(Some(false)).await?;
+                browser.browser.close().await?; // close browser
+                return Err(CustomError::ButtonNotFound(
+                    "Candidate page is not loading/Connection".to_string(),
+                )); // if error means page is not loading
             }
-            wait(1, 3);
+            x += 1;
+            println!("retrying to load page")
         }
-
+        wait(1, 3);
+    }
 
     wait(7, 21); // random delay
                  //check if connect button is present
@@ -94,20 +91,21 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         .page
         .query_selector("div.pv-top-card-v2-ctas")
         .await?;
-    
+
     let block = match block_option {
         Some(block) => block,
         None => {
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound("block button not found".to_string()));
+            return Err(CustomError::ButtonNotFound(
+                "block button not found".to_string(),
+            ));
         }
     };
-    
+
     let connect_button = block.query_selector("li-icon[type=connect]").await?;
 
- 
     let more_option = block
         .query_selector("button[aria-label='More actions']")
         .await?;
@@ -118,7 +116,9 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound("More button not found".to_string()));
+            return Err(CustomError::ButtonNotFound(
+                "More button not found".to_string(),
+            ));
         }
     };
     more.hover_builder();
@@ -137,54 +137,52 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound("Connect button not found".to_string()));
+            return Err(CustomError::ButtonNotFound(
+                "Connect button not found".to_string(),
+            ));
         }
     }
 
-    
-    
     //check if popup to choose "How do you know" appeares
     let popup_how = browser
-    .page
-    .query_selector("button[aria-label='Other']")
-    .await?;
+        .page
+        .query_selector("button[aria-label='Other']")
+        .await?;
 
     match popup_how {
-    Some(popup_how) => {
-        popup_how.click_builder().click().await?; // click on button "Other"
-        
-        let connect = browser
-        .page
-        .query_selector("button[aria-label='Connect']")
-        .await?;
-    match connect {
-        Some(connect) => connect.click_builder().click().await?,
+        Some(popup_how) => {
+            popup_how.click_builder().click().await?; // click on button "Other"
+
+            let connect = browser
+                .page
+                .query_selector("button[aria-label='Connect']")
+                .await?;
+            match connect {
+                Some(connect) => connect.click_builder().click().await?,
                 None => {
                     wait(1, 5);
                     browser.page.close(Some(false)).await?;
                     browser.browser.close().await?;
-                    return Err(playwright::Error::InvalidParams.into())
-                },
+                    return Err(playwright::Error::InvalidParams.into());
+                }
             }
         }
         None => (),
     };
-    
 
     let email_needed = browser.page.query_selector("label[for=email]").await?;
 
     match email_needed {
         Some(_) => {
-                wait(1, 5);
-                browser.page.close(Some(false)).await?;
-                browser.browser.close().await?;
-                return Err(CustomError::EmailNeeded);   
+            wait(1, 5);
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Err(CustomError::EmailNeeded);
         }
         None => (),
     };
-        
-    
-    //artdeco-modal artdeco-modal--layer-default send-invite  
+
+    //artdeco-modal artdeco-modal--layer-default send-invite
     message(&browser.page, candidate.message.as_str()).await?;
     wait(4, 8);
     let pending_button = block.query_selector("li-icon[type=clock]").await?;
@@ -197,12 +195,15 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
             return Ok(());
         }
         None => (),
-    };  
-
-    
+    };
 
     wait(3, 7);
-    let connection_limit = browser.page.query_selector("div[class='artdeco-modal artdeco-modal--layer-default ip-fuse-limit-alert']").await?;
+    let connection_limit = browser
+        .page
+        .query_selector(
+            "div[class='artdeco-modal artdeco-modal--layer-default ip-fuse-limit-alert']",
+        )
+        .await?;
 
     match connection_limit {
         Some(_) => {
@@ -221,7 +222,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
 }
 #[instrument]
 async fn message(page: &Page, message: &str) -> Result<(), playwright::Error> {
-
     //press button add note
     let add_note = page
         .query_selector("button[aria-label='Add a note']")
@@ -254,5 +254,4 @@ async fn message(page: &Page, message: &str) -> Result<(), playwright::Error> {
         }
         None => return Err(playwright::Error::InvalidParams),
     };
-    
 }

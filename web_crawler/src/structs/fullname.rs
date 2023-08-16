@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone)]
 pub struct FullName {
     pub first_name: String,
