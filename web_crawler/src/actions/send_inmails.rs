@@ -15,6 +15,7 @@ use crate::structs::candidate::Candidate;
 use crate::structs::entry::EntrySendInmail;
 use crate::structs::error::CustomError;
 use playwright::api::Page;
+use playwright::api::File;
 
 pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     let candidate = Candidate::new(
@@ -133,7 +134,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             wait(3, 6);
             let build = browser.page.goto_builder(url.as_str()).goto().await;
             if build.is_ok() {
-                _go_to = build;
+                _go_to = build; //_go_to never read, is there some point for it?
                 break;
             } else if build.is_err() && x == 3 {
                 wait(3, 6);
@@ -142,8 +143,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                 return Err(CustomError::ButtonNotFound(
                     "Candidate Recruiter page is not loading/Inmail".to_string(),
                 )); // if error means page is not loading
-            }
-            x += 1;
+            }            x += 1;
             println!("retrying to load page")
         }
     }
@@ -202,6 +202,39 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             ));
         }
     };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    let file_button = browser
+        .page
+        .query_selector("li-icon[type='paperclip-icon']")
+        .await?
+        .unwrap();
+
+    file_button.click_builder().click().await?;
+    let url = "https://8391d9e4954c178fdc23d54008f421f8.cdn.bubble.io/f1685347944533x739141849066435200/Foto_Nemi.png";
+
+    // Fetch content from the URL
+    let response = reqwest::get(url).await?;
+
+    // Get the response content as bytes
+    let buffer = response.bytes().await?;
+
+    // Convert the buffer into a base64-encoded string
+    let encoded_buffer = base64::encode(&buffer);
+
+    // Create the Playwright File instance
+    let file = File {
+        name: "file".to_string(),
+        mime: "application/octet-stream".to_string(), // Use the appropriate MIME type here.
+        buffer: encoded_buffer,
+    };
+    wait(2, 4);
+    file_button.set_input_files_builder(file);
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        wait(10000, 20000);
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     let subject_input = browser
         .page
