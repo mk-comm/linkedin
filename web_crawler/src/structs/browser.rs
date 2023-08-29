@@ -10,6 +10,7 @@ pub struct BrowserConfig {
     pub context: BrowserContext,
     pub page: Page,
     pub build: Response,
+    pub headless: bool,
 }
 
 #[derive(Debug)]
@@ -21,4 +22,5 @@ pub struct BrowserInit {
     pub session_cookie: String,
     pub user_id: String,
     pub recruiter_session_cookie: Option<String>,
+    pub headless: bool,
 }

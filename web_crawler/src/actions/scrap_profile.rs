@@ -23,6 +23,7 @@ pub async fn scrap_profile(entry: Entry) -> Result<(), CustomError> {
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: Some(entry.recruiter_session_cookie),
+        headless: true
     };
     let browser = start_browser(browser_info).await?;
 

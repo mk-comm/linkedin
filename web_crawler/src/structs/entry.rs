@@ -62,6 +62,8 @@ pub struct EntrySendInmail {
     pub user_id: String,
     pub recruiter_session_cookie: String,
     pub session_cookie: String,
+    pub file_url: String,
+    pub file_name: String,
 }
 
 /* EntrySendInmail
@@ -78,7 +80,10 @@ pub struct EntrySendInmail {
     "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
     "session_cookie": "-cJKYmaFKFjZYydPcD0wV0tKxUBR1U9nTFASLc9a",
     "user_id": "qePDD2xm7Sap0AgUqexqbUx9WmzfOhoZYhWzcnZHlmM",
-    "recruiter_session_cookie":"AQJ2PTEmY2FwX3NlYXQ9MjU2MjQ0MTEzJmNhcF9hZG1pbj1mYWxzZSZjYXBfa249MjQxNDY4ODAzFT9osKrQvUG0aR2ol-xlpTVVMvI"
+    "recruiter_session_cookie":"AQJ2PTEmY2FwX3NlYXQ9MjU2MjQ0MTEzJmNhcF9hZG1pbj1mYWxzZSZjYXBfa249MjQxNDY4ODAzFT9osKrQvUG0aR2ol-xlpTVVMvI",
+    "file_url": "https://www.file.com",
+    "file_name": "file.pdf",
+
 }
 
 */

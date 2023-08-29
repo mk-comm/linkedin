@@ -24,6 +24,8 @@ RUN apt-get update && apt-get install -y pkg-config libssl-dev
 RUN apt-get update && \
     apt-get install -y \
     libnss3 \
+    xvfb \
+    xdotool \
     libnss3-tools \
     libnss3-dev \
     libnspr4 \
@@ -58,6 +60,7 @@ RUN apt-get update && \
 
 # Copy the app into the Docker image
 COPY . /app
+
 # Set the working directory to the app
 WORKDIR /app
 

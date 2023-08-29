@@ -9,7 +9,7 @@ use scraper::{Html, Selector};
 use serde_json::json;
 use std::collections::HashMap;
 
-#[tracing::instrument]
+
 pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
     let recruiter = entry.recruiter.clone();
     let api_key = entry.user_id.clone();
@@ -24,6 +24,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: Some(entry.recruiter_session_cookie),
+        headless: true
     };
 
     let browser = start_browser(browser_info).await?;
