@@ -42,7 +42,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         .launcher()
         .proxy(proxy)
         .headless(browserinfo.headless)
-       // .executable(path)
+        //.executable(path)
         .launch()
         .await?;
 
@@ -149,8 +149,6 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     } else {
         wait(1, 3);
     }
-
-    //page.evaluate(r#"window.stop()"#, ()).await?;
 
     wait(7, 14);
     let cookie = session_cookie_is_valid(&page).await?;

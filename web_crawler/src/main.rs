@@ -56,6 +56,7 @@ async fn scrap_conversations(json: web::Json<EntryRegular>) -> HttpResponse {
 #[tracing::instrument]
 #[post("/scrap_inmails")]
 async fn scrap_inmails_conversations(json: web::Json<EntryRecruiter>) -> HttpResponse {
+    
     info!("This is some additional information");
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
@@ -204,9 +205,10 @@ async fn withdraw_connection(json: web::Json<Entry>) -> HttpResponse {
 #[post("/message")]
 async fn message(json: web::Json<EntrySendConnection>) -> HttpResponse {
     let message_id = json.message_id.clone();
+    let message_id_2 = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
-    tokio::spawn(async move {
+    let result = tokio::spawn(async move {
         let api = send_message(json.into_inner());
         match api.await {
             Ok(_) => {
@@ -231,7 +233,9 @@ async fn message(json: web::Json<EntrySendConnection>) -> HttpResponse {
             }
         }
     });
-
+    tokio::spawn(async move {
+        check_task(result, message_id_2).await;
+    });
     HttpResponse::Ok().json(json!({
         "status": "success",
         "message": "Sending Message started!"
@@ -277,12 +281,12 @@ async fn scrap_profiles(json: web::Json<Entry>) -> HttpResponse {
 
 #[post("/connect")]
 async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
-    println!("{:?}", json);
     info!("Received request to connect");
     let message_id = json.message_id.clone();
+    let message_id_2 = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
-    tokio::spawn(async move {
+    let result = tokio::spawn(async move {
         match connection(json.into_inner()).await {
             Ok(_) => {
                 info!("Connection sent successfully");
@@ -308,7 +312,9 @@ async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
             }
         }
     });
-
+    tokio::spawn(async move {
+        check_task(result, message_id_2).await;
+    });
     HttpResponse::Ok().json(json!({
         "status": "success",
         "message": "Sending Connection started!"
@@ -319,9 +325,10 @@ async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
 async fn send_inmail(json: web::Json<EntrySendInmail>) -> HttpResponse {
     println!("{:?}", json);
     let message_id = json.message_id.clone();
+    let message_id_2 = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
-    tokio::spawn(async move {
+    let result: task::JoinHandle<()> = tokio::spawn(async move {
         let api = send_inmails(json.into_inner());
         match api.await {
             Ok(_) => {
@@ -346,7 +353,12 @@ async fn send_inmail(json: web::Json<EntrySendInmail>) -> HttpResponse {
             }
         }
     });
-
+    //create a separate thread spawned to handle the request
+    tokio::spawn(async move {
+        check_task(result, message_id_2).await;
+    });
+    //try axum instead of actix-web
+    
     HttpResponse::Ok().json(json!({
         "status": "success",
         "message": "Sending Inmail started!"
@@ -379,3 +391,24 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
+
+async fn check_task(task:  task::JoinHandle<()>, message_id: String) {
+    let webhook = "https://overview.tribe.xyz/api/1.1/wf/checking_thread_task";
+    match task.await {
+        Ok(_) => println!("Task was finished successfully"),
+        Err(error) => {
+            let client = reqwest::Client::new();
+            let payload = json!({
+                "result": error.to_string(),
+                "message_id": message_id,
+                "error": "yes",
+            });
+            let _res = client.post(webhook).json(&payload).send().await;
+        }
+    }
+}
+// To solve {} issues with empty json response
+// + 1. add separate thread for awaiting of initial thread and see what is the result there
+// 2. add tracing for error like, debug, warning etc. (look at tracing subsciber)
+// 3. switch from actix to axum 
+// 4. switch to aws or gcp
