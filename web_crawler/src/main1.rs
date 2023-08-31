@@ -399,7 +399,7 @@ async fn main() -> std::io::Result<()> {
 async fn check_task(task:  task::JoinHandle<()>, message_id: String) {
     let webhook = "https://overview.tribe.xyz/api/1.1/wf/checking_thread_task";
     match task.await {
-        Ok(_) => info!("Task was finished successfully"),
+        Ok(_) => info!("Task was finished successfully, {}", message_id),
         Err(error) => {
             debug!(error = ?error, "An error occurred/Task Checked {}", message_id);
             error!(error = ?error, "An error occurred/Task Checked {}", message_id);
@@ -409,7 +409,13 @@ async fn check_task(task:  task::JoinHandle<()>, message_id: String) {
                 "message_id": message_id,
                 "error": "yes",
             });
-            let _res = client.post(webhook).json(&payload).send().await;
+            let res = client.post(webhook).json(&payload).send().await;
+                match res {
+                    Ok(_) => info!("Http for task, {} was done", message_id),
+                    Err(error) => {
+                        error!(error = ?error, "Http for task {} returned error {}", message_id, error);
+                    }
+                }
         }
     }
 }

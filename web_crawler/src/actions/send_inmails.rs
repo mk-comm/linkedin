@@ -1,5 +1,6 @@
 
 
+
 use scraper::{Html, Selector};
 
 use crate::actions::start_browser::start_browser;
@@ -208,7 +209,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
 
 
 
-if entry.file_name.is_some() {
+    if !entry.file_name.is_empty() {
     return Err(CustomError::ButtonNotFound(
         "Inmail file not send".to_string(),
     ));

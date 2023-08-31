@@ -1,7 +1,6 @@
 use crate::structs::entry::EntryRecruiter;
 use crate::structs::entry::EntryRegular;
 use crate::structs::entry::EntryScrapConnection;
-use actix_web::{get, post, web, HttpResponse};
 use serde_json::json;
 use tracing::{error, info,debug};
 
@@ -28,17 +27,13 @@ use structs::entry::EntryScrapSearchRegular;
 use structs::entry::EntrySendConnection;
 use structs::entry::EntrySendInmail;
 
-#[get("/")]
-async fn index() -> String {
-    "Route is not available!".to_string()
-}
-#[post("/scrap_conversations")]
-async fn scrap_conversations(json: web::Json<EntryRegular>) -> HttpResponse {
+
+async fn scrap_conversations(json: Json<EntryRegular>) -> impl IntoResponse {
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
 
     let _spawn = task::spawn_local(async move {
-        let api = scrap(json.into_inner());
+        let api = scrap(json.0);
         match api.await {
             Ok(_) => info!("Scraping messages was successful!"),
             Err(error) => {
@@ -53,21 +48,21 @@ async fn scrap_conversations(json: web::Json<EntryRegular>) -> HttpResponse {
         }
     });
 
-    HttpResponse::Ok().json(json!({
+    Json(json!({
         "status": "success",
-        "message": "Scraping Conversations started!"
+        "message": "Scarping conversations started!"
     }))
 }
+
 #[tracing::instrument]
-#[post("/scrap_inmails")]
-async fn scrap_inmails_conversations(json: web::Json<EntryRecruiter>) -> HttpResponse {
+async fn scrap_inmails_conversations(json: Json<EntryRecruiter>) -> impl IntoResponse {
     
     info!("This is some additional information");
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
 
     let _spawn = task::spawn_local(async move {
-        let api = scrap_inmails(json.into_inner());
+        let api = scrap_inmails(json.0);
         match api.await {
             Ok(_) => info!("Scraping messages was successful!"),
             Err(error) => {
@@ -82,18 +77,18 @@ async fn scrap_inmails_conversations(json: web::Json<EntryRecruiter>) -> HttpRes
         }
     });
 
-    HttpResponse::Ok().json(json!({
+    Json(json!({
         "status": "success",
-        "message": "Scraping Inmails started!"
+        "message": "Scrap Inmails started!"
     }))
 }
 
-#[post("/scrap_connection")]
-async fn scrap_connection(json: web::Json<EntryScrapConnection>) -> HttpResponse {
+
+async fn scrap_connection(json: Json<EntryScrapConnection>) -> impl IntoResponse {
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     tokio::spawn(async move {
-        let api = scrap_connections(json.into_inner());
+        let api = scrap_connections(json.0);
         match api.await {
             Ok(_) => info!("Scraping connections was successful!"),
             Err(error) => {
@@ -108,19 +103,19 @@ async fn scrap_connection(json: web::Json<EntryScrapConnection>) -> HttpResponse
         }
     });
 
-    HttpResponse::Ok().json(json!({
+    Json(json!({
         "status": "success",
-        "message": "Scraping Connections started!"
+        "message": "Scrap connection started!"
     }))
 }
 
-#[post("/scrap_regular_search")]
-async fn scrap_regular_search_url(json: web::Json<EntryScrapSearchRegular>) -> HttpResponse {
+
+async fn scrap_regular_search_url(json: Json<EntryScrapSearchRegular>) -> impl IntoResponse {
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     let aisearch = json.aisearch.clone();
     tokio::spawn(async move {
-        let api = scrap_regular_search(json.into_inner());
+        let api = scrap_regular_search(json.0);
         match api.await {
             Ok(_) => info!("Scraping regular search was successful!"),
             Err(error) => {
@@ -136,19 +131,19 @@ async fn scrap_regular_search_url(json: web::Json<EntryScrapSearchRegular>) -> H
         }
     });
 
-    HttpResponse::Ok().json(json!({
+    Json(json!({
         "status": "success",
-        "message": "Scraping of regular search started!"
+        "message": "Scrap regular search started!"
     }))
 }
 
-#[post("/scrap_recruiter_search")]
-async fn scrap_recruiter_search_url(json: web::Json<EntryScrapSearchRecruiter>) -> HttpResponse {
+
+async fn scrap_recruiter_search_url(json: Json<EntryScrapSearchRecruiter>) -> impl IntoResponse {
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     let aisearch = json.aisearch.clone();
     tokio::spawn(async move {
-        let api = scrap_recruiter_search(json.into_inner());
+        let api = scrap_recruiter_search(json.0);
         match api.await {
 
             Ok(_) => info!("Scraping recruiter search was successful!"),
@@ -165,19 +160,19 @@ async fn scrap_recruiter_search_url(json: web::Json<EntryScrapSearchRecruiter>) 
         }
     });
 
-    HttpResponse::Ok().json(json!({
+    Json(json!({
         "status": "success",
-        "message": "Scraping of recruiter search started!"
+        "message": "Scrap recruiter search started!"
     }))
 }
 
-#[post("/withdraw_connection")]
-async fn withdraw_connection(json: web::Json<Entry>) -> HttpResponse {
+
+async fn withdraw_connection(json: Json<Entry>) -> impl IntoResponse {
     let message_id = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     tokio::spawn(async move {
-        let api = withdraw(json.into_inner());
+        let api = withdraw(json.0);
         match api.await {
             Ok(_) => {
                 let client = reqwest::Client::new();
@@ -202,20 +197,20 @@ async fn withdraw_connection(json: web::Json<Entry>) -> HttpResponse {
         }
     });
 
-    HttpResponse::Ok().json(json!({
+    Json(json!({
         "status": "success",
-        "message": "Withdraw Connection started!"
+        "message": "Withdraw connection started!"
     }))
 }
 
-#[post("/message")]
-async fn message(json: web::Json<EntrySendConnection>) -> HttpResponse {
+
+async fn message(json: Json<EntrySendConnection>) -> impl IntoResponse {
     let message_id = json.message_id.clone();
     let message_id_2 = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     let result = tokio::spawn(async move {
-        let api = send_message(json.into_inner());
+        let api = send_message(json.0);
         match api.await {
             Ok(_) => {
                 let client = reqwest::Client::new();
@@ -242,19 +237,19 @@ async fn message(json: web::Json<EntrySendConnection>) -> HttpResponse {
     tokio::spawn(async move {
         check_task(result, message_id_2).await;
     });
-    HttpResponse::Ok().json(json!({
+    Json(json!({
         "status": "success",
-        "message": "Sending Message started!"
+        "message": "Sending message started!"
     }))
 }
 
-#[post("/scrap_profiles")]
-async fn scrap_profiles(json: web::Json<Entry>) -> HttpResponse {
+
+async fn scrap_profiles(json: Json<Entry>) -> impl IntoResponse {
     let message_id = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     tokio::spawn(async move {
-        let api = scrap_profile(json.into_inner());
+        let api = scrap_profile(json.0);
         match api.await {
             Ok(_) => {
                 let client = reqwest::Client::new();
@@ -279,23 +274,23 @@ async fn scrap_profiles(json: web::Json<Entry>) -> HttpResponse {
         }
     });
 
-    HttpResponse::Ok().json(json!({
+    Json(json!({
         "status": "success",
-        "message": "Scraping profile started!"
+        "message": "Scrap profile started!"
     }))
 }
 
-#[post("/connect")]
-async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
-    info!("Received request to connect");
+
+async fn connect(json: Json<EntrySendConnection>) -> impl IntoResponse {
+    info!("Send connection started {}", json.message_id);
     let message_id = json.message_id.clone();
     let message_id_2 = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     let result = tokio::spawn(async move {
-        match connection(json.into_inner()).await {
+        match connection(json.0).await {
             Ok(_) => {
-                info!("Connection sent successfully");
+                info!("Connection sent successfully {}", message_id);
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
@@ -306,7 +301,7 @@ async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
                 let _res = client.post(webhook).json(&payload).send().await;
             }
             Err(error) => {
-                error!("Error sending connection: {}", error);
+                error!("Error sending connection for {}: {}", message_id, error);
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
@@ -314,16 +309,22 @@ async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
                     "user_id": user_id,
                     "error": "yes",
                 });
-                let _res = client.post(webhook).json(&payload).send().await;
+                let res = client.post(webhook).json(&payload).send().await;
+                match res {
+                    Ok(_) => info!("Connection http for message, {} was done", message_id),
+                    Err(error) => {
+                        error!(error = ?error, "Connection http for message {} returned error {}", message_id, error);
+                    }
+                }
             }
         }
     });
     tokio::spawn(async move {
         check_task(result, message_id_2).await;
     });
-    HttpResponse::Ok().json(json!({
+    Json(json!({
         "status": "success",
-        "message": "Sending Connection started!"
+        "message": "Sending connection started!"
     }))
 }
 
@@ -349,10 +350,16 @@ async fn send_inmail(json: Json<EntrySendInmail>) -> impl IntoResponse {
                     "user_id": user_id,
                     "error": "no",
                 });
-                let _res = client.post(webhook).json(&payload).send().await;
+                let res = client.post(webhook).json(&payload).send().await;
+                match res {
+                    Ok(_) => info!("Inmail http for message/Ok, {} was done", message_id),
+                    Err(error) => {
+                        error!(error = ?error, "Inmail http/Ok for message {} returned error {}", message_id, error);
+                    }
+                }
             }
             Err(error) => {
-                error!(error = ?error, "An error occurred/Imail sent {}", message_id);
+                error!(error = ?error, "An error occurred/Imail sent {}, error {}", message_id, error);
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
@@ -360,7 +367,13 @@ async fn send_inmail(json: Json<EntrySendInmail>) -> impl IntoResponse {
                     "user_id": user_id,
                     "error": "yes",
                 });
-                let _res = client.post(webhook).json(&payload).send().await;
+                let res = client.post(webhook).json(&payload).send().await;
+                match res {
+                    Ok(_) => info!("Inmail http for message/Error, {} was done", message_id),
+                    Err(error) => {
+                        error!(error = ?error, "Inmail http for message?error {} returned error {}", message_id, error);
+                    }
+                }
             }
         }
     });
@@ -384,8 +397,17 @@ async fn main() {
     let address: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("Failed to parse address");
 
     let app = Router::new()
-        .route("/send_inmail", post(send_inmail));
-        // ... add other routes as needed ...
+        .route("/send_inmail", post(send_inmail))
+        .route("/connect", post(connect))
+        .route("/scrap_conversations", post(scrap_conversations))
+        .route("/message", post(message))
+        .route("/withdraw_connection", post(withdraw_connection))
+        .route("/scrap_connection", post(scrap_connection))
+        .route("/scrap_inmails", post(scrap_inmails_conversations))
+        .route("/scrap_profiles", post(scrap_profiles))
+        .route("/scrap_regular_search", post(scrap_regular_search_url))
+        .route("/scrap_recruiter_search", post(scrap_recruiter_search_url));
+        
 
     hyper::Server::bind(&address)
         .serve(app.into_make_service())
@@ -398,8 +420,8 @@ async fn check_task(task:  task::JoinHandle<()>, message_id: String) {
     match task.await {
         Ok(_) => info!("Task was finished successfully"),
         Err(error) => {
-            debug!(error = ?error, "An error occurred/Task Checked {}", message_id);
-            error!(error = ?error, "An error occurred/Task Checked {}", message_id);
+            debug!(error = ?error, "An error occurred/Task Checked {}, error {}", message_id, error);
+            error!(error = ?error, "An error occurred/Task Checked {}, error {}", message_id, error);
             let client = reqwest::Client::new();
             let payload = json!({
                 "result": error.to_string(),
@@ -413,5 +435,5 @@ async fn check_task(task:  task::JoinHandle<()>, message_id: String) {
 // To solve {} issues with empty json response
 // + 1. add separate thread for awaiting of initial thread and see what is the result there
 // 2. add tracing for error like, debug, warning etc. (look at tracing subsciber)
-// 3. switch from actix to axum 
+// 3. + switch from actix to axum 
 // 4. switch to aws or gcp

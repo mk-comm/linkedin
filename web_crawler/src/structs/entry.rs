@@ -62,8 +62,8 @@ pub struct EntrySendInmail {
     pub user_id: String,
     pub recruiter_session_cookie: String,
     pub session_cookie: String,
-    pub file_url: Option<String>,
-    pub file_name: Option<String>,
+    pub file_url: String,
+    pub file_name: String,
 }
 
 /* EntrySendInmail
