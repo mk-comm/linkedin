@@ -209,7 +209,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
 
 
 
-    if !entry.file_name.is_empty() {
+    if entry.file_name != "null" {
     return Err(CustomError::ButtonNotFound(
         "Inmail file not send".to_string(),
     ));

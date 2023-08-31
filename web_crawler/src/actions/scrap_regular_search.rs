@@ -6,6 +6,7 @@ use crate::structs::error::CustomError;
 use reqwest;
 use scraper::{Html, Selector};
 use serde_json::json;
+use tracing::{error, info};
 
 pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), CustomError> {
     let browser_info = BrowserInit {
@@ -50,7 +51,7 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
 
     //println!("url list: {:?}", url_list);
 
-    send_urls(url_list, &entry.result_url).await?;
+    send_urls(url_list, &entry.result_url, &entry.aisearch).await?;
 
     wait(5, 12);
 
@@ -96,15 +97,21 @@ fn count_pages(html: String) -> i32 {
     total_pages
 }
 
-async fn send_urls(urls: Vec<String>, target_url: &str) -> Result<(), reqwest::Error> {
+async fn send_urls(urls: Vec<String>, target_url: &str, ai_search: &str) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 
     // Convert the Vec<String> into a JSON string
-    let urls_json = json!({ "urls": urls });
+    let urls_json = json!({ 
+        "urls": urls,
+        "ai_search": ai_search });
 
-    let _response = client.post(target_url).json(&urls_json).send().await?;
-
-    //println!("{:?}", response.text().await?);
+    let response = client.post(target_url).json(&urls_json).send().await;
+    match response {
+        Ok(_) => info!("Send_urls/scrap_regular_search/Ok, {} was done", ai_search),
+        Err(error) => {
+            error!(error = ?error, "Send_urls/scrap_regular_search/Error {} returned error {}", ai_search, error);
+        }
+    }
 
     Ok(())
 }
