@@ -74,16 +74,16 @@ pub async fn scrap_profile(entry: Entry) -> Result<(), CustomError> {
         }
     };
 
-    println!("entity_urn: {}", entity_urn);
-
+    //println!("entity_urn: {}", entity_urn);
+    /* 
     let contact_info = browser
         .page
         .query_selector("a#top-card-text-details-contact-info")
         .await?
         .unwrap();
-    let url = contact_info.get_attribute("href").await?;
-    println!("url: {}", url.unwrap());
-
+    //let url = contact_info.get_attribute("href").await?;
+    //println!("url: {}", url.unwrap());
+*/
     let client = reqwest::Client::new();
     let payload = json!({
             "entity_urn": entity_urn,

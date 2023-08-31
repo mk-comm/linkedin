@@ -80,7 +80,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
                 )); // if error means page is not loading
             }
             x += 1;
-            println!("retrying to load page")
+            //println!("retrying to load page")
         }
         wait(1, 3);
     }

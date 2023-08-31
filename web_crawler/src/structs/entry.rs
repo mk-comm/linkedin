@@ -47,7 +47,7 @@ pub struct EntryRecruiter {
     pub recruiter_stage_not_interested: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct EntrySendInmail {
     pub message_id: String,
     pub webhook: String,
@@ -62,8 +62,8 @@ pub struct EntrySendInmail {
     pub user_id: String,
     pub recruiter_session_cookie: String,
     pub session_cookie: String,
-    pub file_url: String,
-    pub file_name: String,
+    pub file_url: Option<String>,
+    pub file_name: Option<String>,
 }
 
 /* EntrySendInmail

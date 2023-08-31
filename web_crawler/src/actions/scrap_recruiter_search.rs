@@ -41,7 +41,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         .unwrap();
 
     let pages_count = count_pages(search_container.inner_html().await?);
-    println!("pages count: {}", pages_count);
+    //println!("pages count: {}", pages_count);
     let mut url_list: Vec<String> = Vec::new();
     for i in 1..=pages_count {
         scrap(search_container.inner_html().await?.as_str(), &mut url_list);
@@ -57,7 +57,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         wait(3, 5);
     }
 
-    println!("url list: {:?}", url_list);
+    //println!("url list: {:?}", url_list);
 
     send_urls(url_list, &entry.result_url).await?;
 
@@ -111,9 +111,9 @@ async fn send_urls(urls: Vec<String>, target_url: &str) -> Result<(), reqwest::E
     // Convert the Vec<String> into a JSON string
     let urls_json = json!({ "urls": urls });
 
-    let response = client.post(target_url).json(&urls_json).send().await?;
+    let _response = client.post(target_url).json(&urls_json).send().await?;
 
-    println!("{:?}", response.text().await?);
+    //println!("{:?}", response.text().await?);
 
     Ok(())
 }

@@ -90,7 +90,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
                 .await?;
             match icon {
                 Some(icon) => {
-                    println!("Icon found");
+                    //println!("Icon found");
                     icon.click_builder().click().await?; // click on icon pending
                     wait(1, 3);
                     let withdraw = browser.page.
@@ -112,7 +112,7 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
                     }
                 }
                 None => {
-                    println!("Icon not found");
+                    //println!("Icon not found");
                     button.click_builder().click().await?;
                     wait(1, 3);
                     let dropdown = block

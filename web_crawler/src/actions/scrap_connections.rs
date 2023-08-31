@@ -120,9 +120,9 @@ fn scrap_each_connection(html: &str) -> Vec<Connection> {
         let url_elem = li.select(&url_selector).next().unwrap();
         let profile_url = url_elem.value().attr("href").unwrap().to_string();
 
-        println!("First Name: {:?}", full_name);
+        //println!("First Name: {:?}", full_name);
 
-        println!("Profile URL: https://www.linkedin.com{}", profile_url);
+        //println!("Profile URL: https://www.linkedin.com{}", profile_url);
 
         let connection = Connection {
             first_name: full_name.first_name,

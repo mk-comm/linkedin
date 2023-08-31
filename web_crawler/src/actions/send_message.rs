@@ -116,7 +116,7 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
         wait(1, 5); // random delay
         browser.page.close(Some(false)).await?;
         browser.browser.close().await?;
-        println!("You have to be premium to send messages to this profile");
+        //println!("You have to be premium to send messages to this profile");
         return Err(CustomError::ButtonNotFound("Inmail needed".to_string()));
     } // Inmail needed to send message to this profile
       // Get the HTML content of the messaging container
@@ -127,7 +127,7 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
         .unwrap();
     let html = pick.inner_html().await?;
     let conversation_id = find_conversation(html.as_str(), entity_urn.as_str());
-    println!("conversation_id: {}", conversation_id);
+    //println!("conversation_id: {}", conversation_id);
 
     let conversation_select = match browser
         .page
@@ -203,7 +203,7 @@ fn find_conversation(html: &str, entity_urn: &str) -> String {
     let mut correct_div = String::new();
     for conv_div in document.select(&conv_selector) {
         let id = conv_div.value().attr("id").unwrap();
-        println!("{}", id);
+        //println!("{}", id);
         let href_elem = conv_div.select(&href_selector).next().unwrap();
 
         let href = href_elem.value().attr("href").unwrap();

@@ -154,14 +154,14 @@ pub async fn scrap_message(
                     conversation_select.click_builder().click().await?;
                     wait(3, 5);
                     mark_unread(&conversation_select, focused_inbox).await?;
-                    println!("Marked as unread/Interested");
+                    //println!("Marked as unread/Interested");
                 }
             }
             MessageCategory::NotInterested => {
-                println!("Nothing happened/NotInterested");
+                //println!("Nothing happened/NotInterested");
             }
             MessageCategory::NotFound => {
-                println!("Category NotFound");
+                //println!("Category NotFound");
             }
         }
     }

@@ -157,7 +157,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
     };
 
     if recruiter == false {
-        println!("Inmails is disabled for this user");
+        //println!("Inmails is disabled for this user");
         browser.page.close(Some(false)).await?;
         browser.browser.close().await?;
         return Ok(());
@@ -215,7 +215,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
                 change_stage(&stage_not_interested, &browser).await?;
             }
             MessageCategory::NotFound => {
-                println!("No category found");
+                //println!("No category found");
             }
         }
     }

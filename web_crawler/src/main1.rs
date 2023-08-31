@@ -1,15 +1,10 @@
 use crate::structs::entry::EntryRecruiter;
 use crate::structs::entry::EntryRegular;
 use crate::structs::entry::EntryScrapConnection;
-use actix_web::{get, post, web, HttpResponse};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use serde_json::json;
 use tracing::{error, info,debug};
 
-use axum::{Router, Json, response::IntoResponse};
-use axum::routing::post;
-use tokio::task;
-
-use std::net::SocketAddr;
 mod actions;
 mod structs;
 use crate::actions::connection::connection;
@@ -27,7 +22,7 @@ use structs::entry::EntryScrapSearchRecruiter;
 use structs::entry::EntryScrapSearchRegular;
 use structs::entry::EntrySendConnection;
 use structs::entry::EntrySendInmail;
-
+use tokio::task;
 #[get("/")]
 async fn index() -> String {
     "Route is not available!".to_string()
@@ -327,8 +322,8 @@ async fn connect(json: web::Json<EntrySendConnection>) -> HttpResponse {
     }))
 }
 
-
-async fn send_inmail(json: Json<EntrySendInmail>) -> impl IntoResponse {
+#[post("/send_inmail")]
+async fn send_inmail(json: web::Json<EntrySendInmail>) -> HttpResponse {
     info!("Send Inmail started {}", json.message_id);
     let message_id = json.message_id.clone();
     let message_id_2 = json.message_id.clone();
@@ -337,7 +332,7 @@ async fn send_inmail(json: Json<EntrySendInmail>) -> impl IntoResponse {
 
     let result: task::JoinHandle<()> = tokio::spawn(async move {
        
-        let api = send_inmails(json.0);
+        let api = send_inmails(json.into_inner());
 
         match api.await {
             Ok(_) => {
@@ -368,29 +363,37 @@ async fn send_inmail(json: Json<EntrySendInmail>) -> impl IntoResponse {
     tokio::spawn(async move {
         check_task(result, message_id_2).await;
     });
-    Json(json!({
+    HttpResponse::Ok().json(json!({
         "status": "success",
         "message": "Sending Inmail started!"
     }))
 }
 
-#[tokio::main]
-async fn main() {
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
     tracing_subscriber::fmt::init();
     let port = match std::env::var("PORT") {
         Ok(val) => val,
         Err(_e) => "8080".to_string(),
     };
-    let address: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("Failed to parse address");
-
-    let app = Router::new()
-        .route("/send_inmail", post(send_inmail));
-        // ... add other routes as needed ...
-
-    hyper::Server::bind(&address)
-        .serve(app.into_make_service())
-        .await
-        .expect("Server failed");
+    let address = format!("0.0.0.0:{}", port);
+    HttpServer::new(|| {
+        App::new()
+            .service(index)
+            .service(connect)
+            .service(scrap_conversations)
+            .service(message)
+            .service(withdraw_connection)
+            .service(scrap_connection)
+            .service(scrap_inmails_conversations)
+            .service(scrap_profiles)
+            .service(send_inmail)
+            .service(scrap_regular_search_url)
+            .service(scrap_recruiter_search_url)
+    })
+    .bind(address)?
+    .run()
+    .await
 }
 
 async fn check_task(task:  task::JoinHandle<()>, message_id: String) {

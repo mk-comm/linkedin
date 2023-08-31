@@ -9,13 +9,15 @@ use crate::structs::candidate::Candidate;
 use crate::structs::entry::EntrySendInmail;
 use crate::structs::error::CustomError;
 use playwright::api::Page;
+use tracing::span;
+use tracing::Level;
+use tracing::instrument;
 
-
-
-
-
+#[instrument]
 pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
-    
+
+    let span = span!(Level::DEBUG, "sub_span_name {}", entry.message_id);
+    let _enter = span.enter();
     let candidate = Candidate::new(
         entry.fullname.clone(),
         entry.linkedin.clone(),
@@ -41,6 +43,8 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         .page
         .query_selector("input[class=search-global-typeahead__input]")
         .await?;
+    
+
     wait(3, 15); // random delay
                  //focus on search input and fill it with text
     match search_input {
@@ -89,7 +93,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                 )); // if error means page is not loading
             }
             x += 1;
-            println!("retrying to load page")
+            //println!("retrying to load page")
         }
         wait(1, 3);
     }
@@ -119,7 +123,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                  */
 
     let entity_urn = find_entity_run(&browser.page).await?;
-    println!("entity_urn: {:?}", entity_urn);
+    //println!("entity_urn: {:?}", entity_urn);
 
     let url = format!(
         "https://www.linkedin.com/talent/profile/{}?trk=FLAGSHIP_VIEW_IN_RECRUITER",
@@ -143,7 +147,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                     "Candidate Recruiter page is not loading/Inmail".to_string(),
                 )); // if error means page is not loading
             }            x += 1;
-            println!("retrying to load page")
+            //println!("retrying to load page")
         }
     }
 
@@ -204,7 +208,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
 
 
 
-if !entry.file_name.is_empty() {
+if entry.file_name.is_some() {
     return Err(CustomError::ButtonNotFound(
         "Inmail file not send".to_string(),
     ));
@@ -287,7 +291,9 @@ if !entry.file_name.is_empty() {
     wait(2, 4);
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
+    drop(_enter);
     Ok(())
+
 }
 
 async fn find_entity_run(page: &Page) -> Result<String, playwright::Error> {
