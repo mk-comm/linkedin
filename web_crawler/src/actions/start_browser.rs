@@ -14,7 +14,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     //path to  local browser
 
     //let path = Path::new("/opt/homebrew/bin/chromium");
-    
+
     let mut user = User::new(
         browserinfo.user_agent,
         browserinfo.session_cookie,
@@ -42,7 +42,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         .launcher()
         .proxy(proxy)
         .headless(browserinfo.headless)
-      //  .executable(path)
+        //.executable(path)
         .launch()
         .await?;
 
@@ -175,7 +175,6 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         build: go_to.unwrap().unwrap(),
         headless: browserinfo.headless,
     };
-
 
     return Ok(browser_config);
 }

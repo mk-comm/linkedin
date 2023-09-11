@@ -19,7 +19,7 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: None,
-        headless: true
+        headless: true,
     };
 
     let browser = start_browser(browser_info).await?;

@@ -23,7 +23,7 @@ pub async fn scrap_profile(entry: Entry) -> Result<(), CustomError> {
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: Some(entry.recruiter_session_cookie),
-        headless: true
+        headless: true,
     };
     let browser = start_browser(browser_info).await?;
 
@@ -75,15 +75,15 @@ pub async fn scrap_profile(entry: Entry) -> Result<(), CustomError> {
     };
 
     //println!("entity_urn: {}", entity_urn);
-    /* 
-    let contact_info = browser
-        .page
-        .query_selector("a#top-card-text-details-contact-info")
-        .await?
-        .unwrap();
-    //let url = contact_info.get_attribute("href").await?;
-    //println!("url: {}", url.unwrap());
-*/
+    /*
+        let contact_info = browser
+            .page
+            .query_selector("a#top-card-text-details-contact-info")
+            .await?
+            .unwrap();
+        //let url = contact_info.get_attribute("href").await?;
+        //println!("url: {}", url.unwrap());
+    */
     let client = reqwest::Client::new();
     let payload = json!({
             "entity_urn": entity_urn,

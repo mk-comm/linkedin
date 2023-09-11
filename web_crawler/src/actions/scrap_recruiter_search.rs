@@ -3,9 +3,9 @@ use crate::structs::browser::BrowserInit;
 use crate::structs::error::CustomError;
 use crate::{actions::start_browser::start_browser, structs::entry::EntryScrapSearchRecruiter};
 use reqwest;
-use tracing::{error, info};
 use scraper::{Html, Selector};
 use serde_json::json;
+use tracing::{error, info};
 
 pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<(), CustomError> {
     let browser_info = BrowserInit {
@@ -16,7 +16,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: Some(entry.recruiter_session_cookie),
-        headless: true
+        headless: true,
     };
 
     let browser = start_browser(browser_info).await?;
@@ -106,7 +106,11 @@ fn count_pages(html: String) -> i32 {
     total_pages
 }
 
-async fn send_urls(urls: Vec<String>, target_url: &str, ai_search: &str) -> Result<(), reqwest::Error> {
+async fn send_urls(
+    urls: Vec<String>,
+    target_url: &str,
+    ai_search: &str,
+) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 
     // Convert the Vec<String> into a JSON string
@@ -116,7 +120,10 @@ async fn send_urls(urls: Vec<String>, target_url: &str, ai_search: &str) -> Resu
 
     let response = client.post(target_url).json(&urls_json).send().await;
     match response {
-        Ok(_) => info!("Send_urls/scrap_recruiter_search/Ok, {} was done", ai_search),
+        Ok(_) => info!(
+            "Send_urls/scrap_recruiter_search/Ok, {} was done",
+            ai_search
+        ),
         Err(error) => {
             error!(error = ?error, "Send_urls/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
         }

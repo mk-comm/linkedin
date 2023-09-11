@@ -1,5 +1,3 @@
-
-
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::candidate::Candidate;
@@ -25,11 +23,11 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: None,
-        headless: true
+        headless: true,
     };
 
     let browser = start_browser(browser_info).await?;
-    
+
     let search_input = browser
         .page
         .query_selector("input[class=search-global-typeahead__input]")
@@ -70,8 +68,6 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
         .query_selector("button.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.pvs-profile-actions__action")
         //.query_selector("li-icon[type=send-privately]")
         .await;
-
-    
 
     let entity_urn = match find_entity_run(&browser.page).await {
         Ok(entity_urn) => entity_urn,

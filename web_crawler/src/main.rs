@@ -3,7 +3,7 @@ use crate::structs::entry::EntryRegular;
 use crate::structs::entry::EntryScrapConnection;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use serde_json::json;
-use tracing::{error, info,debug};
+use tracing::{debug, error, info};
 
 mod actions;
 mod structs;
@@ -56,7 +56,6 @@ async fn scrap_conversations(json: web::Json<EntryRegular>) -> HttpResponse {
 #[tracing::instrument]
 #[post("/scrap_inmails")]
 async fn scrap_inmails_conversations(json: web::Json<EntryRecruiter>) -> HttpResponse {
-    
     info!("This is some additional information");
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
@@ -145,7 +144,6 @@ async fn scrap_recruiter_search_url(json: web::Json<EntryScrapSearchRecruiter>) 
     tokio::spawn(async move {
         let api = scrap_recruiter_search(json.into_inner());
         match api.await {
-
             Ok(_) => info!("Scraping recruiter search was successful!"),
             Err(error) => {
                 let client = reqwest::Client::new();
@@ -337,7 +335,6 @@ async fn send_inmail(json: web::Json<EntrySendInmail>) -> HttpResponse {
     let user_id = json.user_id.clone();
 
     let result: task::JoinHandle<()> = tokio::spawn(async move {
-       
         let api = send_inmails(json.into_inner());
 
         match api.await {
@@ -377,7 +374,7 @@ async fn send_inmail(json: web::Json<EntrySendInmail>) -> HttpResponse {
             }
         }
     });
-   
+
     tokio::spawn(async move {
         check_task(result, message_id_2).await;
     });
@@ -414,7 +411,7 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-async fn check_task(task:  task::JoinHandle<()>, message_id: String) {
+async fn check_task(task: task::JoinHandle<()>, message_id: String) {
     let webhook = "https://overview.tribe.xyz/api/1.1/wf/checking_thread_task";
     match task.await {
         Ok(_) => info!("Task was finished successfully, {}", message_id),
@@ -428,17 +425,17 @@ async fn check_task(task:  task::JoinHandle<()>, message_id: String) {
                 "error": "yes",
             });
             let res = client.post(webhook).json(&payload).send().await;
-                match res {
-                    Ok(_) => info!("Http for task, {} was done", message_id),
-                    Err(error) => {
-                        error!(error = ?error, "Http for task {} returned error {}", message_id, error);
-                    }
+            match res {
+                Ok(_) => info!("Http for task, {} was done", message_id),
+                Err(error) => {
+                    error!(error = ?error, "Http for task {} returned error {}", message_id, error);
                 }
+            }
         }
     }
 }
 // To solve {} issues with empty json response
 // + 1. add separate thread for awaiting of initial thread and see what is the result there
-// 2. add tracing for error like, debug, warning etc. (look at tracing subsciber)
-// 3. switch from actix to axum 
+// + 2. add tracing for error like, debug, warning etc. (look at tracing subsciber)
+// 3. switch from actix to axum
 // 4. switch to aws or gcp

@@ -17,14 +17,14 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: None,
-        headless: true
+        headless: true,
     };
 
     let browser = start_browser(browser_info).await?;
 
     browser.page.goto_builder(&entry.url).goto().await?;
 
-    wait(5, 10);
+    wait(7, 10);
 
     let search_container = browser
         .page
@@ -33,10 +33,10 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         .unwrap();
 
     let pages_count = count_pages(search_container.inner_html().await?);
-    //println!("pages count: {}", pages_count);
+    println!("pages count: {}", pages_count);
     let mut url_list: Vec<String> = Vec::new();
     for i in 1..=pages_count {
-        scrap(search_container.inner_html().await?.as_str(), &mut url_list);
+
         let page_number = format!("button[aria-label='Page {}']", i);
         let next_page = browser
             .page
@@ -45,6 +45,15 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
             .unwrap();
 
         next_page.click_builder().click().await?;
+
+        wait(7, 10);
+
+        let container = browser
+        .page
+        .query_selector("div.search-results-container")
+        .await?
+        .unwrap();
+        scrap(container.inner_html().await?.as_str(), &mut url_list);
 
         wait(3, 5);
     }
@@ -97,7 +106,11 @@ fn count_pages(html: String) -> i32 {
     total_pages
 }
 
-async fn send_urls(urls: Vec<String>, target_url: &str, ai_search: &str) -> Result<(), reqwest::Error> {
+async fn send_urls(
+    urls: Vec<String>,
+    target_url: &str,
+    ai_search: &str,
+) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 
     // Convert the Vec<String> into a JSON string

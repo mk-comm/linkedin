@@ -1,6 +1,3 @@
-
-
-
 use scraper::{Html, Selector};
 
 use crate::actions::start_browser::start_browser;
@@ -10,13 +7,12 @@ use crate::structs::candidate::Candidate;
 use crate::structs::entry::EntrySendInmail;
 use crate::structs::error::CustomError;
 use playwright::api::Page;
+use tracing::instrument;
 use tracing::span;
 use tracing::Level;
-use tracing::instrument;
 
 #[instrument]
 pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
-
     let span = span!(Level::DEBUG, "sub_span_name {}", entry.message_id);
     let _enter = span.enter();
     let candidate = Candidate::new(
@@ -44,7 +40,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         .page
         .query_selector("input[class=search-global-typeahead__input]")
         .await?;
-    
 
     wait(3, 15); // random delay
                  //focus on search input and fill it with text
@@ -147,7 +142,8 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                 return Err(CustomError::ButtonNotFound(
                     "Candidate Recruiter page is not loading/Inmail".to_string(),
                 )); // if error means page is not loading
-            }            x += 1;
+            }
+            x += 1;
             //println!("retrying to load page")
         }
     }
@@ -207,15 +203,11 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         }
     };
 
-
-
     if entry.file_name != "null" {
-    return Err(CustomError::ButtonNotFound(
-        "Inmail file not send".to_string(),
-    ));
-
-
-}
+        return Err(CustomError::ButtonNotFound(
+            "Inmail file not send".to_string(),
+        ));
+    }
 
     let subject_input = browser
         .page
@@ -267,19 +259,35 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         }
     };
 
-    let send_button = browser
+    //checking between 2 possible button variations
+    let first_button = browser
         .page
-        .query_selector("button[class='msg-cmpt__button--small compose-actions__submit-button']")
+        .query_selector(
+            "button[class='artdeco-button artdeco-button--2 artdeco-button--primary ember-view']",
+        )
         .await?;
 
-    match send_button {
-        Some(button) => {
+    if let Some(button) = first_button {
+        // Do actions with the first button found
+        println!("First button found.");
+        button.hover_builder(); // hover on search input
+        wait(1, 4); // random delay
+        button.click_builder().click().await?; // click on search input
+        wait(2, 5); // random delay
+    } else {
+        let second_button = browser
+            .page
+            .query_selector(
+                "button[class='msg-cmpt__button--small compose-actions__submit-button']",
+            )
+            .await?;
+
+        if let Some(button) = second_button {
             button.hover_builder(); // hover on search input
             wait(1, 4); // random delay
             button.click_builder().click().await?; // click on search input
             wait(2, 5); // random delay
-        }
-        None => {
+        } else {
             wait(1, 5); // random delay
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
@@ -287,14 +295,31 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                 "Send button in recruiter is not visible/Text".to_string(),
             ));
         }
-    };
-    
+    }
+
+    /*
+        match send_button {
+            Some(button) => {
+                button.hover_builder(); // hover on search input
+                wait(1, 4); // random delay
+                button.click_builder().click().await?; // click on search input
+                wait(2, 5); // random delay
+            }
+            None => {
+                wait(1, 5); // random delay
+                browser.page.close(Some(false)).await?;
+                browser.browser.close().await?; // close browser
+                return Err(CustomError::ButtonNotFound(
+                    "Send button in recruiter is not visible/Text".to_string(),
+                ));
+            }
+        };
+    */
     wait(2, 4);
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
     drop(_enter);
     Ok(())
-
 }
 
 async fn find_entity_run(page: &Page) -> Result<String, playwright::Error> {
@@ -379,4 +404,3 @@ fn print_elements_with_datalet_in_id(html: &str) -> String {
 
     entity_urn
 }
-
