@@ -100,9 +100,9 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
         }
     };
 
-    let conversations = scrap_conversation_to_list(&conversation_list.inner_html().await?, &api_key, regular);
+    let conversations =
+        scrap_conversation_to_list(&conversation_list.inner_html().await?, &api_key, regular);
 
- 
     for conversation in conversations.values() {
         scrap_message(conversation, &browser.page, focused_inbox, &browser).await?;
     }
@@ -112,9 +112,11 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
     Ok(())
 }
 
-
-fn scrap_conversation_to_list(html: &str, api_key: &str, regular: bool ) -> HashMap<String, Conversation>{
-
+fn scrap_conversation_to_list(
+    html: &str,
+    api_key: &str,
+    regular: bool,
+) -> HashMap<String, Conversation> {
     let mut conversations = HashMap::new(); // hashmap to store conversations
 
     let document = Html::parse_document(html); // parse html
@@ -126,8 +128,6 @@ fn scrap_conversation_to_list(html: &str, api_key: &str, regular: bool ) -> Hash
     let timestamp_selector = Selector::parse("time.msg-conversation-listitem__time-stamp").unwrap();
     let thread_url_selector = Selector::parse("a.msg-conversation-listitem__link").unwrap();
     let unread_selector = Selector::parse(".msg-conversation-card__unread-count").unwrap();
-
-    
 
     for convo in document.select(&conversation_selector) {
         let id = convo.value().attr("id").unwrap().to_string();

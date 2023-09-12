@@ -36,7 +36,6 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
     println!("pages count: {}", pages_count);
     let mut url_list: Vec<String> = Vec::new();
     for i in 1..=pages_count {
-
         let page_number = format!("button[aria-label='Page {}']", i);
         let next_page = browser
             .page
@@ -49,10 +48,10 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         wait(7, 10);
 
         let container = browser
-        .page
-        .query_selector("div.search-results-container")
-        .await?
-        .unwrap();
+            .page
+            .query_selector("div.search-results-container")
+            .await?
+            .unwrap();
         scrap(container.inner_html().await?.as_str(), &mut url_list);
 
         wait(3, 5);

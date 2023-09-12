@@ -318,8 +318,11 @@ enum MessageCategory {
     NotFound,
 }
 
-fn scrap_conversation(html: &str, api_key: &str, conversations: &mut HashMap<String, InmailConversation>) {
-    
+fn scrap_conversation(
+    html: &str,
+    api_key: &str,
+    conversations: &mut HashMap<String, InmailConversation>,
+) {
     let document = Html::parse_document(html);
 
     let conversation_selector = Selector::parse("._card-container_z8knzq").unwrap();
@@ -371,5 +374,4 @@ fn scrap_conversation(html: &str, api_key: &str, conversations: &mut HashMap<Str
 
         conversations.insert(id.unwrap().to_string(), conversation);
     }
-
 }
