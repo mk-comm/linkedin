@@ -31,11 +31,11 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: Some(entry.recruiter_session_cookie),
-        headless: true,
+        headless: false,
     };
 
     let browser = start_browser(browser_info).await?;
-
+    wait(30000, 150000);
     let search_input = browser
         .page
         .query_selector("input[class=search-global-typeahead__input]")

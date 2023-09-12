@@ -100,8 +100,25 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
         }
     };
 
-    let document = Html::parse_document(&conversation_list.inner_html().await.unwrap()); // parse html
-                                                                                         //selectors (which part of html to parse to get the specific data)
+    let conversations = scrap_conversation_to_list(&conversation_list.inner_html().await?, &api_key, regular);
+
+ 
+    for conversation in conversations.values() {
+        scrap_message(conversation, &browser.page, focused_inbox, &browser).await?;
+    }
+
+    browser.page.close(Some(false)).await?;
+    browser.browser.close().await?;
+    Ok(())
+}
+
+
+fn scrap_conversation_to_list(html: &str, api_key: &str, regular: bool ) -> HashMap<String, Conversation>{
+
+    let mut conversations = HashMap::new(); // hashmap to store conversations
+
+    let document = Html::parse_document(html); // parse html
+
     let conversation_selector = Selector::parse("li.msg-conversation-listitem").unwrap();
 
     let participant_name_selector =
@@ -110,7 +127,7 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
     let thread_url_selector = Selector::parse("a.msg-conversation-listitem__link").unwrap();
     let unread_selector = Selector::parse(".msg-conversation-card__unread-count").unwrap();
 
-    let mut conversations = HashMap::new(); // hashmap to store conversations
+    
 
     for convo in document.select(&conversation_selector) {
         let id = convo.value().attr("id").unwrap().to_string();
@@ -153,17 +170,12 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
             candidate_name,
             timestamp,
             unread,
-            api_key: api_key.clone(),
+            api_key: api_key.to_string(),
             enable_ai: regular,
         };
 
         conversations.insert(id, conversation);
     }
 
-    for conversation in conversations.values() {
-        scrap_message(conversation, &browser.page, focused_inbox, &browser).await?;
-    }
-    browser.page.close(Some(false)).await?;
-    browser.browser.close().await?;
-    Ok(())
+    conversations
 }

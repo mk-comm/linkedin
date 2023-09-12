@@ -16,6 +16,7 @@ pub async fn scrap_message(
     focused_inbox: bool,
     browser: &BrowserConfig,
 ) -> Result<(), CustomError> {
+
     let conversation_select = match page
         .query_selector(format!("li[id='{}']", conversation.id).as_str())
         .await?
@@ -52,95 +53,43 @@ pub async fn scrap_message(
         .unwrap()
         .unwrap();
 
-    let owner_container_html = owner_container.inner_html().await.unwrap();
-    let owner_document = Html::parse_document(&owner_container_html);
-    let owner_selector = Selector::parse("a.app-aware-link.msg-thread__link-to-profile").unwrap();
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
+let mut full_text = String::new(); // Conversation text to push to AI
+let tuple = scrap_each_message(owner_container.inner_html().await?.as_str(), message_container.inner_html().await?.as_str(), &mut full_text);
+let messages = tuple.1; //hashmap for storing all messages
+let conversation_owner_link = tuple.0;
 
-    let conversation_owner_link: String;
 
-    if let Some(conversation_owner) = owner_document.select(&owner_selector).next() {
-        conversation_owner_link = conversation_owner
-            .value()
-            .attr("href")
-            .and_then(|href| Some(href.to_owned()))
-            .unwrap_or_else(|| String::new());
-        // Do something with conversation_owner_link
-    } else {
-        // Handle the case where there is no conversation owner element
-        conversation_owner_link = String::new();
+let candidate_of_sequence = scrap_profile(
+    browser,
+    conversation_owner_link.as_str(),
+    &conversation.api_key,
+)
+.await?; // check if candidate is in sequence
+
+conversation_select.hover_builder();
+wait(1, 9);
+conversation_select.click_builder().click().await?;
+
+// checks if the message is new or was scraped before
+
+let full_name = FullName::split_name(conversation.candidate_name.as_str());
+
+let mut new_message = false;
+
+/////////////////loop for create/check message
+
+for message in messages.values() {
+    let check_message = check_message_new_message(&message, &full_name, conversation).await;
+    if check_message == true && message.received == true {
+        new_message = true;
+        create_message(&message, &full_name, &conversation).await;
     }
+}
+ // check if the message is new
 
-    let mut messages: HashMap<String, Message> = HashMap::new(); // list of messages
-    let mut full_text = String::new(); // Conversation text to push to AI
-    let mut new_message = false; // if true and candidate_of_sequence is true evaluate conversation
-    let candidate_of_sequence = scrap_profile(
-        browser,
-        conversation_owner_link.as_str(),
-        &conversation.api_key,
-    )
-    .await?; // check if candidate is in sequence
-
-    // Selectors for the message container
-    let message_container_html = message_container.inner_html().await.unwrap();
-    let document = Html::parse_document(&message_container_html); // parse html
-    let sender_selector =
-        Selector::parse(".msg-s-message-group__meta .msg-s-message-group__profile-link").unwrap();
-    let timestamp_selector = Selector::parse(".msg-s-message-group__meta time").unwrap();
-    let content_selector = Selector::parse(".msg-s-event__content p").unwrap();
-    let url_send_from_selector =
-        Selector::parse(".msg-s-event-listitem__link[tabindex=\"0\"]").unwrap();
-    let url_send_to_selector = Selector::parse(".msg-s-message-group__meta a").unwrap();
-    //
-
-    conversation_select.hover_builder();
-    wait(1, 9);
-    conversation_select.click_builder().click().await?;
-
-    // select the conversation
-    // Iterate over the message container and create a message
-    for ((((sender, timestamp), content), url_send_from), url_send_to) in document
-        .select(&sender_selector)
-        .zip(document.select(&timestamp_selector))
-        .zip(document.select(&content_selector))
-        .zip(document.select(&url_send_from_selector))
-        .zip(document.select(&url_send_to_selector))
-    {
-        let sender = sender.text().collect::<String>().trim().to_owned();
-        let full_name = FullName::split_name(&sender);
-        let timestamp = timestamp.text().collect::<String>().trim().to_owned();
-        let message_text = content.text().collect::<String>().trim().to_owned();
-        let url_send_from = url_send_from.value().attr("href").unwrap().to_owned();
-        let url_send_to = url_send_to.value().attr("href").unwrap().to_owned();
-        let received: bool = if conversation_owner_link == url_send_from {
-            true
-        } else {
-            false
-        };
-        let message = Message {
-            sender,
-            timestamp,
-            message_text,
-            url_send_from,
-            url_send_to,
-            received,
-        };
-
-        if received == true {
-            full_text.push_str(format!("Candidate: {}\n", &message.message_text.clone()).as_str())
-        } else {
-            full_text.push_str(format!("Recruiter: {}\n", &message.message_text.clone()).as_str())
-        }
-
-        // checks if the message is new or was scraped before
-        let check_message = check_message(&message, &full_name, conversation).await; // check if the message is new mark conversation as new
-        if check_message == true && received == true {
-            new_message = true;
-            create_message(&message, &full_name, &conversation).await;
-        }
-
-        messages.insert(format!("message_{}", messages.len() + 1), message);
-    } // scrap message container end
-    let full_name = FullName::split_name(conversation.candidate_name.as_str());
+//////////////////////////////////loop for create/check message      
+    
 
     if new_message == true && candidate_of_sequence == Some(true) && conversation.enable_ai == true
     {
@@ -166,6 +115,8 @@ pub async fn scrap_message(
         }
     }
 
+
+    
     if conversation.enable_ai == false && conversation.unread == true {
         mark_unread(&conversation_select, focused_inbox).await?;
     }
@@ -182,8 +133,6 @@ pub async fn scrap_message(
 
 async fn create_message(message: &Message, full_name: &FullName, conversation: &Conversation) {
     // make an api call to bubble
-    // return interested or not interested
-
     let _client = reqwest::Client::new();
     let _payload = json!({
             "message_text": message.message_text,
@@ -203,7 +152,7 @@ async fn create_message(message: &Message, full_name: &FullName, conversation: &
         .unwrap();
 }
 
-async fn check_message(
+async fn check_message_new_message(
     message: &Message,
     full_name: &FullName,
     conversation: &Conversation,
@@ -468,4 +417,90 @@ async fn evaluate(full_text: &str, api: &str, name: FullName) -> MessageCategory
         Some(_) => MessageCategory::NotFound,
         None => MessageCategory::NotFound,
     }
+}
+
+
+fn scrap_each_message(html: &str, message_container: &str, full_text: &mut String) -> (String,HashMap<String, Message>) {
+    
+    let owner_container_html = html;
+    let owner_document = Html::parse_document(&owner_container_html);
+    let owner_selector = Selector::parse("a.app-aware-link.msg-thread__link-to-profile").unwrap();
+
+    let conversation_owner_link: String;
+
+    if let Some(conversation_owner) = owner_document.select(&owner_selector).next() {
+        conversation_owner_link = conversation_owner
+            .value()
+            .attr("href")
+            .and_then(|href| Some(href.to_owned()))
+            .unwrap_or_else(|| String::new());
+    } else {
+        conversation_owner_link = String::new();
+    }
+
+
+
+    let mut messages: HashMap<String, Message> = HashMap::new(); // list of messages
+    //let mut full_text = String::new(); // Conversation text to push to AI
+    //let mut new_message = false; // if true and candidate_of_sequence is true evaluate conversation
+ 
+
+    // Selectors for the message container
+    let message_container_html = message_container;
+    let document = Html::parse_document(&message_container_html); // parse html
+    let sender_selector =
+        Selector::parse(".msg-s-message-group__meta .msg-s-message-group__profile-link").unwrap();
+    let timestamp_selector = Selector::parse(".msg-s-message-group__meta time").unwrap();
+    let content_selector = Selector::parse(".msg-s-event__content p").unwrap();
+    let url_send_from_selector =
+        Selector::parse(".msg-s-event-listitem__link[tabindex=\"0\"]").unwrap();
+    let url_send_to_selector = Selector::parse(".msg-s-message-group__meta a").unwrap();
+    //
+
+
+
+    // select the conversation
+    // Iterate over the message container and create a message
+    for ((((sender, timestamp), content), url_send_from), url_send_to) in document
+        .select(&sender_selector)
+        .zip(document.select(&timestamp_selector))
+        .zip(document.select(&content_selector))
+        .zip(document.select(&url_send_from_selector))
+        .zip(document.select(&url_send_to_selector))
+    {
+        let sender = sender.text().collect::<String>().trim().to_owned();
+        //let full_name = FullName::split_name(&sender);
+        let timestamp = timestamp.text().collect::<String>().trim().to_owned();
+        let message_text = content.text().collect::<String>().trim().to_owned();
+        let url_send_from = url_send_from.value().attr("href").unwrap().to_owned();
+        let url_send_to = url_send_to.value().attr("href").unwrap().to_owned();
+        println!("url_send_from: {}", url_send_from);
+        println!("conversation_owner_link: {}", conversation_owner_link);
+        let received: bool = if conversation_owner_link == url_send_from {
+            true
+        } else {
+            false
+        };
+        println!("received became: {}", received);
+        let message = Message {
+            sender,
+            timestamp,
+            message_text,
+            url_send_from,
+            url_send_to,
+            received,
+        };
+        println!("received in message: {}", message.received);
+
+        if received == true {
+            full_text.push_str(format!("Candidate: {}\n", &message.message_text.clone()).as_str())
+        } else {
+            full_text.push_str(format!("Recruiter: {}\n", &message.message_text.clone()).as_str())
+        }
+
+        
+        messages.insert(format!("message_{}", messages.len() + 1), message);
+    } // scrap message container end
+
+    (conversation_owner_link,messages)
 }

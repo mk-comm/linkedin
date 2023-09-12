@@ -86,58 +86,13 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
 
     let mut conversations: HashMap<String, InmailConversation> = HashMap::new(); // hashmap to store conversations
 
-    let document = Html::parse_document(conversation_list.inner_html().await?.to_owned().as_str());
-
-    let conversation_selector = Selector::parse("._card-container_z8knzq").unwrap();
-
-    let name_selector = Selector::parse("._conversation-card-participant-name_z8knzq").unwrap();
-
-    let url_selector = Selector::parse("._conversation-link_z8knzq").unwrap();
-    let unread_selector = Selector::parse("._unread-badge_z8knzq").unwrap();
-    let snippet_selector = Selector::parse("._conversation-snippet_z8knzq").unwrap();
-
-    for conversation in document.select(&conversation_selector) {
-        let id = conversation
-            .select(&url_selector)
-            .next()
-            .map(|element| element.value().attr("id"))
-            .unwrap_or(Some("Not found"));
-
-        let name = conversation
-            .select(&name_selector)
-            .next()
-            .map(|element| element.inner_html())
-            .unwrap_or("Not found".to_string())
-            .trim()
-            .to_string();
-
-        let url = conversation
-            .select(&url_selector)
-            .next()
-            .map(|element| element.value().attr("href"))
-            .unwrap_or(Some("Not found"));
-
-        let unread = match conversation.select(&unread_selector).next() {
-            Some(_) => true,
-            None => false,
-        };
-        let _snippet = conversation
-            .select(&snippet_selector)
-            .next()
-            .map(|element| element.inner_html())
-            .unwrap_or("Not found".to_string());
-
-        let conversation = InmailConversation::new(
-            id.unwrap().to_string(),
-            url.unwrap().to_string(),
-            name,
-            unread,
-            api_key.clone(),
-        );
-
-        conversations.insert(id.unwrap().to_string(), conversation);
-    }
-
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    scrap_conversation(
+        conversation_list.inner_html().await?.as_str(),
+        &api_key,
+        &mut conversations,
+    );
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     if let Some(conversation) =
         conversations
             .iter()
@@ -361,4 +316,60 @@ enum MessageCategory {
     Interested,
     NotInterested,
     NotFound,
+}
+
+fn scrap_conversation(html: &str, api_key: &str, conversations: &mut HashMap<String, InmailConversation>) {
+    
+    let document = Html::parse_document(html);
+
+    let conversation_selector = Selector::parse("._card-container_z8knzq").unwrap();
+
+    let name_selector = Selector::parse("._conversation-card-participant-name_z8knzq").unwrap();
+
+    let url_selector = Selector::parse("._conversation-link_z8knzq").unwrap();
+    let unread_selector = Selector::parse("._unread-badge_z8knzq").unwrap();
+    let snippet_selector = Selector::parse("._conversation-snippet_z8knzq").unwrap();
+
+    for conversation in document.select(&conversation_selector) {
+        let id = conversation
+            .select(&url_selector)
+            .next()
+            .map(|element| element.value().attr("id"))
+            .unwrap_or(Some("Not found"));
+
+        let name = conversation
+            .select(&name_selector)
+            .next()
+            .map(|element| element.inner_html())
+            .unwrap_or("Not found".to_string())
+            .trim()
+            .to_string();
+
+        let url = conversation
+            .select(&url_selector)
+            .next()
+            .map(|element| element.value().attr("href"))
+            .unwrap_or(Some("Not found"));
+
+        let unread = match conversation.select(&unread_selector).next() {
+            Some(_) => true,
+            None => false,
+        };
+        let _snippet = conversation
+            .select(&snippet_selector)
+            .next()
+            .map(|element| element.inner_html())
+            .unwrap_or("Not found".to_string());
+
+        let conversation = InmailConversation::new(
+            id.unwrap().to_string(),
+            url.unwrap().to_string(),
+            name,
+            unread,
+            api_key.to_string(),
+        );
+
+        conversations.insert(id.unwrap().to_string(), conversation);
+    }
+
 }

@@ -32,6 +32,20 @@ pub struct EntryRegular {
     pub regular: bool,
     pub session_cookie: String,
 }
+
+/*
+{
+    "ip": "154.4.174.216:5866",
+    "username": "username",
+    "password": "password",
+    "webhook": "webhook",
+    "user_id": "user_id",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+    "session_cookie": "session_cookie",
+    "regular": false
+}
+*/
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct EntryRecruiter {
     pub ip: String,
