@@ -93,6 +93,23 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         .query_selector("div.pv-top-card-v2-ctas")
         .await?;
 
+    let page_not_found = browser
+        .page
+        .query_selector("header[class='not-found__header not-found__container']")
+        .await?;
+
+    match page_not_found {
+        Some(_) => {
+            wait(1, 5);
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Err(CustomError::ButtonNotFound(
+                "Page does not exist".to_string(),
+            ));
+        }
+        None => (),
+    };
+
     let block = match block_option {
         Some(block) => block,
         None => {
@@ -164,7 +181,9 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
                     wait(1, 5);
                     browser.page.close(Some(false)).await?;
                     browser.browser.close().await?;
-                    return Err(playwright::Error::InvalidParams.into());
+                    return Err(CustomError::ButtonNotFound(
+                        "Connect button in popup_how is not found".to_string(),
+                    ));
                 }
             }
         }
@@ -222,17 +241,23 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     Ok(())
 }
 #[instrument]
-async fn message(page: &Page, message: &str) -> Result<(), playwright::Error> {
+async fn message(page: &Page, message: &str) -> Result<(), CustomError> {
     //press button add note
+    wait(5, 7);
     let add_note = page
         .query_selector("button[aria-label='Add a note']")
         .await?;
     match add_note {
         Some(add_note) => add_note.click_builder().click().await?, // click on button "Other"
-        None => return Err(playwright::Error::InvalidParams),
+        None => {
+            return Err(CustomError::ButtonNotFound(
+                "Add not button not found".to_string(),
+            ))
+        }
     };
     info!("Filling in the message field");
-    //find input for note
+    wait(5, 7); // random delay
+                //find input for note
     let text_input = page.query_selector("textarea[id=custom-message]").await?;
     match text_input {
         Some(text_input) => {
@@ -242,9 +267,12 @@ async fn message(page: &Page, message: &str) -> Result<(), playwright::Error> {
             wait(1, 2); // random delay
             text_input.fill_builder(message).fill().await?; // fill input for note;
         }
-        None => return Err(playwright::Error::InvalidParams),
+        None => {
+            return Err(CustomError::ButtonNotFound(
+                "Text input not found".to_string(),
+            ))
+        }
     };
-
     wait(1, 3); // random delay
                 //press button send
     let send = page.query_selector("button[aria-label='Send now']").await?;
@@ -253,6 +281,10 @@ async fn message(page: &Page, message: &str) -> Result<(), playwright::Error> {
             send.click_builder().click().await?; // click on button "Send"
             return Ok(()); // return Ok
         }
-        None => return Err(playwright::Error::InvalidParams),
+        None => {
+            return Err(CustomError::ButtonNotFound(
+                "Send button not found".to_string(),
+            ))
+        }
     };
 }

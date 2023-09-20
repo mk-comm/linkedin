@@ -216,5 +216,4 @@ pub struct EntryScrapSearchRecruiter {
     "result_url" : "https://www.result.com",
     "aisearch": "uniqueid"
 }
-
 */
