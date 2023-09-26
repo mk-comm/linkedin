@@ -72,8 +72,8 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             ));
         }
         let search_container_inside = search_container_inside.unwrap();
-        scroll(browser.page.clone()).await?;
-        wait(5, 7);
+        scroll(&browser.page).await?;
+        wait(12, 15);
         let _scrap = scrap(
             search_container_inside.inner_html().await?.as_str(),
             &mut url_list,
@@ -108,97 +108,29 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     Ok(())
 }
 
-async fn scroll(page: Page) -> Result<(), CustomError> {
+async fn scroll(page: &Page) -> Result<(), CustomError> {
+    let mut x = 0;
+
+    while x < 25 {
+        move_scroll(&page).await?;
+        x += 1;
+    }
+
+    Ok(())
+}
+
+async fn move_scroll(page: &Page) -> Result<(), CustomError>{
     let scroll_code = r#"
     function() {
         let totalHeight = document.body.scrollHeight;
-        let scrollDistance = totalHeight * 0.1;
+        let scrollDistance = 365;
         window.scrollBy(0, scrollDistance);
     }
-"#;
+    "#;
 
     page.evaluate(scroll_code, ()).await?;
-
-    wait(2, 3);
-    let scroll_code = r#"
-    function() {
-        let totalHeight = document.body.scrollHeight;
-        let scrollDistance = totalHeight * 0.2;
-        window.scrollBy(0, scrollDistance);
-    }
-"#;
-
-    page.evaluate(scroll_code, ()).await?;
-    wait(2, 3);
-    let scroll_code = r#"
-function() {
-    let totalHeight = document.body.scrollHeight;
-    let scrollDistance = totalHeight * 0.3;
-    window.scrollBy(0, scrollDistance);
-}
-"#;
-
-    page.evaluate(scroll_code, ()).await?;
-    wait(2, 3);
-    let scroll_code = r#"
-function() {
-    let totalHeight = document.body.scrollHeight;
-    let scrollDistance = totalHeight * 0.4;
-    window.scrollBy(0, scrollDistance);
-}
-"#;
-    page.evaluate(scroll_code, ()).await?;
-    wait(2, 3);
-    let scroll_code = r#"
-function() {
-    let totalHeight = document.body.scrollHeight;
-    let scrollDistance = totalHeight * 0.5;
-    window.scrollBy(0, scrollDistance);
-}
-"#;
-
-    page.evaluate(scroll_code, ()).await?;
-    wait(2, 3);
-    let scroll_code = r#"
-function() {
-    let totalHeight = document.body.scrollHeight;
-    let scrollDistance = totalHeight * 0.6;
-    window.scrollBy(0, scrollDistance);
-}
-"#;
-
-    page.evaluate(scroll_code, ()).await?;
-    wait(2, 3);
-    let scroll_code = r#"
-function() {
-    let totalHeight = document.body.scrollHeight;
-    let scrollDistance = totalHeight * 0.7;
-    window.scrollBy(0, scrollDistance);
-}
-"#;
-
-    page.evaluate(scroll_code, ()).await?;
-    wait(2, 3);
-    let scroll_code = r#"
-function() {
-    let totalHeight = document.body.scrollHeight;
-    let scrollDistance = totalHeight * 0.8;
-    window.scrollBy(0, scrollDistance);
-}
-"#;
-
-    page.evaluate(scroll_code, ()).await?;
-    wait(2, 3);
-    let scroll_code = r#"
-function() {
-    let totalHeight = document.body.scrollHeight;
-    let scrollDistance = totalHeight * 0.9;
-    window.scrollBy(0, scrollDistance);
-}
-"#;
-
-    page.evaluate(scroll_code, ()).await?;
-    wait(2, 3);
+    
+    wait(1, 2);
     Ok(())
 }
 
@@ -278,7 +210,8 @@ async fn send_urls(
         "urls": urls,
         "ai_search": ai_search });
 
-    let response = client.post(target_url).json(&urls_json).send().await;
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(target_url).json(&urls_json).send().await;
     match response {
         Ok(_) => info!(
             "Send_urls/scrap_recruiter_search/Ok, {} was done",
