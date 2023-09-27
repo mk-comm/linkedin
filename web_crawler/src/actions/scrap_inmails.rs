@@ -53,19 +53,6 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         }
     }
 
-    // random delay
-    //check if connect button is present
-
-    //scrap_stage(&browser, &api_key).await?;
-    /*
-    if recruiter == false {
-        println!("Inmails is disabled for this user");
-        browser.page.close(Some(false)).await?;
-        browser.browser.close().await?;
-        return Ok(());
-    }
-    */
-
     let conversation_list = match browser
         .page
         .query_selector("div.thread-list.visible")
@@ -92,7 +79,9 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         &api_key,
         &mut conversations,
     );
+    
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{ 
     if let Some(conversation) =
         conversations
             .iter()
@@ -109,13 +98,16 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
             scrap_stage(&browser, &api_key).await?;
         }
     };
+}
 
+ 
     if recruiter == false {
         //println!("Inmails is disabled for this user");
         browser.page.close(Some(false)).await?;
         browser.browser.close().await?;
         return Ok(());
     }
+    wait(10, 12);
 
     for conversation in conversations.values() {
         wait(3, 7);
@@ -128,6 +120,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
                 conversation.hover_builder();
                 wait(1, 3);
                 conversation.click_builder().click().await?;
+                wait(5, 12);
                 conversation
             }
             None => {
@@ -157,19 +150,25 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
                 ));
             } // if search input is not found, means page was not loaded and sessuion cookie is not valid
         };
+        println!("conversation: {:?}", conversation);
+        //wait(10000, 25000);
         let html = messages_container.inner_html().await?;
         let text = scrap_message(conversation.clone(), html.as_str()).unwrap();
         let full_name = FullName::split_name(conversation.candidate_name.as_str());
+        println!("full name: {:?}", full_name);
         let result = check_message(text.as_str(), &api_key, full_name).await;
+        println!("{:?}", result);
         match result {
             MessageCategory::Interested => {
+                println!("changing interested {:?}", result);
                 change_stage(&stage_interested, &browser).await?;
             }
             MessageCategory::NotInterested => {
+                println!("changing not-interested {:?}", result);
                 change_stage(&stage_not_interested, &browser).await?;
             }
             MessageCategory::NotFound => {
-                //println!("No category found");
+                println!("No category found");
             }
         }
     }
@@ -210,7 +209,7 @@ fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String,
             full_text.push_str(format!("Recruiter: {} \n", message_text).as_str());
         }
     }
-
+    println!("full text: {:?}", full_text);
     Ok(full_text)
 }
 
@@ -223,6 +222,8 @@ async fn check_message(text: &str, api: &str, name: FullName) -> MessageCategory
             "api_key": api
 
     });
+
+    //println!("payload: {:?}", payload);
     let res = client
         .post("https://overview.tribe.xyz/api/1.1/wf/check_inmail")
         .json(&payload)
@@ -232,7 +233,7 @@ async fn check_message(text: &str, api: &str, name: FullName) -> MessageCategory
     let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
 
     let category = json_response["response"]["category"].as_str();
-
+    println!("responce: {:?}", json_response);
     match category {
         Some("Interested") => MessageCategory::Interested,
         Some("Not interested") => MessageCategory::NotInterested,
@@ -243,6 +244,7 @@ async fn check_message(text: &str, api: &str, name: FullName) -> MessageCategory
 
 async fn change_stage(stage: &str, browser: &BrowserConfig) -> Result<(), CustomError> {
     wait(5, 6);
+    println!("changing stage: {:?}", stage);
     let button_dropdown = browser.page.query_selector("div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-right.ember-view").await?;
     if button_dropdown.is_some() {
         button_dropdown.unwrap().click_builder().click().await?;
@@ -261,11 +263,13 @@ async fn change_stage(stage: &str, browser: &BrowserConfig) -> Result<(), Custom
                 Some(span) => {
                     let text = span.inner_text().await?;
                     if text.trim() == stage.trim() {
+                        print!("stage was found");
                         item.click_builder().click().await?;
+                        print!("stage was clicked");
                         break;
                     }
                 }
-                None => (),
+                None => print!("stage was not found"),
             }
         }
     }
