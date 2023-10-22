@@ -1,5 +1,5 @@
 use playwright::Playwright;
-use std::path::Path;
+//use std::path::Path;
 
 use super::wait::wait;
 use crate::structs::browser::{BrowserConfig, BrowserInit};
@@ -13,7 +13,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     info!("Starting browser");
     //path to  local browser
 
-    let path = Path::new("/opt/homebrew/bin/chromium");
+    //let path = Path::new("/opt/homebrew/bin/chromium");
 
     let mut user = User::new(
         browserinfo.user_agent,
@@ -34,7 +34,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
 
     let playwright = Playwright::initialize().await?;
 
-    //let _ = playwright.prepare(); // Install browsers uncomment on production
+    let _ = playwright.prepare(); // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
@@ -42,7 +42,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         .launcher()
         .proxy(proxy)
         .headless(browserinfo.headless)
-        .executable(path)
+       // .executable(path)
         .launch()
         .await?;
 

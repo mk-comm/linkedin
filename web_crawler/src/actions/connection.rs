@@ -122,7 +122,14 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
     };
 
-    let connect_button = block.query_selector("li-icon[type=connect]").await?;
+    let mut connect_button = block.query_selector("li-icon[type=connect]").await?;
+    //let connect_button_another = block.query_selector("use[href='#connect-medium']").await?;
+
+    if connect_button.is_none() {
+        connect_button = block.query_selector("use[href='#connect-medium']").await?;
+    } else {
+        println!("connect button another not found");
+    }
 
     let more_option = block
         .query_selector("button[aria-label='More actions']")
@@ -156,7 +163,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             return Err(CustomError::ButtonNotFound(
-                "Connect button not found".to_string(),
+                "Connect button not found/Requires investigation".to_string(),
             ));
         }
     }
@@ -201,8 +208,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
         None => (),
     };
-
-    //artdeco-modal artdeco-modal--layer-default send-invite
+    
     message(&browser.page, candidate.message.as_str()).await?;
     wait(4, 8);
     let pending_button = block.query_selector("li-icon[type=clock]").await?;
@@ -274,7 +280,7 @@ async fn message(page: &Page, message: &str) -> Result<(), CustomError> {
         }
     };
     wait(1, 3); // random delay
-                //press button send
+    //press button send
     let send = page.query_selector("button[aria-label='Send now']").await?;
     match send {
         Some(send) => {
