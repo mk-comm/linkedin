@@ -4,7 +4,7 @@ use crate::{
 };
 
 use crate::structs::browser::BrowserInit;
-
+#[allow(dead_code)]
 pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
     let candidate = Candidate::new(
         entry.fullname.clone(),

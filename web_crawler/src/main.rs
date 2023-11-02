@@ -20,8 +20,7 @@ use crate::actions::scrap_recruiter_search::scrap_recruiter_search;
 use crate::actions::scrap_regular_search::scrap_regular_search;
 use crate::actions::send_inmails::send_inmails;
 use crate::actions::send_message::send_message;
-use crate::actions::withdraw_connection::withdraw;
-use structs::entry::Entry;
+use crate::actions::withdraw_pending_connection::withdraw_pending;
 use structs::entry::EntryScrapSearchRecruiter;
 use structs::entry::EntryScrapSearchRegular;
 use structs::entry::EntrySendConnection;
@@ -160,12 +159,12 @@ async fn scrap_recruiter_search_url(json: Json<EntryScrapSearchRecruiter>) -> im
     }))
 }
 
-async fn withdraw_connection(json: Json<Entry>) -> impl IntoResponse {
+async fn withdraw_connection(json: Json<EntrySendConnection>) -> impl IntoResponse {
     let message_id = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
     tokio::spawn(async move {
-        let api = withdraw(json.0);
+        let api = withdraw_pending(json.0);
         match api.await {
             Ok(_) => {
                 let client = reqwest::Client::new();
@@ -235,7 +234,7 @@ async fn message(json: Json<EntrySendConnection>) -> impl IntoResponse {
     }))
 }
 
-async fn scrap_profiles(json: Json<Entry>) -> impl IntoResponse {
+async fn scrap_profiles(json: Json<EntrySendConnection>) -> impl IntoResponse {
     let message_id = json.message_id.clone();
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();

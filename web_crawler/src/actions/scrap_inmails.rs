@@ -79,28 +79,27 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         &api_key,
         &mut conversations,
     );
-    
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{ 
-    if let Some(conversation) =
-        conversations
-            .iter()
-            .find_map(|(_, conv)| if !conv.unread { Some(conv) } else { None })
-    {
-        if let Ok(Some(conv_element)) = conversation_list
-            .query_selector(&format!("a[id='{}']", conversation.id))
-            .await
-        {
-            conv_element.hover_builder();
-            wait(1, 3);
-            conv_element.click_builder().click().await?;
-            wait(5, 9);
-            scrap_stage(&browser, &api_key).await?;
-        }
-    };
-}
 
- 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    {
+        if let Some(conversation) =
+            conversations
+                .iter()
+                .find_map(|(_, conv)| if !conv.unread { Some(conv) } else { None })
+        {
+            if let Ok(Some(conv_element)) = conversation_list
+                .query_selector(&format!("a[id='{}']", conversation.id))
+                .await
+            {
+                conv_element.hover_builder();
+                wait(1, 3);
+                conv_element.click_builder().click().await?;
+                wait(5, 9);
+                scrap_stage(&browser, &api_key).await?;
+            }
+        };
+    }
+
     if recruiter == false {
         //println!("Inmails is disabled for this user");
         browser.page.close(Some(false)).await?;

@@ -208,7 +208,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
         None => (),
     };
-    
+
     message(&browser.page, candidate.message.as_str()).await?;
     wait(4, 8);
     let pending_button = block.query_selector("li-icon[type=clock]").await?;
@@ -280,7 +280,7 @@ async fn message(page: &Page, message: &str) -> Result<(), CustomError> {
         }
     };
     wait(1, 3); // random delay
-    //press button send
+                //press button send
     let send = page.query_selector("button[aria-label='Send now']").await?;
     match send {
         Some(send) => {

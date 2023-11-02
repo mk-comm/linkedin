@@ -42,7 +42,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         .launcher()
         .proxy(proxy)
         .headless(browserinfo.headless)
-       // .executable(path)
+        //.executable(path)
         .launch()
         .await?;
 

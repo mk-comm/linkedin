@@ -11,3 +11,4 @@ pub mod send_message;
 pub mod start_browser;
 pub mod wait;
 pub mod withdraw_connection;
+pub mod withdraw_pending_connection;

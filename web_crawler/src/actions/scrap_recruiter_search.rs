@@ -119,7 +119,7 @@ async fn scroll(page: &Page) -> Result<(), CustomError> {
     Ok(())
 }
 
-async fn move_scroll(page: &Page) -> Result<(), CustomError>{
+async fn move_scroll(page: &Page) -> Result<(), CustomError> {
     let scroll_code = r#"
     function() {
         let totalHeight = document.body.scrollHeight;
@@ -129,7 +129,7 @@ async fn move_scroll(page: &Page) -> Result<(), CustomError>{
     "#;
 
     page.evaluate(scroll_code, ()).await?;
-    
+
     wait(1, 2);
     Ok(())
 }
