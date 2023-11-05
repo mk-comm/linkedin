@@ -51,8 +51,7 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
 
     let button = browser
         .page
-        .wait_for_selector_builder("div.mn-community-summary__entity-info")
-        .wait_for_selector()
+        .query_selector("div.mn-community-summary__entity-info")
         .await?;
     match button {
         Some(button) => {
@@ -62,13 +61,19 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
             wait(8, 12);
         }
         None => {
+            let url= "https://www.linkedin.com/mynetwork/invite-connect/connections/";
+            browser.page.goto_builder(url);
+            wait(11, 16);
+            /* 
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
             return Err(CustomError::ButtonNotFound(
                 "Connections button is missing".to_string(),
             ));
+            */
         }
     }
+
     let connections = scrap_each_connection(&browser.page.content().await?);
 
     if connections.len() == 0 {
