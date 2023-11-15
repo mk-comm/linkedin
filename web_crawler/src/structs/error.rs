@@ -12,8 +12,9 @@ pub enum CustomError {
     EmailNeeded,
     ConnectionLimit,
     ProfileNotFound,
-    //ActixError(ActixError),
-    //IoError(IoError),
+    AnyhowError(anyhow::Error),
+    ChronoError(chrono::ParseError),
+    SerdeJsonError(serde_json::Error),
 }
 
 impl fmt::Display for CustomError {
@@ -31,6 +32,9 @@ impl fmt::Display for CustomError {
             CustomError::ProxyNotWorking => write!(f, "Proxy not working"),
             CustomError::ReqwestError(e) => write!(f, "{}", e),
             //CustomError::ActixError(e) => write!(f, "{}", e),
+            CustomError::AnyhowError(e) => write!(f, "{}", e),
+            CustomError::SerdeJsonError(e) => write!(f, "{}", e),
+            CustomError::ChronoError(e) => write!(f, "{}", e),
             //CustomError::IoError(e) => write!(f, "{}", e),
         }
     }
@@ -51,5 +55,23 @@ impl From<playwright::Error> for CustomError {
 impl From<reqwest::Error> for CustomError {
     fn from(err: reqwest::Error) -> CustomError {
         CustomError::ReqwestError(err)
+    }
+}
+
+impl From<anyhow::Error> for CustomError {
+    fn from(err: anyhow::Error) -> CustomError {
+        CustomError::AnyhowError(err)
+    }
+}
+
+impl From<serde_json::Error> for CustomError {
+    fn from(err: serde_json::Error) -> Self {
+        CustomError::SerdeJsonError(err)
+    }
+}
+
+impl From<chrono::ParseError> for CustomError {
+    fn from(err: chrono::ParseError) -> Self {
+        CustomError::ChronoError(err)
     }
 }

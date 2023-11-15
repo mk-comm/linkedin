@@ -42,7 +42,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         .launcher()
         .proxy(proxy)
         .headless(browserinfo.headless)
-        //.executable(path)
+        // .executable(path)
         .launch()
         .await?;
 
@@ -176,7 +176,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         headless: browserinfo.headless,
     };
 
-    return Ok(browser_config);
+    Ok(browser_config)
 }
 
 async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
@@ -185,20 +185,20 @@ async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
         .await?;
 
     if profile.is_some() {
-        return Ok(true);
+        Ok(true)
     } else {
         wait(1, 3);
         let email_input = page.query_selector("input[name=email-address]").await?;
         if email_input.is_some() {
-            return Ok(false);
+            Ok(false)
         } else {
             let search_bar = page
                 .query_selector("input.search-global-typeahead__input")
                 .await?;
             if search_bar.is_some() {
-                return Ok(true);
+                Ok(true)
             } else {
-                return Ok(false);
+                Ok(false)
             }
         }
     }

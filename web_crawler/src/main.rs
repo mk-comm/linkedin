@@ -20,12 +20,32 @@ use crate::actions::scrap_recruiter_search::scrap_recruiter_search;
 use crate::actions::scrap_regular_search::scrap_regular_search;
 use crate::actions::send_inmails::send_inmails;
 use crate::actions::send_message::send_message;
+use crate::actions::serialize::serialize_json;
 use crate::actions::withdraw_pending_connection::withdraw_pending;
 use structs::entry::EntryScrapSearchRecruiter;
 use structs::entry::EntryScrapSearchRegular;
 use structs::entry::EntrySendConnection;
 use structs::entry::EntrySendInmail;
+use structs::entry::PhantomGetJson;
 
+async fn serialize(json: Json<PhantomGetJson>) -> impl IntoResponse {
+    let result = serialize_json(json.0);
+
+    match result {
+        Ok(result) => Json(json!({
+            "status": "success",
+            "error": "no",
+            "message": "Serialization was successful!",
+            "result": result,
+        })),
+        Err(error) => Json(json!({
+            "status": "failed",
+            "error": "yes",
+            "message": "Serialization failed!",
+            "result": error.to_string()
+        })),
+    }
+}
 async fn scrap_conversations(json: Json<EntryRegular>) -> impl IntoResponse {
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
@@ -52,7 +72,6 @@ async fn scrap_conversations(json: Json<EntryRegular>) -> impl IntoResponse {
     }))
 }
 
-#[tracing::instrument]
 async fn scrap_inmails_conversations(json: Json<EntryRecruiter>) -> impl IntoResponse {
     info!("This is some additional information");
     let webhook = json.webhook.clone();
@@ -395,6 +414,7 @@ async fn main() {
         .route("/scrap_inmails", post(scrap_inmails_conversations))
         .route("/scrap_profiles", post(scrap_profiles))
         .route("/scrap_regular_search", post(scrap_regular_search_url))
+        .route("/serialize", post(serialize))
         .route("/scrap_recruiter_search", post(scrap_recruiter_search_url));
 
     hyper::Server::bind(&address)

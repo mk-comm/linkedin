@@ -217,3 +217,54 @@ pub struct EntryScrapSearchRecruiter {
     "aisearch": "uniqueid"
 }
 */
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct PhantomGetJson {
+    pub body: Vec<PhantomJsonProfile>,
+    pub sourcer: Option<String>,
+    pub job: Option<String>,
+}
+#[derive(Debug, Deserialize, Serialize)]
+#[allow(non_snake_case)]
+pub struct PhantomGeneral {
+    pub imgUrl: Option<String>,
+    pub fullName: Option<String>,
+    pub headline: Option<String>,
+    pub location: Option<String>,
+    pub profileUrl: Option<String>,
+    pub connectionDegree: Option<String>,
+    pub description: Option<String>,
+    pub firstName: Option<String>,
+    pub lastName: Option<String>,
+    pub userId: Option<String>,
+    pub vmid: Option<String>,
+}
+#[derive(Debug, Deserialize, Serialize)]
+pub struct PhantomJsonProfile {
+    pub general: PhantomGeneral,
+    pub jobs: Option<Vec<PhantomJobs>>,
+    pub schools: Option<Vec<PhantomSchools>>,
+    pub timestamp: Option<String>,
+}
+#[allow(non_snake_case)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct PhantomSchools {
+    pub schoolUrl: Option<String>,
+    pub schoolName: Option<String>,
+    pub logoUrl: Option<String>,
+    pub degree: Option<String>,
+    pub dateRange: Option<String>,
+    pub description: Option<String>,
+}
+#[allow(non_snake_case)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct PhantomJobs {
+    pub companyUrl: Option<String>,
+    pub companyName: Option<String>,
+    pub logoUrl: Option<String>,
+    pub jobTitle: Option<String>,
+    pub dateRange: Option<String>,
+    pub duration: Option<String>,
+    pub description: Option<String>,
+    pub location: Option<String>,
+}

@@ -10,7 +10,7 @@ use serde_json::json;
 use std::collections::HashMap;
 
 pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
-    let recruiter = entry.recruiter.clone();
+    let recruiter = entry.recruiter;
     let api_key = entry.user_id.clone();
     let stage_interested = entry.recruiter_stage_interested.clone();
     let stage_not_interested = entry.recruiter_stage_not_interested.clone();

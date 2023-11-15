@@ -8,6 +8,7 @@ pub mod scrap_recruiter_search;
 pub mod scrap_regular_search;
 pub mod send_inmails;
 pub mod send_message;
+pub mod serialize;
 pub mod start_browser;
 pub mod wait;
 pub mod withdraw_connection;

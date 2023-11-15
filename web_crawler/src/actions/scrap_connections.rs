@@ -61,10 +61,10 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
             wait(8, 12);
         }
         None => {
-            let url= "https://www.linkedin.com/mynetwork/invite-connect/connections/";
+            let url = "https://www.linkedin.com/mynetwork/invite-connect/connections/";
             browser.page.goto_builder(url);
             wait(11, 16);
-            /* 
+            /*
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
             return Err(CustomError::ButtonNotFound(
