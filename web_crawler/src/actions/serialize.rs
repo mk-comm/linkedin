@@ -185,16 +185,17 @@ fn to_education(schools: Option<Vec<PhantomSchools>>) -> Result<Vec<Education>, 
     let mut education: Vec<Education> = Vec::new();
     for school in schools {
         let date = school.dateRange.clone();
-        let dates: Vec<String> = match date {
-            Some(date) => date.split(" - ").map(|s| s.to_string()).collect(),
-            None => {
-                return Err(CustomError::ButtonNotFound(
-                    "Education Date range is missing".to_string(),
-                ))
+        let mut start_date: Option<i64> = None;
+        let mut end_date: Option<i64> = None;
+        match date {
+            Some(date) => {
+                let dates = extract_dates(date.as_str());
+                start_date = date_to_timestamp(dates[0].as_str())?;
+                end_date = date_to_timestamp(dates[1].as_str())?;
+                Some(dates)
             }
+            None => None,
         };
-        let start_date = date_to_timestamp_year(dates[0].as_str())?;
-        let end_date = date_to_timestamp_year(dates[1].as_str())?;
         let edu = Education {
             id: extract_number(school.schoolUrl), // should be stripped of  https://www.linkedin.com/company/ and /
             schoolName: school.schoolName,
@@ -221,7 +222,7 @@ fn to_experience(jobs: Option<Vec<PhantomJobs>>) -> Result<Vec<Experience>, Cust
     for job in jobs {
         let date = job.dateRange.clone();
         let dates: Vec<String> = match date {
-            Some(date) => date.split(" - ").map(|s| s.to_string()).collect(),
+            Some(date) => extract_dates(date.as_str()),
             None => {
                 return Err(CustomError::ButtonNotFound(
                     "Job Date range is missing".to_string(),
@@ -268,7 +269,7 @@ fn extract_nick(url: Option<String>) -> Option<String> {
 }
 #[allow(deprecated)]
 fn date_to_timestamp(date: &str) -> Result<Option<i64>, CustomError> {
-    if date == "Present" {
+    if date.contains("Present") {
         return Ok(None);
     }
     let months = [
@@ -300,13 +301,53 @@ fn date_to_timestamp(date: &str) -> Result<Option<i64>, CustomError> {
     Ok(Some(timestamp))
 }
 
-#[allow(deprecated)]
-fn date_to_timestamp_year(date: &str) -> Result<Option<i64>, CustomError> {
-    if date == "Present" {
-        return Ok(None);
+fn extract_dates(date: &str) -> Vec<String> {
+    let date_vec: Vec<&str> = date.split_whitespace().collect();
+    let months = [
+        ("Jan", 1),
+        ("Feb", 2),
+        ("Mar", 3),
+        ("Apr", 4),
+        ("May", 5),
+        ("Jun", 6),
+        ("Jul", 7),
+        ("Aug", 8),
+        ("Sep", 9),
+        ("Oct", 10),
+        ("Nov", 11),
+        ("Dec", 12),
+    ];
+    let year_strings: Vec<String> = (1940..=2090).map(|year| year.to_string()).collect();
+    let years: Vec<&str> = year_strings.iter().map(AsRef::as_ref).collect();
+    let mut date_string = String::new();
+
+    for word in date_vec {
+        if word == "Present" {
+            date_string = format!("{} {}", date_string, word);
+            break;
+        }
+
+        for &month in &months {
+            if word == month.0 {
+                date_string = format!("{} {}", date_string, word);
+                break;
+            }
+        }
+        for &year in &years {
+            if word == year {
+                date_string = format!("{} {}", date_string, word);
+            }
+        }
     }
-    let date = format!("{}-01-01", date);
-    let naive_date = NaiveDate::parse_from_str(date.as_str(), "%Y-%m-%d")?;
-    let timestamp = naive_date.and_hms(0, 0, 0).timestamp();
-    Ok(Some(timestamp))
+    let word_count: Vec<&str> = date_string.as_str().split_whitespace().collect();
+    if word_count.len() < 3 {
+        date_string = format!("Jan {} Jan {}", word_count[0], word_count[1])
+    }
+    let dates: Vec<String> = date_string
+        .split_whitespace()
+        .collect::<Vec<&str>>()
+        .chunks(2)
+        .map(|chunk| chunk.join(" "))
+        .collect();
+    dates
 }
