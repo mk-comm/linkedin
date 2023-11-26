@@ -29,22 +29,18 @@ use structs::entry::EntrySendInmail;
 use structs::entry::PhantomGetJson;
 
 async fn serialize(json: Json<PhantomGetJson>) -> impl IntoResponse {
-    let result = serialize_json(json.0);
+    let _spawn = task::spawn(async move {
+        let api = serialize_json(json.0);
+        match api.await {
+            Ok(_) => info!("Serialization was successful!"),
+            Err(error) => error!("{}", error),
+        }
+    });
 
-    match result {
-        Ok(result) => Json(json!({
-            "status": "success",
-            "error": "no",
-            "message": "Serialization was successful!",
-            "result": result,
-        })),
-        Err(error) => Json(json!({
-            "status": "failed",
-            "error": "yes",
-            "message": "Serialization failed!",
-            "result": error.to_string()
-        })),
-    }
+    Json(json!({
+        "status": "success",
+        "message": "Serialization started!"
+    }))
 }
 async fn scrap_conversations(json: Json<EntryRegular>) -> impl IntoResponse {
     let webhook = json.webhook.clone();

@@ -1,7 +1,9 @@
-use crate::structs::entry::{PhantomGetJson, PhantomJobs, PhantomSchools};
+use crate::structs::entry::{PhantomGetJson, PhantomJobs, PhantomJsonProfile, PhantomSchools};
 use crate::structs::error::CustomError;
+use base64::encode;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize, Serializer};
+use serde_json::json;
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
 struct ResultJson {
@@ -134,45 +136,12 @@ where
     }
 }
 
-pub fn serialize_json(json: PhantomGetJson) -> Result<String, CustomError> {
-    let jobs = json.body[0].jobs.clone();
-    let schools = json.body[0].schools.clone();
-
-    let company = match jobs {
-        Some(job) => (
-            extract_number(job[0].companyUrl.clone()),
-            job[0].companyName.clone(),
-        ),
-        None => (None, None),
-    };
-    let education = to_education(schools)?;
-    let jobs = to_experience(json.body[0].jobs.clone())?;
-    let result = Profile {
-        linkedin: json.body[0].general.profileUrl.clone(),
-        first: json.body[0].general.firstName.clone(),
-        last: json.body[0].general.lastName.clone(),
-        email: None,
-        job: json.job.clone(),         // should be changed
-        sourcer: json.sourcer.clone(), // should be changed
-        title: json.body[0].general.headline.clone(),
-        linkedin_unique: extract_nick(json.body[0].general.profileUrl.clone()),
-        linkedin_unique_number: json.body[0].general.userId.clone(),
-        connectionLevel: Some(2),
-        company: company.1,
-        company_unique: company.0,
-        about: json.body[0].general.description.clone(),
-        profilePicture: json.body[0].general.imgUrl.clone(),
-        education,
-        experience: jobs,
-        viewedIn: Some("Phantom".to_string()),
-        location: json.body[0].general.location.clone(),
-        entityUrn: json.body[0].general.vmid.clone(),
-        extension_version: Some("phantom".to_string()),
-        timestamp: json.body[0].timestamp.clone(),
-    };
+pub async fn serialize_json(json: PhantomGetJson) -> Result<String, CustomError> {
     //println!("result {:?}", result);
-    let json = serde_json::to_string(&result)?;
-    Ok(json)
+    for profile in json.body {
+        let result = serializer_each_profile(profile, json.job.clone(), json.sourcer.clone()).await;
+    }
+    Ok("test".to_owned())
     //println!("json {:?}", json);
     //Ok(())
 }
@@ -209,6 +178,72 @@ fn to_education(schools: Option<Vec<PhantomSchools>>) -> Result<Vec<Education>, 
     }
 
     Ok(education)
+}
+
+async fn serializer_each_profile(
+    json: PhantomJsonProfile,
+    job: Option<String>,
+    sourcer: Option<String>,
+) -> Result<(), CustomError> {
+    let jobs = json.jobs.clone();
+    let schools = json.schools.clone();
+
+    let company = match jobs {
+        Some(job) => (
+            extract_number(job[0].companyUrl.clone()),
+            job[0].companyName.clone(),
+        ),
+        None => (None, None),
+    };
+    let education = to_education(schools)?;
+    let jobs = to_experience(json.jobs.clone())?;
+    let result = Profile {
+        linkedin: json.general.profileUrl.clone(),
+        first: json.general.firstName.clone(),
+        last: json.general.lastName.clone(),
+        email: None,
+        job,     // should be changed
+        sourcer, // should be changed
+        title: json.general.headline.clone(),
+        linkedin_unique: extract_nick(json.general.profileUrl.clone()),
+        linkedin_unique_number: json.general.userId.clone(),
+        connectionLevel: Some(2),
+        company: company.1,
+        company_unique: company.0,
+        about: json.general.description.clone(),
+        profilePicture: json.general.imgUrl.clone(),
+        education,
+        experience: jobs,
+        viewedIn: Some("Phantom".to_string()),
+        location: json.general.location.clone(),
+        entityUrn: json.general.vmid.clone(),
+        extension_version: Some("phantom".to_string()),
+        timestamp: json.timestamp.clone(),
+    };
+    let result = send_url(result).await;
+    match result {
+        Ok(_) => (),
+        Err(e) => println!("result error {}", e)
+        
+    }
+    Ok(())
+}
+#[allow(deprecated)]
+async fn send_url(profile: Profile) -> Result<(), CustomError> {
+    let serialized = serde_json::to_vec(&profile).unwrap();
+    let encoded = encode(&serialized);
+    const WEBHOOK_URL : &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
+    let client = reqwest::Client::new();
+    
+
+    let target_json = json!({ 
+        "b64": encoded });
+    let res = client.post(WEBHOOK_URL).json(&target_json).send().await;
+    match res {
+        Ok(_) => (),
+        Err(e) => println!("{}", e),
+    }
+    Ok(())
 }
 
 fn to_experience(jobs: Option<Vec<PhantomJobs>>) -> Result<Vec<Experience>, CustomError> {
