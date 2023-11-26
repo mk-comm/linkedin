@@ -168,6 +168,7 @@ pub struct EntryScrapSearchRegular {
     pub session_cookie: String,
     pub url: String,
     pub result_url: String,
+    pub url_list_id: String,
     pub aisearch: String,
 }
 
@@ -182,6 +183,7 @@ pub struct EntryScrapSearchRegular {
     "user_id": "qePDD2xm7Sap0AgUqexqbUx9WmzfOhoZYhWzcnZHlmM",
     "url": "https://www.linkedin.com/search/results/people/?currentCompany=%5B%221441",
     "result_url" : "https://www.result.com",
+    "url_list_id" : "id78",
     "aisearch": "uniqueid"
 }
 
@@ -199,6 +201,7 @@ pub struct EntryScrapSearchRecruiter {
     pub recruiter_session_cookie: String,
     pub url: String,
     pub result_url: String,
+    pub url_list_id: String,
     pub aisearch: String,
 }
 
@@ -214,6 +217,7 @@ pub struct EntryScrapSearchRecruiter {
     "user_id": "qePDD2xm7Sap0AgUqexqbUx9WmzfOhoZYhWzcnZHlmM",
     "url": "https://www.linkedin.com/search/results/people/?currentCompany=%5B%221441",
     "result_url" : "https://www.result.com",
+    "url_list_id" : "id78",
     "aisearch": "uniqueid"
 }
 */

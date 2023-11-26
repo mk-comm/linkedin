@@ -34,8 +34,8 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
 
     let pages_count = count_pages(search_container.inner_html().await?);
     println!("pages count: {}", pages_count);
-    let mut url_list: Vec<String> = Vec::new();
     for i in 1..=pages_count {
+        let mut url_list: Vec<String> = Vec::new();
         let page_number = format!("button[aria-label='Page {}']", i);
         let next_page = browser
             .page
@@ -54,12 +54,12 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
             .unwrap();
         scrap(container.inner_html().await?.as_str(), &mut url_list);
 
+        send_urls(url_list, &entry.result_url, &entry.aisearch, &entry.url_list_id).await?;
         wait(3, 5);
     }
 
     //println!("url list: {:?}", url_list);
 
-    send_urls(url_list, &entry.result_url, &entry.aisearch).await?;
 
     wait(5, 12);
 
@@ -109,13 +109,15 @@ async fn send_urls(
     urls: Vec<String>,
     target_url: &str,
     ai_search: &str,
+    url_list_id: &str,
 ) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 
     // Convert the Vec<String> into a JSON string
     let urls_json = json!({ 
         "urls": urls,
-        "ai_search": ai_search });
+        "ai_search": ai_search,
+        "url_list_id": url_list_id     });
 
     let response = client.post(target_url).json(&urls_json).send().await;
     match response {

@@ -85,7 +85,6 @@ struct Education {
     #[serde(serialize_with = "serialize_option_string")]
     description: Option<String>,
 }
-
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
 struct Experience {
@@ -185,16 +184,15 @@ fn to_education(schools: Option<Vec<PhantomSchools>>) -> Result<Vec<Education>, 
     let mut education: Vec<Education> = Vec::new();
     for school in schools {
         let date = school.dateRange.clone();
-        let mut start_date: Option<i64> = None;
-        let mut end_date: Option<i64> = None;
-        match date {
-            Some(date) => {
-                let dates = extract_dates(date.as_str());
-                start_date = date_to_timestamp(dates[0].as_str())?;
-                end_date = date_to_timestamp(dates[1].as_str())?;
-                Some(dates)
-            }
-            None => None,
+        if date.is_none() {
+            return Err(CustomError::ButtonNotFound(
+                "School Date range is missing".to_string(),
+            ));
+        };
+        let new_vec = get_date(date.unwrap().as_str());
+        let date_vec = match new_vec {
+            Ok(value) => value,
+            Err(_) => return Err(CustomError::ButtonNotFound("Date vec is error".to_string())),
         };
         let edu = Education {
             id: extract_number(school.schoolUrl), // should be stripped of  https://www.linkedin.com/company/ and /
@@ -203,8 +201,8 @@ fn to_education(schools: Option<Vec<PhantomSchools>>) -> Result<Vec<Education>, 
             degreeName: school.degree,
             fieldOfStudy: None,
             periodText: school.dateRange,
-            startDate: start_date,
-            endDate: end_date,
+            startDate: date_vec[0],
+            endDate: date_vec[1],
             description: school.description,
         };
         education.push(edu);
@@ -221,16 +219,16 @@ fn to_experience(jobs: Option<Vec<PhantomJobs>>) -> Result<Vec<Experience>, Cust
     let mut experience: Vec<Experience> = Vec::new();
     for job in jobs {
         let date = job.dateRange.clone();
-        let dates: Vec<String> = match date {
-            Some(date) => extract_dates(date.as_str()),
-            None => {
-                return Err(CustomError::ButtonNotFound(
-                    "Job Date range is missing".to_string(),
-                ))
-            }
+        if date.is_none() {
+            return Err(CustomError::ButtonNotFound(
+                "Job Date range is missing".to_string(),
+            ));
         };
-        let start_date = date_to_timestamp(dates[0].as_str())?;
-        let end_date = date_to_timestamp(dates[1].as_str())?;
+        let new_vec = get_date(date.unwrap().as_str());
+        let date_vec = match new_vec {
+            Ok(value) => value,
+            Err(_) => return Err(CustomError::ButtonNotFound("Date vec is error".to_string())),
+        };
         let exp = Experience {
             companyName: job.companyName.clone(),
             companyId: extract_number(job.companyUrl.clone()), //should be stripped of  https://www.linkedin.com/company/ and /
@@ -240,8 +238,8 @@ fn to_experience(jobs: Option<Vec<PhantomJobs>>) -> Result<Vec<Experience>, Cust
             position: job.jobTitle,
             employmentType: None,
             periodText: job.dateRange,
-            startDate: start_date,
-            endDate: end_date,
+            startDate: date_vec[0],
+            endDate: date_vec[1],
             duration: job.duration,
             location: job.location,
             description: job.description,
@@ -267,42 +265,23 @@ fn extract_nick(url: Option<String>) -> Option<String> {
         parts.last().map(|s| s.to_string())
     })
 }
-#[allow(deprecated)]
-fn date_to_timestamp(date: &str) -> Result<Option<i64>, CustomError> {
-    if date.contains("Present") {
-        return Ok(None);
-    }
-    let months = [
-        ("Jan", 1),
-        ("Feb", 2),
-        ("Mar", 3),
-        ("Apr", 4),
-        ("May", 5),
-        ("Jun", 6),
-        ("Jul", 7),
-        ("Aug", 8),
-        ("Sep", 9),
-        ("Oct", 10),
-        ("Nov", 11),
-        ("Dec", 12),
-    ];
-
-    let month_year: Vec<&str> = date.split_whitespace().collect();
-    let mut month = String::from(month_year[0]);
-
-    for &(m, n) in &months {
-        if m == month_year[0] {
-            month = n.to_string();
-        }
-    }
-    let date = format!("{}-{}-01", month_year[1], month);
-    let naive_date = NaiveDate::parse_from_str(date.as_str(), "%Y-%m-%d")?;
-    let timestamp = naive_date.and_hms(0, 0, 0).timestamp();
-    Ok(Some(timestamp))
+#[derive(Debug)]
+struct DateFormat {
+    month: Option<String>,
+    year: Option<String>,
 }
 
-fn extract_dates(date: &str) -> Vec<String> {
+impl DateFormat {
+    fn new() -> Self {
+        DateFormat {
+            month: None,
+            year: None,
+        }
+    }
+}
+fn get_date(date: &str) -> Result<Vec<Option<i64>>, CustomError> {
     let date_vec: Vec<&str> = date.split_whitespace().collect();
+
     let months = [
         ("Jan", 1),
         ("Feb", 2),
@@ -319,35 +298,86 @@ fn extract_dates(date: &str) -> Vec<String> {
     ];
     let year_strings: Vec<String> = (1940..=2090).map(|year| year.to_string()).collect();
     let years: Vec<&str> = year_strings.iter().map(AsRef::as_ref).collect();
-    let mut date_string = String::new();
-
+    let mut start_date = DateFormat::new();
+    let mut end_date = DateFormat::new();
     for word in date_vec {
         if word == "Present" {
-            date_string = format!("{} {}", date_string, word);
+            end_date.month = None;
+            end_date.year = None;
             break;
         }
 
         for &month in &months {
             if word == month.0 {
-                date_string = format!("{} {}", date_string, word);
+                if start_date.month.is_none() {
+                    start_date.month = Some(month.1.to_string())
+                } else {
+                    end_date.month = Some(month.1.to_string())
+                };
                 break;
             }
         }
         for &year in &years {
             if word == year {
-                date_string = format!("{} {}", date_string, word);
+                if start_date.year.is_none() {
+                    start_date.year = Some(word.to_string())
+                } else {
+                    end_date.year = Some(word.to_string())
+                };
             }
         }
     }
-    let word_count: Vec<&str> = date_string.as_str().split_whitespace().collect();
-    if word_count.len() < 3 {
-        date_string = format!("Jan {} Jan {}", word_count[0], word_count[1])
+    let start_date_string = construct_string(start_date);
+    let end_date_string = construct_string(end_date);
+    let start_date_i64 = match construct_timestamp(start_date_string) {
+        Ok(value) => value,
+        Err(e) => {
+            return Err(CustomError::ButtonNotFound(
+                format!("start_date_i64_error {}", e).to_string(),
+            ));
+        }
+    };
+    let end_date_i64 = match construct_timestamp(end_date_string) {
+        Ok(value) => value,
+        Err(e) => {
+            return Err(CustomError::ButtonNotFound(
+                format!("end_date_i64_error {}", e).to_string(),
+            ));
+        }
+    };
+    let vec_i64 = vec![start_date_i64, end_date_i64];
+    Ok(vec_i64)
+}
+
+#[allow(deprecated)]
+fn construct_timestamp(date: Option<String>) -> Result<Option<i64>, CustomError> {
+    if date.is_none() {
+        return Ok(None);
     }
-    let dates: Vec<String> = date_string
-        .split_whitespace()
-        .collect::<Vec<&str>>()
-        .chunks(2)
-        .map(|chunk| chunk.join(" "))
-        .collect();
-    dates
+    let naive_date = NaiveDate::parse_from_str(date.unwrap().as_str(), "%Y-%m-%d")?;
+    let timestamp = naive_date.and_hms(0, 0, 0).timestamp();
+    Ok(Some(timestamp))
+}
+
+fn construct_string(date: DateFormat) -> Option<String> {
+    //println!("check {:?}", date);
+    if date.month.is_none() && date.year.is_none() {
+        return None;
+    };
+    //println!("checkafter {:?}", date);
+
+    let month = if date.month.is_some() {
+        date.month
+    } else {
+        Some("1".to_string())
+    };
+
+    let year = if date.year.is_some() {
+        date.year
+    } else {
+        return None;
+    };
+
+    let result = format!("{}-{}-01", year.unwrap(), month.unwrap());
+    Some(result)
 }

@@ -57,9 +57,9 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         ));
     }
     let pages_count = pages_count.unwrap();
-    //println!("pages count: {}", pages_count);
-    let mut url_list: Vec<String> = Vec::new();
-    for _i in 1..=pages_count {
+    println!("pages count: {}", pages_count);
+    for i in 1..=pages_count {
+        let mut url_list: Vec<String> = Vec::new();
         let search_container_inside = browser
             .page
             .query_selector("div.hp-core-temp.profile-list.profile-list-container")
@@ -73,15 +73,17 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         }
         let search_container_inside = search_container_inside.unwrap();
         scroll(&browser.page).await?;
-        wait(12, 15);
+        wait(5, 7);
         let _scrap = scrap(
             search_container_inside.inner_html().await?.as_str(),
             &mut url_list,
         );
-        //let page_number = format!("span[class=a11y-text:contains('Page {}')]", i);
-        let next_button = format!("a[class='pagination__quick-link pagination__quick-link--next']");
-        let next_page = browser.page.query_selector(next_button.as_str()).await?;
+        send_urls(url_list, &entry.result_url, &entry.aisearch, &entry.url_list_id).await?;
+        const NEXT_ICON: &str = ".mini-pagination__quick-link[rel='next']";
 
+        const NEXT_BUTTON: &str =
+            "a[class='pagination__quick-link pagination__quick-link--next']";
+        let next_page = browser.page.query_selector(NEXT_BUTTON).await?;
         match next_page {
             Some(next_page) => {
                 next_page.click_builder().click().await?;
@@ -91,15 +93,18 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 wait(3, 5);
             }
             None => {
+                let next_page = browser.page.query_selector(NEXT_ICON).await?;
+                if next_page.is_some() {
+                    next_page.unwrap().click_builder().click().await?;
+                    wait(10, 15);
+                } else {
+                    println!("next page is empty");
+                }
                 println!("next page not found");
-                break;
+                //break;
             }
         }
     }
-
-    println!("url list: {:?}", url_list);
-
-    send_urls(url_list, &entry.result_url, &entry.aisearch).await?;
 
     wait(5, 12);
 
@@ -112,7 +117,7 @@ async fn scroll(page: &Page) -> Result<(), CustomError> {
     let mut x = 0;
 
     while x < 25 {
-        move_scroll(&page).await?;
+        move_scroll(page).await?;
         x += 1;
     }
 
@@ -202,13 +207,15 @@ async fn send_urls(
     urls: Vec<String>,
     target_url: &str,
     ai_search: &str,
+    url_list_id: &str
 ) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 
     // Convert the Vec<String> into a JSON string
     let urls_json = json!({ 
         "urls": urls,
-        "ai_search": ai_search });
+        "ai_search": ai_search,
+    "url_list_id": url_list_id});
 
     let response: Result<reqwest::Response, reqwest::Error> =
         client.post(target_url).json(&urls_json).send().await;
