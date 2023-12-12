@@ -117,41 +117,62 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                  };
                  */
 
-    let entity_urn = find_entity_run(&browser.page).await?;
-    //println!("entity_urn: {:?}", entity_urn);
+    let entity_urn = find_entity_urn(&browser.page).await?;
 
-    let url = format!(
-        "https://www.linkedin.com/talent/profile/{}?trk=FLAGSHIP_VIEW_IN_RECRUITER",
-        entity_urn
-    );
-    // go to candidate page777
-    let mut _go_to = browser.page.goto_builder(url.as_str()).goto().await;
-    let mut x = 0;
-    if go_to.is_err() {
-        while x <= 3 {
-            wait(3, 6);
-            let build = browser.page.goto_builder(url.as_str()).goto().await;
-            if build.is_ok() {
-                _go_to = build; //_go_to never read, is there some point for it?
-                break;
-            } else if build.is_err() && x == 3 {
+    println!("entity_urn: {:?}", entity_urn);
+    //println!("entity_urn: {:?}", entity_urn);
+    const VIEW_IN_RECRUITER: &str = "button[class='artdeco-button artdeco-button--2 artdeco-button--secondary ember-view pvs-profile-actions__action']";
+    if entity_urn.is_some() {
+        let url = format!(
+            "https://www.linkedin.com/talent/profile/{}?trk=FLAGSHIP_VIEW_IN_RECRUITER",
+            entity_urn.unwrap()
+        );
+        // go to candidate page777
+        let mut _go_to = browser.page.goto_builder(url.as_str()).goto().await;
+        let mut x = 0;
+        if go_to.is_err() {
+            while x <= 3 {
                 wait(3, 6);
-                browser.page.close(Some(false)).await?;
-                browser.browser.close().await?; // close browser
-                return Err(CustomError::ButtonNotFound(
-                    "Candidate Recruiter page is not loading/Inmail".to_string(),
-                )); // if error means page is not loading
+                let build = browser.page.goto_builder(url.as_str()).goto().await;
+                if build.is_ok() {
+                    _go_to = build; //_go_to never read, is there some point for it?
+                    break;
+                } else if build.is_err() && x == 3 {
+                    wait(3, 6);
+                    browser.page.close(Some(false)).await?;
+                    browser.browser.close().await?; // close browser
+                    return Err(CustomError::ButtonNotFound(
+                        "Candidate Recruiter page is not loading/Inmail".to_string(),
+                    )); // if error means page is not loading
+                }
+                x += 1;
+                //println!("retrying to load page")
             }
-            x += 1;
-            //println!("retrying to load page")
         }
+    } else {
+        let view_in_recruiter_button = browser.page.query_selector(VIEW_IN_RECRUITER).await?;
+        match view_in_recruiter_button {
+            Some(button) => button.click_builder().click().await?,
+            None => {
+                return Err(CustomError::ButtonNotFound(
+                    "Vier in recruiter button is not found".to_string(),
+                ))
+            }
+        }
+        wait(6, 10);
+        let opened_pages = browser.context.pages().unwrap();
+        let url = opened_pages.get(1).unwrap().url()?;
+        let _result = browser.page.goto_builder(url.as_str()).goto().await;
+        //browser.page.close(Some(false)).await?;
     }
+    wait(10, 15);
 
     let nav_bar = browser
         .page
         .query_selector("div[class='global-nav__right']")
         .await?;
 
+    //wait(10000000, 100000000000);
     match &nav_bar {
         Some(_) => (),
         None => {
@@ -330,7 +351,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     Ok(())
 }
 
-async fn find_entity_run(page: &Page) -> Result<String, playwright::Error> {
+async fn find_entity_urn(page: &Page) -> Result<Option<String>, playwright::Error> {
     let link_selector = Selector::parse("a").unwrap();
     let document = scraper::Html::parse_document(&page.content().await?);
     let mut entity_urn = String::new();
@@ -359,17 +380,23 @@ async fn find_entity_run(page: &Page) -> Result<String, playwright::Error> {
     }
 
     if entity_urn.is_empty() {
-        entity_urn = print_elements_with_datalet_in_id(document.html().as_str());
+        entity_urn = match print_elements_with_datalet_in_id(document.html().as_str()) {
+            Some(urn) => urn,
+            None => return Ok(None),
+        };
     }
-    Ok(entity_urn)
+    Ok(Some(entity_urn))
 }
 
-fn print_elements_with_datalet_in_id(html: &str) -> String {
+fn print_elements_with_datalet_in_id(html: &str) -> Option<String> {
     // Parse the document
     let document = Html::parse_document(html);
 
     // Create a Selector for elements with an 'id' attribute
-    let selector = Selector::parse("[id]").unwrap();
+    let selector = match Selector::parse("[id]") {
+        Ok(selector) => selector,
+        Err(_) => return None,
+    };
 
     let mut right_id = String::new();
     // Iterate over elements matching the selector
@@ -395,7 +422,10 @@ fn print_elements_with_datalet_in_id(html: &str) -> String {
         }
     }
 
-    let entity_id_selector = Selector::parse(&right_id).unwrap();
+    let entity_id_selector = match Selector::parse(&right_id) {
+        Ok(selector) => selector,
+        Err(_) => return None,
+    };
     let mut entity_urn = String::new();
     for element in document.select(&entity_id_selector) {
         let text = element.html();
@@ -410,5 +440,5 @@ fn print_elements_with_datalet_in_id(html: &str) -> String {
         }
     }
 
-    entity_urn
+    Some(entity_urn)
 }
