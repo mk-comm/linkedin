@@ -53,7 +53,7 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
             .await?
             .unwrap();
         scrap(container.inner_html().await?.as_str(), &mut url_list);
-
+        wait(1, 2);
         send_urls(url_list, &entry.result_url, &entry.aisearch, &entry.url_list_id).await?;
         wait(3, 5);
     }

@@ -1,5 +1,6 @@
 use crate::structs::entry::{PhantomGetJson, PhantomJobs, PhantomJsonProfile, PhantomSchools};
 use crate::structs::error::CustomError;
+use crate::actions::wait::wait;
 use base64::encode;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize, Serializer};
@@ -140,6 +141,7 @@ pub async fn serialize_json(json: PhantomGetJson) -> Result<String, CustomError>
     //println!("result {:?}", result);
     for profile in json.body {
         let result = serializer_each_profile(profile, json.job.clone(), json.sourcer.clone()).await;
+        wait(1,2);
     }
     Ok("test".to_owned())
     //println!("json {:?}", json);

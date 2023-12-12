@@ -82,10 +82,17 @@ pub async fn scrap_message(
     /////////////////loop for create/check message
 
     for message in messages.values() {
-        let check_message = check_message_new_message(&message, &full_name, conversation).await;
+        let check_message = check_message_new_message(message, &full_name, conversation).await;
         if check_message == true && message.received == true {
             new_message = true;
-            create_message(&message, &full_name, &conversation).await;
+            create_message(message, &full_name, conversation).await;
+            /*
+            let autoreply = check_autoreply(message, &full_name, conversation).await;
+            if autoreply {
+                let responce = get_reply(full_text.clone(), conversation, full_name.clone()).await;
+                let message = send_message(page, responce).await;
+            }
+            */
         }
     }
     // check if the message is new
@@ -94,7 +101,7 @@ pub async fn scrap_message(
 
     if new_message == true && candidate_of_sequence == Some(true) && conversation.enable_ai == true
     {
-        let category = evaluate(full_text.as_str(), &conversation.api_key, full_name).await;
+        let category = evaluate(full_text.as_str(), &conversation.api_key, full_name.clone()).await;
         match category {
             MessageCategory::Interested => {
                 mark_star(&conversation_select, focused_inbox).await?;
@@ -173,10 +180,82 @@ async fn check_message_new_message(
         .unwrap();
     let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
 
-    let new_message = json_response["response"]["new_message"].as_bool().unwrap();
-    new_message
+    json_response["response"]["new_message"].as_bool().unwrap()
 }
 
+async fn check_autoreply(
+    message: &Message,
+    full_name: &FullName,
+    conversation: &Conversation,
+) -> bool {
+    let client = reqwest::Client::new();
+    let payload = json!({
+            "message_text": message.message_text,
+            "conversation_url": conversation.thread_url,
+            "api_key": conversation.api_key,
+            "first": full_name.first_name,
+            "last": full_name.last_name,
+            "entity_urn": message.url_send_from,
+    });
+    let res = client
+        .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_check_autoreply")
+        .json(&payload)
+        .send()
+        .await
+        .unwrap();
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+
+    json_response["response"]["autoreply"].as_bool().unwrap()
+}
+
+async fn get_prompt() -> String {
+    let client = reqwest::Client::new();
+    let payload = json!({});
+    let res = client
+        .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_check_prompt")
+        .json(&payload)
+        .send()
+        .await
+        .unwrap();
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+
+    json_response["response"]["prompt"].to_string()
+}
+
+async fn send_message(page: &Page, message: String) -> Result<(), CustomError> {
+    const INPUT_SELECTOR: &str =
+        "div[class='msg-form__msg-content-container--scrollable scrollable relative']";
+    let text_input = page.query_selector(INPUT_SELECTOR).await?;
+    match text_input {
+        Some(input) => {
+            input.click_builder().click().await?;
+            input.fill_builder(message.as_str()).fill().await?;
+            println!("{}", message) // fill input for note;
+        }
+        None => (),
+    }
+
+    Ok(())
+}
+
+async fn get_reply(message: String, conversation: &Conversation, full_name: FullName) -> String {
+    let client = reqwest::Client::new();
+    let payload = json!({
+            "message_text": message,
+            "api_key": conversation.api_key,
+            "first": full_name.first_name,
+            "last": full_name.last_name,
+    });
+    let res = client
+        .post("https://overview.tribe.xyz/version-test/api/1.1/wf/tribe_api_get_reply")
+        .json(&payload)
+        .send()
+        .await
+        .unwrap();
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+
+    json_response["response"]["reply"].to_string()
+}
 async fn mark_unread(
     conversation_element: &ElementHandle,
     focused_inbox: bool,

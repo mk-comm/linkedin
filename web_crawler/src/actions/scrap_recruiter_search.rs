@@ -58,7 +58,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     }
     let pages_count = pages_count.unwrap();
     println!("pages count: {}", pages_count);
-    for i in 1..=pages_count {
+    for _i in 1..=pages_count {
         let mut url_list: Vec<String> = Vec::new();
         let search_container_inside = browser
             .page

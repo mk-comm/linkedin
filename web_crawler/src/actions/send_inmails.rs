@@ -124,7 +124,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         "https://www.linkedin.com/talent/profile/{}?trk=FLAGSHIP_VIEW_IN_RECRUITER",
         entity_urn
     );
-    // go to candidate page
+    // go to candidate page777
     let mut _go_to = browser.page.goto_builder(url.as_str()).goto().await;
     let mut x = 0;
     if go_to.is_err() {
@@ -163,11 +163,20 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     }
 
     wait(6, 16);
-    let profile_block = browser
-.page
-.query_selector("div[class='topcard-condensed__content-top topcard-condensed__content-top--profile-size-7']")
-.await?;
+    const PROFILE_OLD_BLOCK: &str = "div[class='topcard-condensed__content-top topcard-condensed__content-top--profile-size-7']";
+    const PROFILE_NEW_BLOCK: &str =
+        "div[class='zDhsPKaLqxcmxXjtBlqsgIkUbsNgtibqA UaplslhAVpzzlyntYbznbPnOcAEusqrjfE']";
 
+    let profile_block = if browser
+        .page
+        .query_selector(PROFILE_OLD_BLOCK)
+        .await?
+        .is_some()
+    {
+        browser.page.query_selector(PROFILE_OLD_BLOCK).await?
+    } else {
+        browser.page.query_selector(PROFILE_NEW_BLOCK).await?
+    };
     match &profile_block {
         Some(_) => (),
         None => {
