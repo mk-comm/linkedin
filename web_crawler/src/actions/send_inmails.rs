@@ -184,30 +184,31 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     }
 
     wait(6, 16);
-    const PROFILE_OLD_BLOCK: &str = "div[class='topcard-condensed__content-top topcard-condensed__content-top--profile-size-7']";
-    const PROFILE_NEW_BLOCK: &str =
-        "div[class='zDhsPKaLqxcmxXjtBlqsgIkUbsNgtibqA UaplslhAVpzzlyntYbznbPnOcAEusqrjfE']";
+    /*
+        const PROFILE_OLD_BLOCK: &str = "div[class='topcard-condensed__content-top topcard-condensed__content-top--profile-size-7']";
+        const PROFILE_NEW_BLOCK: &str =
+            "div[class='zDhsPKaLqxcmxXjtBlqsgIkUbsNgtibqA UaplslhAVpzzlyntYbznbPnOcAEusqrjfE']";
 
-    let profile_block = if browser
-        .page
-        .query_selector(PROFILE_OLD_BLOCK)
-        .await?
-        .is_some()
-    {
-        browser.page.query_selector(PROFILE_OLD_BLOCK).await?
-    } else {
-        browser.page.query_selector(PROFILE_NEW_BLOCK).await?
-    };
-    match &profile_block {
-        Some(_) => (),
-        None => {
-            wait(1, 3);
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            return Err(CustomError::ProfileNotFound);
+        let profile_block = if browser
+            .page
+            .query_selector(PROFILE_OLD_BLOCK)
+            .await?
+            .is_some()
+        {
+            browser.page.query_selector(PROFILE_OLD_BLOCK).await?
+        } else {
+            browser.page.query_selector(PROFILE_NEW_BLOCK).await?
+        };
+        match &profile_block {
+            Some(_) => (),
+            None => {
+                wait(1, 3);
+                browser.page.close(Some(false)).await?;
+                browser.browser.close().await?;
+                return Err(CustomError::ProfileNotFound);
+            }
         }
-    }
-
+    */
     wait(2, 4);
 
     let send_button = browser
