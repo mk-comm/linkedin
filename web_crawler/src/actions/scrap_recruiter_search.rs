@@ -32,9 +32,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     //.query_selector("ol.pagination__list")
     //.await?
     //;
-
-    //wait(10000, 20000);
-
+    //wait(10000, 100000);
     let search_container = browser
         .page
         .query_selector("div.hp-core-temp.profile-list.profile-list-container")
@@ -46,6 +44,30 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             "Search container not found/Scrap Recruiter Search".to_string(),
         ));
     }
+
+    const CANDIDATE_NUMBER: &str =
+        "span[class='profile-list__header-info-text t-14 profile-list__header-info-text--reflow']";
+    let number_candidates = browser.page.query_selector(CANDIDATE_NUMBER).await?;
+    match number_candidates {
+        Some(number) => {
+            let text = number.text_content().await?;
+            let text = match text {
+                Some(text) => text,
+                None => String::from("1001"),
+            };
+            println!("{:?}", text);
+            let result = if text.contains('M') || text.contains('K') {
+                1000
+            } else {
+                let numeric_text: String = text.chars().filter(|c| c.is_digit(10)).collect();
+                numeric_text.trim().parse::<i32>().unwrap_or(1002)
+            };
+            println!("{}", result);
+            send_search_number(result, &entry.aisearch).await?
+        }
+        None => 
+            send_search_number(1003, &entry.aisearch).await?
+    };
     let search_container = search_container.unwrap();
 
     let pages_count = count_pages(search_container.inner_html().await?);
@@ -78,11 +100,16 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             search_container_inside.inner_html().await?.as_str(),
             &mut url_list,
         );
-        send_urls(url_list, &entry.result_url, &entry.aisearch, &entry.url_list_id).await?;
+        send_urls(
+            url_list,
+            &entry.result_url,
+            &entry.aisearch,
+            &entry.url_list_id,
+        )
+        .await?;
         const NEXT_ICON: &str = ".mini-pagination__quick-link[rel='next']";
 
-        const NEXT_BUTTON: &str =
-            "a[class='pagination__quick-link pagination__quick-link--next']";
+        const NEXT_BUTTON: &str = "a[class='pagination__quick-link pagination__quick-link--next']";
         let next_page = browser.page.query_selector(NEXT_BUTTON).await?;
         match next_page {
             Some(next_page) => {
@@ -207,7 +234,7 @@ async fn send_urls(
     urls: Vec<String>,
     target_url: &str,
     ai_search: &str,
-    url_list_id: &str
+    url_list_id: &str,
 ) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 
@@ -226,6 +253,34 @@ async fn send_urls(
         ),
         Err(error) => {
             error!(error = ?error, "Send_urls/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
+        }
+    }
+    //println!("{:?}", response.text().await?);
+
+    Ok(())
+}
+
+async fn send_search_number(
+    number: i32,
+    ai_search: &str,
+) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+
+    // Convert the Vec<String> into a JSON string
+    let send_json = json!({ 
+        "number": number,
+        "ai_search": ai_search});
+    const TARGET_URL:&str = "
+        https://overview.tribe.xyz/api/1.1/wf/tribe_search_number";
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(TARGET_URL).json(&send_json).send().await;
+    match response {
+        Ok(_) => info!(
+            "Send_search_number/scrap_recruiter_search/Ok, {} was done",
+            ai_search
+        ),
+        Err(error) => {
+            error!(error = ?error, "Send_search_number/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
         }
     }
     //println!("{:?}", response.text().await?);

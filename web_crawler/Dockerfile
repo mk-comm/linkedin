@@ -2,7 +2,7 @@
 FROM rust AS builder
 WORKDIR /usr/src/app
 COPY . .
-RUN cargo build --release
+RUN cargo build --release --target=x86_64-unknown-linux-gnu
 
 # Second stage - Ubuntu setup
 FROM ubuntu:22.04

@@ -1,6 +1,6 @@
+use crate::actions::wait::wait;
 use crate::structs::entry::{PhantomGetJson, PhantomJobs, PhantomJsonProfile, PhantomSchools};
 use crate::structs::error::CustomError;
-use crate::actions::wait::wait;
 use base64::encode;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize, Serializer};
@@ -25,6 +25,7 @@ struct BodyJson {
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
 struct Profile {
+    AI: bool,
     #[serde(serialize_with = "serialize_option_string")]
     linkedin: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
@@ -141,7 +142,7 @@ pub async fn serialize_json(json: PhantomGetJson) -> Result<String, CustomError>
     //println!("result {:?}", result);
     for profile in json.body {
         let result = serializer_each_profile(profile, json.job.clone(), json.sourcer.clone()).await;
-        wait(1,2);
+        wait(1, 2);
     }
     Ok("test".to_owned())
     //println!("json {:?}", json);
@@ -200,6 +201,7 @@ async fn serializer_each_profile(
     let education = to_education(schools)?;
     let jobs = to_experience(json.jobs.clone())?;
     let result = Profile {
+        AI: true,
         linkedin: json.general.profileUrl.clone(),
         first: json.general.firstName.clone(),
         last: json.general.lastName.clone(),
@@ -225,8 +227,7 @@ async fn serializer_each_profile(
     let result = send_url(result).await;
     match result {
         Ok(_) => (),
-        Err(e) => println!("result error {}", e)
-        
+        Err(e) => println!("result error {}", e),
     }
     Ok(())
 }
@@ -234,9 +235,8 @@ async fn serializer_each_profile(
 async fn send_url(profile: Profile) -> Result<(), CustomError> {
     let serialized = serde_json::to_vec(&profile).unwrap();
     let encoded = encode(&serialized);
-    const WEBHOOK_URL : &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
+    const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
     let client = reqwest::Client::new();
-    
 
     let target_json = json!({ 
         "b64": encoded });

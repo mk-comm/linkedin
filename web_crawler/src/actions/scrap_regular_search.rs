@@ -23,9 +23,34 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
     let browser = start_browser(browser_info).await?;
 
     browser.page.goto_builder(&entry.url).goto().await?;
-
     wait(7, 10);
 
+    const CANDIDATE_NUMBER: &str =
+        "h2.pb2.t-black--light.t-14";
+    let number_candidates = browser.page.query_selector(CANDIDATE_NUMBER).await?;
+    match number_candidates {
+        Some(number) => {
+            let text = number.text_content().await?;
+            let text = match text {
+                Some(text) => text,
+                None => String::from("1001"),
+            };
+            println!("{:?}", text);
+            let result = if text.contains(',') || text.contains('K') {
+                println!("more than 1k");
+                1000
+            } else {
+                let numeric_text: String = text.chars().filter(|c| c.is_digit(10)).collect();
+                println!("numeric {}", numeric_text);
+                numeric_text.trim().parse::<i32>().unwrap_or(1002)
+            };
+            println!("{}", result);
+            send_search_number(result, &entry.aisearch).await?
+        }
+        None => 
+            {println!("none");
+            send_search_number(1003, &entry.aisearch).await?}
+    };
     let search_container = browser
         .page
         .query_selector("div.search-results-container")
@@ -54,12 +79,17 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
             .unwrap();
         scrap(container.inner_html().await?.as_str(), &mut url_list);
         wait(1, 2);
-        send_urls(url_list, &entry.result_url, &entry.aisearch, &entry.url_list_id).await?;
+        send_urls(
+            url_list,
+            &entry.result_url,
+            &entry.aisearch,
+            &entry.url_list_id,
+        )
+        .await?;
         wait(3, 5);
     }
 
     //println!("url list: {:?}", url_list);
-
 
     wait(5, 12);
 
@@ -126,6 +156,33 @@ async fn send_urls(
             error!(error = ?error, "Send_urls/scrap_regular_search/Error {} returned error {}", ai_search, error);
         }
     }
+
+    Ok(())
+}
+async fn send_search_number(
+    number: i32,
+    ai_search: &str,
+) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+
+    // Convert the Vec<String> into a JSON string
+    let send_json = json!({ 
+        "number": number,
+        "ai_search": ai_search});
+    const TARGET_URL:&str = "
+        https://overview.tribe.xyz/api/1.1/wf/tribe_search_number";
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(TARGET_URL).json(&send_json).send().await;
+    match response {
+        Ok(_) => info!(
+            "Send_search_number/scrap_recruiter_search/Ok, {} was done",
+            ai_search
+        ),
+        Err(error) => {
+            error!(error = ?error, "Send_search_number/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
+        }
+    }
+    //println!("{:?}", response.text().await?);
 
     Ok(())
 }

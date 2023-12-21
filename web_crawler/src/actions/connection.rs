@@ -127,8 +127,16 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
 
     if connect_button.is_none() {
         connect_button = block.query_selector("use[href='#connect-medium']").await?;
+        println!("medium connect found");
     } else {
         println!("connect button another not found");
+    }
+
+    if connect_button.is_none() {
+        connect_button = block.query_selector("use[href='#connect-small']").await?;
+        println!("small connect found");
+    } else {
+        println!("connect button small not found");
     }
 
     let more_option = block
@@ -150,7 +158,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     wait(1, 4);
     more.click_builder().click().await?;
     wait(2, 5);
-
     match connect_button {
         Some(button) => {
             button.hover_builder();

@@ -33,7 +33,7 @@ async fn serialize(json: Json<PhantomGetJson>) -> impl IntoResponse {
         let api = serialize_json(json.0);
         match api.await {
             Ok(_) => info!("Serialization was successful!"),
-            Err(error) => error!("{}", error),
+            Err(error) => error!("Serialization error: {}", error),
         }
     });
 
