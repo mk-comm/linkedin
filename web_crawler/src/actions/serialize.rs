@@ -141,7 +141,9 @@ where
 pub async fn serialize_json(json: PhantomGetJson) -> Result<String, CustomError> {
     //println!("result {:?}", result);
     for profile in json.body {
+        let full_name = profile.general.fullName.clone();
         let result = serializer_each_profile(profile, json.job.clone(), json.sourcer.clone()).await;
+        println!("Serilaztion result for {:?} {:?}", full_name, result);
         wait(1, 2);
     }
     Ok("test".to_owned())
@@ -156,12 +158,12 @@ fn to_education(schools: Option<Vec<PhantomSchools>>) -> Result<Vec<Education>, 
     let mut education: Vec<Education> = Vec::new();
     for school in schools {
         let date = school.dateRange.clone();
-        if date.is_none() {
-            return Err(CustomError::ButtonNotFound(
-                "School Date range is missing".to_string(),
-            ));
-        };
-        let new_vec = get_date(date.unwrap().as_str());
+        //if date.is_none() {
+        //return Err(CustomError::ButtonNotFound(
+        //    "School Date range is missing".to_string(),
+        //  ));
+        //};
+        let new_vec = get_date(date.as_deref());
         let date_vec = match new_vec {
             Ok(value) => value,
             Err(_) => return Err(CustomError::ButtonNotFound("Date vec is error".to_string())),
@@ -256,12 +258,12 @@ fn to_experience(jobs: Option<Vec<PhantomJobs>>) -> Result<Vec<Experience>, Cust
     let mut experience: Vec<Experience> = Vec::new();
     for job in jobs {
         let date = job.dateRange.clone();
-        if date.is_none() {
-            return Err(CustomError::ButtonNotFound(
-                "Job Date range is missing".to_string(),
-            ));
-        };
-        let new_vec = get_date(date.unwrap().as_str());
+        //if date.is_none() {
+        //  return Err(CustomError::ButtonNotFound(
+        //    "Job Date range is missing".to_string(),
+        //));
+        //};
+        let new_vec = get_date(date.as_deref());
         let date_vec = match new_vec {
             Ok(value) => value,
             Err(_) => return Err(CustomError::ButtonNotFound("Date vec is error".to_string())),
@@ -316,7 +318,12 @@ impl DateFormat {
         }
     }
 }
-fn get_date(date: &str) -> Result<Vec<Option<i64>>, CustomError> {
+fn get_date(date: Option<&str>) -> Result<Vec<Option<i64>>, CustomError> {
+    if date.is_none() {
+        let new_vec: Vec<Option<i64>> = vec![None, None];
+        return Ok(new_vec);
+    }
+    let date = date.unwrap();
     let date_vec: Vec<&str> = date.split_whitespace().collect();
 
     let months = [
