@@ -58,14 +58,14 @@ RUN apt-get update && \
     /root/.cargo/bin/rustup update && \
     apt-get install -y cargo
 
-# Copy the app into the Docker image
-COPY . /app
+
+# Copy the compiled app from the builder stage
+COPY --from=builder /usr/src/app/target/x86_64-unknown-linux-gnu/release/web_crawler /app/web_crawler
+
 
 # Set the working directory to the app
 WORKDIR /app
 
-# Build the app
-RUN cargo build --release
 
 # Run the app
-CMD ["./target/release/web_crawler"]
+CMD ["./web_crawler"]
