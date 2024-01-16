@@ -11,7 +11,7 @@ use crate::actions::scrap_messages::scrap_message;
 
 pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
     let api_key = entry.user_id.clone();
-    let regular = entry.regular.clone();
+    let regular = entry.regular;
 
     let browser_info = BrowserInit {
         ip: entry.ip,
@@ -25,7 +25,6 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
     };
 
     let browser = start_browser(browser_info).await?;
-
     wait(3, 11);
     /*
     let messaging_button = browser
@@ -133,7 +132,7 @@ fn scrap_conversation_to_list(
         let id = convo.value().attr("id").unwrap().to_string();
 
         //once conversation thread url is not found, break the loop, that means it was the last convo
-        if convo.select(&thread_url_selector).next() == None {
+        if convo.select(&thread_url_selector).next().is_none() {
             break;
         }
         let thread_url = convo

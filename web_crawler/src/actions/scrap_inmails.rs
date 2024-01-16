@@ -100,12 +100,6 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         };
     }
 
-    if recruiter == false {
-        //println!("Inmails is disabled for this user");
-        browser.page.close(Some(false)).await?;
-        browser.browser.close().await?;
-        return Ok(());
-    }
     wait(10, 12);
 
     for conversation in conversations.values() {
@@ -152,11 +146,16 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         println!("conversation: {:?}", conversation);
         //wait(10000, 25000);
         let html = messages_container.inner_html().await?;
-        let text = scrap_message(conversation.clone(), html.as_str()).unwrap();
         let full_name = FullName::split_name(conversation.candidate_name.as_str());
-        println!("full name: {:?}", full_name);
-        let result = check_message(text.as_str(), &api_key, full_name).await;
-        println!("{:?}", result);
+        let messages_text = scrap_message(conversation.clone(), html.as_str(), &full_name).unwrap();
+        let text = messages_text.1;
+        let messages = messages_text.0;
+        for message in messages {
+            create_message(&message).await?
+        };
+        if recruiter {
+
+        let result = check_message(text.as_str(), &api_key, &full_name).await;
         match result {
             MessageCategory::Interested => {
                 println!("changing interested {:?}", result);
@@ -170,6 +169,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
                 println!("No category found");
             }
         }
+        }
     }
     wait(3, 7); // random delay
 
@@ -177,8 +177,15 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
     browser.browser.close().await?;
     Ok(())
 }
-
-fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String, CustomError> {
+struct InmailMessage {
+    message_text: String,
+    api_key: String,
+    first_name: String,
+    last_name: String,
+    conversation_url: String,
+    
+}
+fn scrap_message(conversation: InmailConversation, html: &str, name: &FullName) -> Result<(Vec<InmailMessage>, String), CustomError> {
     let document = Html::parse_document(html);
     let message_id_selector = Selector::parse("._message-list-item_1gj1uc").unwrap();
     let sender_name_selector = Selector::parse("._headingText_e3b563").unwrap();
@@ -187,7 +194,7 @@ fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String,
         Selector::parse("._message-data-wrapper_1gj1uc div div div").unwrap();
 
     let mut full_text = String::new();
-
+    let mut messages: Vec<InmailMessage> = Vec::new();
     for message_element in document.select(&message_id_selector) {
         let mut sender_full_name = String::new();
         if let Some(sender_element) = message_element.select(&sender_name_selector).next() {
@@ -204,15 +211,24 @@ fn scrap_message(conversation: InmailConversation, html: &str) -> Result<String,
 
         if conversation.candidate_name.trim() == sender_full_name.trim() {
             full_text.push_str(format!("Candidate: {} \n", message_text).as_str());
+            let message = InmailMessage {
+                message_text,
+                api_key: conversation.api_key.clone(),
+                first_name: name.first_name.clone(),
+                last_name: name.last_name.clone(),
+                conversation_url: conversation.thread_url.clone(),
+            };
+            messages.push(message);
+
         } else {
             full_text.push_str(format!("Recruiter: {} \n", message_text).as_str());
         }
     }
     println!("full text: {:?}", full_text);
-    Ok(full_text)
+    Ok((messages, full_text))
 }
 
-async fn check_message(text: &str, api: &str, name: FullName) -> MessageCategory {
+async fn check_message(text: &str, api: &str, name: &FullName) -> MessageCategory {
     let client = reqwest::Client::new();
     let payload = json!({
             "message_text": text,
@@ -241,6 +257,27 @@ async fn check_message(text: &str, api: &str, name: FullName) -> MessageCategory
     }
 }
 
+async fn create_message(message: &InmailMessage) -> Result<(), CustomError> {
+    let client = reqwest::Client::new();
+    let payload = json!({
+            "conversation_url": message.conversation_url,
+            "message_text": message.message_text,
+            "api_key": message.api_key,
+            "first": message.first_name,
+            "last": message.last_name,
+
+    });
+
+    //println!("payload: {:?}", payload);
+    let res = client
+        .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive_inmail")
+        .json(&payload)
+        .send()
+        .await
+        ?;
+    let _json_response: serde_json::Value = res.json().await?; //here is lays the responce
+    Ok(())
+}
 async fn change_stage(stage: &str, browser: &BrowserConfig) -> Result<(), CustomError> {
     wait(5, 6);
     println!("changing stage: {:?}", stage);

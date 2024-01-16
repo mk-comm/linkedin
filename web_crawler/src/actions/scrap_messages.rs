@@ -85,7 +85,7 @@ pub async fn scrap_message(
         let check_message = check_message_new_message(message, &full_name, conversation).await;
         if check_message == true && message.received == true {
             new_message = true;
-            create_message(message, &full_name, conversation).await;
+            create_message(message, conversation).await;
             /*
             let autoreply = check_autoreply(message, &full_name, conversation).await;
             if autoreply {
@@ -137,19 +137,21 @@ pub async fn scrap_message(
     Ok(())
 }
 
-async fn create_message(message: &Message, full_name: &FullName, conversation: &Conversation) {
+async fn create_message(message: &Message, conversation: &Conversation) {
     // make an api call to bubble
+    let full_name = FullName::split_name(message.sender.as_str());
     let _client = reqwest::Client::new();
     let _payload = json!({
             "message_text": message.message_text,
             "candidate_entity_urn": message.url_send_from,
             "received": message.received,
-            "sender": full_name.full_name,
+            "sender": message.sender,
             "first": full_name.first_name,
             "last": full_name.last_name,
             "conversation_url": conversation.thread_url,
             "api_key": conversation.api_key,
     });
+    println!("payload :{}", _payload);
     let _res = _client
         .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive")
         .json(&_payload)
@@ -503,7 +505,7 @@ fn scrap_each_message(
     full_text: &mut String,
 ) -> (String, HashMap<String, Message>) {
     let owner_container_html = html;
-    let owner_document = Html::parse_document(&owner_container_html);
+    let owner_document = Html::parse_document(owner_container_html);
     let owner_selector = Selector::parse("a.app-aware-link.msg-thread__link-to-profile").unwrap();
 
     let conversation_owner_link: String;
