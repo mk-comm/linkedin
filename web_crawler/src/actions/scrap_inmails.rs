@@ -29,7 +29,6 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
     let browser = start_browser(browser_info).await?;
     wait(7, 10); // random delay
                  // go to candidate page
-
     browser
         .page   
         .goto_builder("https://www.linkedin.com/talent/inbox/0/main/id/2-MTBiZjJhZTMtNTNlNi00NDRjLddWJmZGQtYTg5MTk4ZjA5MWExXzAxMg==")
@@ -114,7 +113,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
                 wait(1, 3);
                 conversation.click_builder().click().await?;
                 wait(5, 12);
-                conversation
+
             }
             None => {
                 return Err(CustomError::ButtonNotFound(
@@ -123,11 +122,36 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
             }
         }; // select the conversation
            //
+        if conversation.unread {
+
+        match conversation_list
+            .query_selector(format!("a[id='{}']", conversation.id).as_str())
+            .await?
+        {
+            Some(conversation) => {
+                conversation.hover_builder();
+                wait(1, 3);
+                conversation.click_builder().click().await?;
+                wait(5, 12);
+
+        let conversation_id = "div[class='_card-container_z8knzq _active_z8knzq']";
+        let conversation_block = browser.page.query_selector(conversation_id).await?.unwrap();
+        let unread_button = conversation_block.query_selector
+            ("button[class='ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _flat_1aegh9 a11y-conversation-button']")
+        .await?.unwrap();
+                    unread_button.click_builder().click().await?;
+                    println!("button unread was pressed");
+            }
+            None => {
+                return Err(CustomError::ButtonNotFound(
+                    "Conversation not found".to_string(),
+                ))
+            }
+        }; // select the conversation
+        }
         let _fragment = true;
-
+println!("unread {}", conversation.unread);
         // needs to be fixed for broken characters
-
-        //
         let messages_container = match browser
             .page
             .query_selector("div._messages-container_1j60am._divider_lvf5de")
@@ -144,7 +168,6 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
             } // if search input is not found, means page was not loaded and sessuion cookie is not valid
         };
         println!("conversation: {:?}", conversation);
-        //wait(10000, 25000);
         let html = messages_container.inner_html().await?;
         let full_name = FullName::split_name(conversation.candidate_name.as_str());
         let messages_text = scrap_message(conversation.clone(), html.as_str(), &full_name).unwrap();
