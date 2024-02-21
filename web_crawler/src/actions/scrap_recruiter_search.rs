@@ -68,10 +68,10 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         None => 
             send_search_number(1003, &entry.aisearch).await?
     };
-    let search_container = search_container.unwrap();
+    //let search_container = search_container.unwrap();
 
+/*
     let pages_count = count_pages(search_container.inner_html().await?);
-
     if pages_count.is_err() {
         error!("pages count not found");
         return Err(CustomError::ButtonNotFound(
@@ -80,7 +80,9 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     }
     let pages_count = pages_count.unwrap();
     println!("pages count: {}", pages_count);
-    for _i in 1..=pages_count {
+*/
+    let mut pages_left = true;
+    while pages_left == true {
         let mut url_list: Vec<String> = Vec::new();
         let search_container_inside = browser
             .page
@@ -126,6 +128,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                     wait(10, 15);
                 } else {
                     println!("next page is empty");
+                    pages_left = false;
                 }
                 println!("next page not found");
                 //break;

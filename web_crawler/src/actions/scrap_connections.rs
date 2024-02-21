@@ -49,6 +49,8 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
 
     wait(12, 17);
 
+    const URL: &str = "https://www.linkedin.com/mynetwork/invite-connect/connections/";
+
     let button = browser
         .page
         .query_selector("div.mn-community-summary__entity-info")
@@ -61,8 +63,15 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
             wait(8, 12);
         }
         None => {
-            let url = "https://www.linkedin.com/mynetwork/invite-connect/connections/";
-            browser.page.goto_builder(url);
+            let build = browser.page.goto_builder(URL).goto().await;
+            match build {
+                Ok(_) => (),
+                Err(_) => {
+                    return Err(CustomError::ButtonNotFound(
+                        "Connection page is not opening".to_string(),
+                    ))
+                }
+            }
             wait(11, 16);
             /*
             browser.page.close(Some(false)).await?;
@@ -75,7 +84,6 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
     }
 
     let connections = scrap_each_connection(&browser.page.content().await?);
-
     if connections.len() == 0 {
         browser.page.close(Some(false)).await?;
         browser.browser.close().await?; // close browser

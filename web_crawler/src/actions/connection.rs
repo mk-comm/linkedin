@@ -288,6 +288,8 @@ async fn message(page: &Page, message: &str) -> Result<(), CustomError> {
     };
     wait(1, 3); // random delay
                 //press button send
+                //println!("reached sending");
+                //wait(100000, 100000);
     let send = page.query_selector("button[aria-label='Send now']").await?;
     match send {
         Some(send) => {
