@@ -98,7 +98,7 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             return Err(CustomError::ButtonNotFound(
-                "Message button(err) not found".to_string(),
+                "message button(err) not found".to_string(),
             ));
         }
     };
@@ -135,17 +135,44 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
         .query_selector(format!("div[id='{}']", conversation_id).as_str())
         .await?
     {
-        Some(conversation) => conversation,
+        Some(conversation) => Some(conversation),
         None => {
             wait(1, 5); // random delay
+            let linkedin_nick_div = browser
+                .page
+                .query_selector(".pv-text-details__about-this-profile-entrypoint")
+                .await?
+                .expect("Element with linkedin nick not found");
+            let href_value = linkedin_nick_div
+                .get_attribute("href")
+                .await?
+                .expect("Attribute not found");
+
+            // Strip the URL to show only the LinkedIn nickname.
+            // Assuming the href format is "/in/{nickname}/overlay/about-this-profile/"
+            let linkedin_nick = href_value.split("/").nth(2).unwrap_or("");
+            let conversation_id = find_conversation(html.as_str(), linkedin_nick);
+            let conversation = browser
+                .page
+                .query_selector(format!("div[id='{}']", conversation_id).as_str())
+                .await?;
+            match conversation {
+                Some(div) => Some(div),
+                None => None,
+            }
+        }
+    };
+    let conversation_select = match conversation_select {
+        Some(div) => div,
+        None => {
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
             return Err(CustomError::ButtonNotFound(
-                "Conversation not found".to_string(),
+                "Conversation not found/ new or existing".to_string(),
             ));
         }
-    }; // select the conversation that matches the entity_urn
-
+    };
+    wait(2, 4);
     let regular_input = conversation_select
     .query_selector("div.msg-form__contenteditable.t-14.t-black--light.t-normal.flex-grow-1.full-height.notranslate")
     .await?;
@@ -196,7 +223,7 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
 
 fn find_conversation(html: &str, entity_urn: &str) -> String {
     // Parse the HTML content and find the required div
-    let document = Html::parse_document(&html);
+    let document = Html::parse_document(html);
     let conv_selector = Selector::parse("div.msg-convo-wrapper").unwrap();
     let href_selector = Selector::parse("a[href^='/in/']").unwrap();
 
