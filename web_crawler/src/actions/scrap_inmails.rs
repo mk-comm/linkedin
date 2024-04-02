@@ -113,7 +113,6 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
                 wait(1, 3);
                 conversation.click_builder().click().await?;
                 wait(5, 12);
-
             }
             None => {
                 return Err(CustomError::ButtonNotFound(
@@ -123,34 +122,34 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         }; // select the conversation
            //
         if conversation.unread {
+            match conversation_list
+                .query_selector(format!("a[id='{}']", conversation.id).as_str())
+                .await?
+            {
+                Some(conversation) => {
+                    conversation.hover_builder();
+                    wait(1, 3);
+                    conversation.click_builder().click().await?;
+                    wait(5, 12);
 
-        match conversation_list
-            .query_selector(format!("a[id='{}']", conversation.id).as_str())
-            .await?
-        {
-            Some(conversation) => {
-                conversation.hover_builder();
-                wait(1, 3);
-                conversation.click_builder().click().await?;
-                wait(5, 12);
-
-        let conversation_id = "div[class='_card-container_z8knzq _active_z8knzq']";
-        let conversation_block = browser.page.query_selector(conversation_id).await?.unwrap();
-        let unread_button = conversation_block.query_selector
+                    let conversation_id = "div[class='_card-container_z8knzq _active_z8knzq']";
+                    let conversation_block =
+                        browser.page.query_selector(conversation_id).await?.unwrap();
+                    let unread_button = conversation_block.query_selector
             ("button[class='ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _flat_1aegh9 a11y-conversation-button']")
         .await?.unwrap();
                     unread_button.click_builder().click().await?;
                     println!("button unread was pressed");
-            }
-            None => {
-                return Err(CustomError::ButtonNotFound(
-                    "Conversation not found".to_string(),
-                ))
-            }
-        }; // select the conversation
+                }
+                None => {
+                    return Err(CustomError::ButtonNotFound(
+                        "Conversation not found".to_string(),
+                    ))
+                }
+            }; // select the conversation
         }
         let _fragment = true;
-println!("unread {}", conversation.unread);
+        println!("unread {}", conversation.unread);
         // needs to be fixed for broken characters
         let messages_container = match browser
             .page
@@ -175,23 +174,22 @@ println!("unread {}", conversation.unread);
         let messages = messages_text.0;
         for message in messages {
             create_message(&message).await?
-        };
-        if recruiter {
-
-        let result = check_message(text.as_str(), &api_key, &full_name).await;
-        match result {
-            MessageCategory::Interested => {
-                println!("changing interested {:?}", result);
-                change_stage(&stage_interested, &browser).await?;
-            }
-            MessageCategory::NotInterested => {
-                println!("changing not-interested {:?}", result);
-                change_stage(&stage_not_interested, &browser).await?;
-            }
-            MessageCategory::NotFound => {
-                println!("No category found");
-            }
         }
+        if recruiter {
+            let result = check_message(text.as_str(), &api_key, &full_name).await;
+            match result {
+                MessageCategory::Interested => {
+                    println!("changing interested {:?}", result);
+                    change_stage(&stage_interested, &browser).await?;
+                }
+                MessageCategory::NotInterested => {
+                    println!("changing not-interested {:?}", result);
+                    change_stage(&stage_not_interested, &browser).await?;
+                }
+                MessageCategory::NotFound => {
+                    println!("No category found");
+                }
+            }
         }
     }
     wait(3, 7); // random delay
@@ -206,9 +204,12 @@ struct InmailMessage {
     first_name: String,
     last_name: String,
     conversation_url: String,
-    
 }
-fn scrap_message(conversation: InmailConversation, html: &str, name: &FullName) -> Result<(Vec<InmailMessage>, String), CustomError> {
+fn scrap_message(
+    conversation: InmailConversation,
+    html: &str,
+    name: &FullName,
+) -> Result<(Vec<InmailMessage>, String), CustomError> {
     let document = Html::parse_document(html);
     let message_id_selector = Selector::parse("._message-list-item_1gj1uc").unwrap();
     let sender_name_selector = Selector::parse("._headingText_e3b563").unwrap();
@@ -242,7 +243,6 @@ fn scrap_message(conversation: InmailConversation, html: &str, name: &FullName) 
                 conversation_url: conversation.thread_url.clone(),
             };
             messages.push(message);
-
         } else {
             full_text.push_str(format!("Recruiter: {} \n", message_text).as_str());
         }
@@ -296,8 +296,7 @@ async fn create_message(message: &InmailMessage) -> Result<(), CustomError> {
         .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive_inmail")
         .json(&payload)
         .send()
-        .await
-        ?;
+        .await?;
     let _json_response: serde_json::Value = res.json().await?; //here is lays the responce
     Ok(())
 }
