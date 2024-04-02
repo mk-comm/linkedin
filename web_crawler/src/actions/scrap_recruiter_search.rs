@@ -20,13 +20,17 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         recruiter_session_cookie: Some(entry.recruiter_session_cookie),
         headless: true,
     };
-
+    let ai_search = entry.aisearch.as_str();
+    send_search_status("Starting the browser", &ai_search);
     let browser = start_browser(browser_info).await?;
 
+    send_search_status("Connected to Linkedin", &ai_search);
+    send_search_status("Opening the search page", &ai_search);
     browser.page.goto_builder(&entry.url).goto().await?;
 
     wait(12, 15);
 
+    send_search_status("Page opened", &ai_search);
     //let pagination = browser
     //.page
     //.query_selector("ol.pagination__list")
@@ -41,13 +45,15 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     if search_container.is_none() {
         error!("search container not found");
         return Err(CustomError::ButtonNotFound(
-            "Search container not found/Scrap Recruiter Search".to_string(),
+            "Search list of candidates not found/Recruiter search".to_string(),
         ));
     }
 
+    send_search_status("Counting candidates", &ai_search);
     const CANDIDATE_NUMBER: &str =
         "span[class='profile-list__header-info-text t-14 profile-list__header-info-text--reflow']";
     let number_candidates = browser.page.query_selector(CANDIDATE_NUMBER).await?;
+    let total_candidates: &str;
     match number_candidates {
         Some(number) => {
             let text = number.text_content().await?;
@@ -62,27 +68,32 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 let numeric_text: String = text.chars().filter(|c| c.is_digit(10)).collect();
                 numeric_text.trim().parse::<i32>().unwrap_or(1002)
             };
-            println!("{}", result);
+            total_candidates = result;
             send_search_number(result, &entry.aisearch).await?
         }
-        None => 
-            send_search_number(1003, &entry.aisearch).await?
+        None => send_search_number(1003, &entry.aisearch).await?,
     };
     //let search_container = search_container.unwrap();
 
-/*
-    let pages_count = count_pages(search_container.inner_html().await?);
-    if pages_count.is_err() {
-        error!("pages count not found");
-        return Err(CustomError::ButtonNotFound(
-            "Pages count not found/Scrap Recruiter Search".to_string(),
-        ));
-    }
-    let pages_count = pages_count.unwrap();
-    println!("pages count: {}", pages_count);
-*/
+    /*
+        let pages_count = count_pages(search_container.inner_html().await?);
+        if pages_count.is_err() {
+            error!("pages count not found");
+            return Err(CustomError::ButtonNotFound(
+                "Pages count not found/Scrap Recruiter Search".to_string(),
+            ));
+        }
+        let pages_count = pages_count.unwrap();
+        println!("pages count: {}", pages_count);
+    */
+    let total_candidates = format!("Total candidates: {}", total_candidates).as_str();
+    send_search_status(total_candidates, &ai_search);
+    let pages_number = 0;
     let mut pages_left = true;
     while pages_left == true {
+        pages_number += 1;
+        let page_scraped = format!("Started scraping page {}", pages_number).as_str();
+        send_search_status(total_candidates, &ai_search);
         let mut url_list: Vec<String> = Vec::new();
         let search_container_inside = browser
             .page
@@ -102,13 +113,29 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             search_container_inside.inner_html().await?.as_str(),
             &mut url_list,
         );
-        send_urls(
+        let result = send_urls(
             url_list,
             &entry.result_url,
             &entry.aisearch,
             &entry.url_list_id,
         )
         .await?;
+        match result {
+            Ok(_) => send_search_status(
+                format!(
+                    "URL batch sent to bubble successfuly, page: {}",
+                    pages_number
+                )
+                .as_str(),
+                &ai_search,
+            ),
+            Err(_) => send_search_status(
+                format!("Error sending batch to bubble, page: {}", pages_number).as_str(),
+                &ai_search,
+            ),
+        }
+
+        send_search_status("Opening next page", &ai_search);
         const NEXT_ICON: &str = ".mini-pagination__quick-link[rel='next']";
 
         const NEXT_BUTTON: &str = "a[class='pagination__quick-link pagination__quick-link--next']";
@@ -128,6 +155,8 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                     wait(10, 15);
                 } else {
                     println!("next page is empty");
+
+                    send_search_status("This was the last page", &ai_search);
                     pages_left = false;
                 }
                 println!("next page not found");
@@ -139,7 +168,8 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     wait(5, 12);
 
     browser.page.close(Some(false)).await?;
-    browser.browser.close().await?; // close browser
+    browser.browser.close().await?; //close browser
+    send_search_status("Search scraped successfuly", &ai_search);
     Ok(())
 }
 
@@ -262,18 +292,36 @@ async fn send_urls(
 
     Ok(())
 }
+async fn send_search_status(status: &str, ai_search: &str) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
 
-async fn send_search_number(
-    number: i32,
-    ai_search: &str,
-) -> Result<(), reqwest::Error> {
+    // Convert the Vec<String> into a JSON string
+    let urls_json = json!({ 
+        "status": status,
+        "ai_search": ai_search});
+    let target_url = "https://overview.tribe.xyz/api/1.1/wf/search_logs";
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(target_url).json(&urls_json).send().await;
+    match response {
+        Ok(_) => info!(
+            "Send_search_status/scrap_recruiter_search/Ok, {} was done",
+            ai_search
+        ),
+        Err(error) => {
+            error!(error = ?error, "Send_search_status/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
+        }
+    }
+
+    Ok(())
+}
+async fn send_search_number(number: i32, ai_search: &str) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 
     // Convert the Vec<String> into a JSON string
     let send_json = json!({ 
         "number": number,
         "ai_search": ai_search});
-    const TARGET_URL:&str = "
+    const TARGET_URL: &str = "
         https://overview.tribe.xyz/api/1.1/wf/tribe_search_number";
     let response: Result<reqwest::Response, reqwest::Error> =
         client.post(TARGET_URL).json(&send_json).send().await;
