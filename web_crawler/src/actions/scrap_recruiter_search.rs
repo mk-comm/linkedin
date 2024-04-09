@@ -21,16 +21,16 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         headless: true,
     };
     let ai_search = entry.aisearch.as_str();
-    send_search_status("Starting the browser", &ai_search);
+    let _ = send_search_status("Starting the browser", ai_search).await;
     let browser = start_browser(browser_info).await?;
 
-    send_search_status("Connected to Linkedin", &ai_search);
-    send_search_status("Opening the search page", &ai_search);
+    let _ = send_search_status("Connected to Linkedin", ai_search).await;
+    let _ = send_search_status("Opening the search page", ai_search).await;
     browser.page.goto_builder(&entry.url).goto().await?;
 
     wait(12, 15);
 
-    send_search_status("Page opened", &ai_search);
+    let _ = send_search_status("Page opened", ai_search).await;
     //let pagination = browser
     //.page
     //.query_selector("ol.pagination__list")
@@ -49,11 +49,11 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         ));
     }
 
-    send_search_status("Counting candidates", &ai_search);
+    let _ = send_search_status("Counting candidates", ai_search).await;
     const CANDIDATE_NUMBER: &str =
         "span[class='profile-list__header-info-text t-14 profile-list__header-info-text--reflow']";
     let number_candidates = browser.page.query_selector(CANDIDATE_NUMBER).await?;
-    let total_candidates: &str;
+    let mut total_candidates: i32 = 0;
     match number_candidates {
         Some(number) => {
             let text = number.text_content().await?;
@@ -86,14 +86,14 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         let pages_count = pages_count.unwrap();
         println!("pages count: {}", pages_count);
     */
-    let total_candidates = format!("Total candidates: {}", total_candidates).as_str();
-    send_search_status(total_candidates, &ai_search);
-    let pages_number = 0;
+    let total_candidates = format!("Total candidates: {}", total_candidates);
+    let _ = send_search_status(total_candidates.as_str(), ai_search).await;
+    let mut pages_number = 0;
     let mut pages_left = true;
-    while pages_left == true {
+    while pages_left {
         pages_number += 1;
-        let page_scraped = format!("Started scraping page {}", pages_number).as_str();
-        send_search_status(total_candidates, &ai_search);
+        let page_scraped = format!("Started scraping page {}", pages_number);
+        let _ = send_search_status(page_scraped.as_str(), ai_search).await;
         let mut url_list: Vec<String> = Vec::new();
         let search_container_inside = browser
             .page
@@ -119,23 +119,37 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             &entry.aisearch,
             &entry.url_list_id,
         )
-        .await?;
-        match result {
-            Ok(_) => send_search_status(
-                format!(
-                    "URL batch sent to bubble successfuly, page: {}",
-                    pages_number
-                )
-                .as_str(),
-                &ai_search,
-            ),
-            Err(_) => send_search_status(
-                format!("Error sending batch to bubble, page: {}", pages_number).as_str(),
-                &ai_search,
-            ),
-        }
+        .await;
 
-        send_search_status("Opening next page", &ai_search);
+        match result {
+            Ok(_) => {
+                let _ = send_search_status(
+                    format!(
+                        "URL batch sent to bubble successfuly, page: {}",
+                        pages_number
+                    )
+                    .as_str(),
+                    ai_search,
+                )
+                .await;
+                
+            }
+            Err(_) => {
+                let _ = send_search_status(
+                    format!(
+                        "Error sending URL batch to bubble, page: {}",
+                        pages_number
+                    )
+                    .as_str(),
+                    ai_search,
+                )
+                .await;
+            }
+            
+        };
+
+
+        let _ = send_search_status("Opening next page", ai_search).await;
         const NEXT_ICON: &str = ".mini-pagination__quick-link[rel='next']";
 
         const NEXT_BUTTON: &str = "a[class='pagination__quick-link pagination__quick-link--next']";
@@ -156,7 +170,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 } else {
                     println!("next page is empty");
 
-                    send_search_status("This was the last page", &ai_search);
+                    let _ = send_search_status("This was the last page", ai_search).await;
                     pages_left = false;
                 }
                 println!("next page not found");
@@ -169,7 +183,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
 
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?; //close browser
-    send_search_status("Search scraped successfuly", &ai_search);
+    let _ = send_search_status("Search scraped successfuly", ai_search).await;
     Ok(())
 }
 
@@ -239,7 +253,7 @@ fn extract_part_from_url(url: &str) -> Option<&str> {
         None
     }
 }
-
+/*
 fn count_pages(html: String) -> Result<i32, CustomError> {
     let document = Html::parse_document(&html);
 
@@ -262,7 +276,7 @@ fn count_pages(html: String) -> Result<i32, CustomError> {
 
     Ok(1) // Default to 1 if the element isn't found or doesn't contain a valid number
 }
-
+*/ 
 async fn send_urls(
     urls: Vec<String>,
     target_url: &str,

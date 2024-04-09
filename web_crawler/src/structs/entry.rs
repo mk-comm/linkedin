@@ -214,7 +214,7 @@ pub struct EntryScrapSearchRecruiter {
     "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
     "session_cookie": "-cJKYmaFKFjZYydPcD0wV0tKxUBR1U9nTFASLc9a",
     "recruiter_session_cookie": "-cJKYmaFKFjZYydPcD0wV0tKxUBR1U9nTFASLc9a"
-    "user_id": "qePDD2xm7Sap0AgUqexqbUx9WmzfOhoZYhWzcnZHlmM",
+    "user_id": "qePDD2xm7Sap0AgUqexgtqbUx9WmzfOhoZYhWzcnZHlmM",
     "url": "https://www.linkedin.com/search/results/people/?currentCompany=%5B%221441",
     "result_url" : "https://www.result.com",
     "url_list_id" : "id78",
@@ -227,6 +227,7 @@ pub struct PhantomGetJson {
     pub body: Vec<PhantomJsonProfile>,
     pub sourcer: Option<String>,
     pub job: Option<String>,
+    pub search_url: Option<String>,
 }
 #[derive(Debug, Deserialize, Serialize)]
 #[allow(non_snake_case)]
