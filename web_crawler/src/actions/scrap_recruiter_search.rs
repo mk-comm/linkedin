@@ -132,22 +132,15 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                     ai_search,
                 )
                 .await;
-                
             }
             Err(_) => {
                 let _ = send_search_status(
-                    format!(
-                        "Error sending URL batch to bubble, page: {}",
-                        pages_number
-                    )
-                    .as_str(),
+                    format!("Error sending URL batch to bubble, page: {}", pages_number).as_str(),
                     ai_search,
                 )
                 .await;
             }
-            
         };
-
 
         let _ = send_search_status("Opening next page", ai_search).await;
         const NEXT_ICON: &str = ".mini-pagination__quick-link[rel='next']";
@@ -276,7 +269,7 @@ fn count_pages(html: String) -> Result<i32, CustomError> {
 
     Ok(1) // Default to 1 if the element isn't found or doesn't contain a valid number
 }
-*/ 
+*/
 async fn send_urls(
     urls: Vec<String>,
     target_url: &str,

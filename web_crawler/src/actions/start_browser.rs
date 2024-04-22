@@ -13,8 +13,9 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     info!("Starting browser");
     //path to  local browser
 
-    //let path = Path::new("/opt/homebrew/bin/chromium");
+    //   let path = Path::new("/opt/homebrew/bin/chromium");
 
+    //let path = Path::new("./chrome-linux/chrome");
     let mut user = User::new(
         browserinfo.user_agent,
         browserinfo.session_cookie,
@@ -34,15 +35,21 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
 
     let playwright = Playwright::initialize().await?;
 
-    let _ = playwright.prepare(); // Install browsers uncomment on production
+    //   let _ = playwright.prepare(); // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 
     let browser = chromium
+        //.persistent_context_launcher(path)
         .launcher()
         .proxy(proxy)
+        //.args(&[
+        //    "-disable-extensions-except=./chrome-linux/tribexyz-4.5.45".to_string(),
+        //    "--load-extension=./chrome-linux/tribexyz-4.5.45".to_string(),
+        //    "--no-incognito".to_string(),
+        //])
         .headless(browserinfo.headless)
-        // .executable(path)
+        //.executable(path)
         .launch()
         .await?;
 

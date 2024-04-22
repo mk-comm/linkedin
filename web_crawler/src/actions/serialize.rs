@@ -66,7 +66,7 @@ struct Profile {
     extension_version: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
     timestamp: Option<String>,
-    search_url: Option<String>
+    search_url: Option<String>,
 }
 
 #[allow(non_snake_case)]
@@ -144,7 +144,13 @@ pub async fn serialize_json(json: PhantomGetJson) -> Result<String, CustomError>
     //println!("result {:?}", result);
     for profile in json.body {
         let full_name = profile.general.fullName.clone();
-        let result = serializer_each_profile(profile, json.job.clone(), json.sourcer.clone(), json.search_url.clone()).await;
+        let result = serializer_each_profile(
+            profile,
+            json.job.clone(),
+            json.sourcer.clone(),
+            json.search_url.clone(),
+        )
+        .await;
         println!("Serilaztion result for {:?} {:?}", full_name, result);
         wait(1, 2);
     }
@@ -228,7 +234,7 @@ async fn serializer_each_profile(
         entityUrn: json.general.vmid.clone(),
         extension_version: Some("phantom".to_string()),
         timestamp: json.timestamp.clone(),
-        search_url
+        search_url,
     };
     let result = send_url(result).await;
     match result {

@@ -30,7 +30,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
     wait(7, 10); // random delay
                  // go to candidate page
     browser
-        .page   
+        .page
         .goto_builder("https://www.linkedin.com/talent/inbox/0/main/id/2-MTBiZjJhZTMtNTNlNi00NDRjLddWJmZGQtYTg5MTk4ZjA5MWExXzAxMg==")
         .goto()
         .await?;
@@ -268,10 +268,10 @@ async fn check_message(text: &str, api: &str, name: &FullName) -> MessageCategor
         .send()
         .await
         .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the response
 
     let category = json_response["response"]["category"].as_str();
-    println!("responce: {:?}", json_response);
+    println!("response: {:?}", json_response);
     match category {
         Some("Interested") => MessageCategory::Interested,
         Some("Not interested") => MessageCategory::NotInterested,
@@ -297,7 +297,7 @@ async fn create_message(message: &InmailMessage) -> Result<(), CustomError> {
         .json(&payload)
         .send()
         .await?;
-    let _json_response: serde_json::Value = res.json().await?; //here is lays the responce
+    let _json_response: serde_json::Value = res.json().await?; //here is lays the response
     Ok(())
 }
 async fn change_stage(stage: &str, browser: &BrowserConfig) -> Result<(), CustomError> {

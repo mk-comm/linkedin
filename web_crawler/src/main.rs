@@ -15,7 +15,7 @@ use crate::actions::connection::connection;
 use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
 use crate::actions::scrap_inmails::scrap_inmails;
-use crate::actions::scrap_profile::scrap_profile;
+use crate::actions::scrap_profile_f::scrap_profile::scrap_profile;
 use crate::actions::scrap_recruiter_search::scrap_recruiter_search;
 use crate::actions::scrap_regular_search::scrap_regular_search;
 use crate::actions::send_inmails::send_inmails;
@@ -344,7 +344,7 @@ async fn send_inmail(json: Json<EntrySendInmail>) -> impl IntoResponse {
 
         match api.await {
             Ok(_) => {
-                info!("Send Inmail finished succesfully {}", message_id);
+                info!("Send Inmail finished successfully {}", message_id);
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
@@ -436,8 +436,3 @@ async fn check_task(task: task::JoinHandle<()>, message_id: String) {
         }
     }
 }
-// To solve {} issues with empty json response
-// + 1. add separate thread for awaiting of initial thread and see what is the result there
-// 2. add tracing for error like, debug, warning etc. (look at tracing subsciber)
-// 3. + switch from actix to axum
-// 4. switch to aws or gcp

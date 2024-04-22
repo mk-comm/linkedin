@@ -86,13 +86,6 @@ pub async fn scrap_message(
         if check_message == true && message.received == true {
             new_message = true;
             create_message(message, conversation).await;
-            /*
-            let autoreply = check_autoreply(message, &full_name, conversation).await;
-            if autoreply {
-                let responce = get_reply(full_text.clone(), conversation, full_name.clone()).await;
-                let message = send_message(page, responce).await;
-            }
-            */
         }
     }
     // check if the message is new
@@ -180,7 +173,7 @@ async fn check_message_new_message(
         .send()
         .await
         .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the response
 
     json_response["response"]["new_message"].as_bool().unwrap()
 }
@@ -205,7 +198,7 @@ async fn check_autoreply(
         .send()
         .await
         .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the
 
     json_response["response"]["autoreply"].as_bool().unwrap()
 }
@@ -219,7 +212,7 @@ async fn get_prompt() -> String {
         .send()
         .await
         .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the
 
     json_response["response"]["prompt"].to_string()
 }
@@ -254,7 +247,7 @@ async fn get_reply(message: String, conversation: &Conversation, full_name: Full
         .send()
         .await
         .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the
 
     json_response["response"]["reply"].to_string()
 }
@@ -458,7 +451,7 @@ async fn scrap_profile(
         .send()
         .await
         .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the
 
     let candidate_part_of_sequence = json_response["response"]["part_of_sequence"]
         .as_bool()
@@ -489,7 +482,7 @@ async fn evaluate(full_text: &str, api: &str, name: FullName) -> MessageCategory
         .send()
         .await
         .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the responce
+    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the
     let category = json_response["response"]["category"].as_str();
     match category {
         Some("Interested") => MessageCategory::Interested,

@@ -6,7 +6,6 @@ use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
 use playwright::api::Page;
 use tracing::{info, instrument};
-#[instrument]
 pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     info!("Sending connection request to {}", entry.fullname);
     //path to  local browser
@@ -109,16 +108,21 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
         None => (),
     };
-
     let block = match block_option {
         Some(block) => block,
         None => {
-            wait(1, 5);
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound(
-                "block button not found".to_string(),
-            ));
+            let block_option = browser.page.query_selector("div[class='ph5 pb5']").await?;
+            match block_option {
+                Some(block) => block,
+                None => {
+                    wait(1, 5);
+                    browser.page.close(Some(false)).await?;
+                    browser.browser.close().await?;
+                    return Err(CustomError::ButtonNotFound(
+                        "block button not found".to_string(),
+                    ));
+                }
+            }
         }
     };
 
@@ -175,7 +179,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
     }
 
-    //check if popup to choose "How do you know" appeares
+    //check if popup to choose "How do you know"
     let popup_how = browser
         .page
         .query_selector("button[aria-label='Other']")
