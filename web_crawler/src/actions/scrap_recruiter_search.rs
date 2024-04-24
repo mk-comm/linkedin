@@ -125,7 +125,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             Ok(_) => {
                 let _ = send_search_status(
                     format!(
-                        "URL batch sent to bubble successfuly, page: {}",
+                        "URL batch sent to bubble successfully, page: {}",
                         pages_number
                     )
                     .as_str(),
@@ -176,7 +176,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
 
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?; //close browser
-    let _ = send_search_status("Search scraped successfuly", ai_search).await;
+    let _ = send_search_status("Search scraped successfully", ai_search).await;
     Ok(())
 }
 
@@ -269,7 +269,7 @@ fn count_pages(html: String) -> Result<i32, CustomError> {
 
     Ok(1) // Default to 1 if the element isn't found or doesn't contain a valid number
 }
-*/
+
 async fn send_urls(
     urls: Vec<String>,
     target_url: &str,
@@ -279,7 +279,7 @@ async fn send_urls(
     let client = reqwest::Client::new();
 
     // Convert the Vec<String> into a JSON string
-    let urls_json = json!({ 
+    let urls_json = json!({
         "urls": urls,
         "ai_search": ai_search,
     "url_list_id": url_list_id});
@@ -287,18 +287,73 @@ async fn send_urls(
     let response: Result<reqwest::Response, reqwest::Error> =
         client.post(target_url).json(&urls_json).send().await;
     match response {
-        Ok(_) => info!(
-            "Send_urls/scrap_recruiter_search/Ok, {} was done",
-            ai_search
-        ),
+        Ok(res) => {
+            info!(
+                "Send_urls/scrap_recruiter_search/Ok, {} was done, response {:?}",
+                ai_search,
+                res.status()
+            );
+            println!("API RESPONSE OK {:?}", res);
+        }
         Err(error) => {
             error!(error = ?error, "Send_urls/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
+            println!("API RESPONSE {:?}", error);
+
+            return Err(error);
         }
     }
-    //println!("{:?}", response.text().await?);
 
     Ok(())
 }
+*/
+
+/// Sends a list of URLs as JSON to a specified target URL with retries on failure.
+///
+/// # Arguments
+/// * `urls` - A vector of URLs to send.
+/// * `target_url` - The endpoint where the URLs will be sent.
+/// * `ai_search` - A descriptive string associated with the search.
+/// * `url_list_id` - Identifier for the list of URLs.
+/// * `retry_delay` - Delay between retries in seconds.
+///
+/// # Returns
+/// * `Result<(), reqwest::Error>` - Result of the POST request.
+async fn send_urls(
+    urls: Vec<String>,
+    target_url: &str,
+    ai_search: &str,
+    url_list_id: &str,
+) -> Result<(), reqwest::Error> {
+    let max_retries = 5;
+     let client = reqwest::Client::new();
+    let urls_json = json!({ 
+        "urls": urls,
+        "ai_search": ai_search,
+        "url_list_id": url_list_id
+    });
+
+    let mut retries = 0;
+    loop {
+        let response = client.post(target_url).json(&urls_json).send().await;
+        match response {
+            Ok(res) => {
+                info!("Send_urls/scrap_recruiter_search/Ok: {}, status: {}", ai_search, res.status());
+                return Ok(());
+            },
+            Err(error) => {
+                if retries < max_retries {
+                    retries += 1;
+                    wait(1,1);
+                    continue;
+                } else {
+                    error!(error = ?error, "Send_urls/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
+                    return Err(error);
+                }
+            }
+        }
+    }
+}
+
 async fn send_search_status(status: &str, ai_search: &str) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 

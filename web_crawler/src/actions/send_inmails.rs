@@ -88,7 +88,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                 )); // if error means page is not loading
             }
             x += 1;
-            //println!("retrying to load page")
+            //// ("retrying to load page")
         }
         wait(1, 3);
     }
@@ -119,8 +119,8 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
 
     let entity_urn = find_entity_urn(&browser.page).await?;
 
-    println!("entity_urn: {:?}", entity_urn);
-    //println!("entity_urn: {:?}", entity_urn);
+    // ("entity_urn: {:?}", entity_urn);
+    //// ("entity_urn: {:?}", entity_urn);
     const VIEW_IN_RECRUITER: &str = "button[class='artdeco-button artdeco-button--2 artdeco-button--secondary ember-view pvs-profile-actions__action']";
     if entity_urn.is_some() {
         let url = format!(
@@ -146,7 +146,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                     )); // if error means page is not loading
                 }
                 x += 1;
-                //println!("retrying to load page")
+                //// ("retrying to load page")
             }
         }
     } else {
@@ -187,7 +187,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     /*
         const PROFILE_OLD_BLOCK: &str = "div[class='topcard-condensed__content-top topcard-condensed__content-top--profile-size-7']";
         const PROFILE_NEW_BLOCK: &str =
-            "div[class='zDhsPKaLqxcmxXjtBlqsgIkUbsNgtibqA UaplslhAVpzzlyntYbznbPnOcAEusqrjfE']";
 
         let profile_block = if browser
             .page
@@ -299,7 +298,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
 
     if let Some(button) = first_button {
         // Do actions with the first button found
-        println!("First button found.");
+        // ("First button found.");
         button.hover_builder(); // hover on search input
         wait(1, 4); // random delay
         button.click_builder().click().await?; // click on search input
@@ -415,9 +414,9 @@ fn print_elements_with_datalet_in_id(html: &str) -> Option<String> {
                             let end = end + start;
                             right_id = format!("[id={}]", &element_html[start..end]);
                         }
-                        None => println!("Could not find end quote"),
+                        None => (), // ("Could not find end quote"),
                     },
-                    None => println!("Could not find 'bpr-guid-'"),
+                    None => (), // ("Could not find 'bpr-guid-'"),
                 }
             }
         }

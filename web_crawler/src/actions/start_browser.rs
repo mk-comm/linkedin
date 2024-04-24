@@ -35,7 +35,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
 
     let playwright = Playwright::initialize().await?;
 
-    //   let _ = playwright.prepare(); // Install browsers uncomment on production
+    let _ = playwright.prepare(); // Install browsers uncomment on production
 
     let chromium = playwright.chromium();
 

@@ -216,62 +216,59 @@ pub async fn scrap_profile(entry: EntrySendConnection) -> Result<(), CustomError
     println!("location {:?}", location);
     println!("entity {:?}", entity_urn);
 
-    let exp_vec = parse_experience_same_page(browser.page).await?;
-    for exp in exp_vec {
-        println!("exp {:?}", exp)
-    }
-    /*
-        let experience_url = format!("{}/details/experience", candidate.linkedin.as_str());
-        let go_to = browser
-            .page
-            .clone()
-            .goto_builder(experience_url.as_str())
-            .goto()
-            .await?;
+    let experience_url = format!("{}/details/experience", candidate.linkedin.as_str());
+    let go_to = browser
+        .page
+        .clone()
+        .goto_builder(experience_url.as_str())
+        .goto()
+        .await?;
 
-        wait(5, 13);
-        let html_body = browser
-            .page
-            .query_selector("div[class='authentication-outlet']")
-            .await?;
-        let html = match html_body {
-            Some(body) => body.inner_html().await?,
-            None => {
-                wait(1, 5);
-                browser.page.close(Some(false)).await?;
-                browser.browser.close().await?;
-                return Err(CustomError::ButtonNotFound("Body is not found".to_string()));
-            }
-        };
-        let experience = parse_experience(&html);
-
-        let education_url = format!("{}/details/education", candidate.linkedin.as_str());
-        let go_to = browser
-            .page
-            .clone()
-            .goto_builder(education_url.as_str())
-            .goto()
-            .await?;
-
-        wait(5, 13);
-        let html_body = browser
-            .page
-            .query_selector("main[class='scaffold-layout__main']")
-            .await?;
-        let html = match html_body {
-            Some(body) => body.inner_html().await?,
-            None => {
-                wait(1, 5);
-                browser.page.close(Some(false)).await?;
-                browser.browser.close().await?;
-                return Err(CustomError::ButtonNotFound("Body is not found".to_string()));
-            }
-        };
-        let education = parse_education(&html);
-        for exp in education {
-            println!("{:?}", exp)
+    wait(5, 13);
+    let html_body = browser
+        .page
+        .query_selector("div[class='authentication-outlet']")
+        .await?;
+    let html = match html_body {
+        Some(body) => body.inner_html().await?,
+        None => {
+            wait(1, 5);
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Err(CustomError::ButtonNotFound("Body is not found".to_string()));
         }
-    */
+    };
+    let experience = parse_experience(&html);
+
+    for exp in experience {
+        println!("{:?}", exp)
+    }
+    let education_url = format!("{}/details/education", candidate.linkedin.as_str());
+    let go_to = browser
+        .page
+        .clone()
+        .goto_builder(education_url.as_str())
+        .goto()
+        .await?;
+
+    wait(5, 13);
+    let html_body = browser
+        .page
+        .query_selector("main[class='scaffold-layout__main']")
+        .await?;
+    let html = match html_body {
+        Some(body) => body.inner_html().await?,
+        None => {
+            wait(1, 5);
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            return Err(CustomError::ButtonNotFound("Body is not found".to_string()));
+        }
+    };
+    let education = parse_education(&html);
+    //for exp in education {
+    //    println!("{:?}", exp)
+    //}
     Ok(())
 }
 
@@ -293,7 +290,7 @@ fn find_entity_urn(html: &str) -> Option<String> {
 }
 
 fn extract_urn_from_href(href: &str) -> Option<String> {
-    println!("href{}", href);
+    //println!("href{}", href);
     // Check for URN in the href attribute
     href.split("?profileUrn=").find_map(|part| {
         if part.starts_with("urn%3Ali%3A") {

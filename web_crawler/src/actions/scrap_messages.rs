@@ -104,14 +104,14 @@ pub async fn scrap_message(
                     conversation_select.click_builder().click().await?;
                     wait(3, 5);
                     mark_unread(&conversation_select, focused_inbox).await?;
-                    //println!("Marked as unread/Interested");
+                    //// ("Marked as unread/Interested");
                 }
             }
             MessageCategory::NotInterested => {
-                //println!("Nothing happened/NotInterested");
+                //// ("Nothing happened/NotInterested");
             }
             MessageCategory::NotFound => {
-                //println!("Category NotFound");
+                //// ("Category NotFound");
             }
         }
     }
@@ -144,7 +144,7 @@ async fn create_message(message: &Message, conversation: &Conversation) {
             "conversation_url": conversation.thread_url,
             "api_key": conversation.api_key,
     });
-    println!("payload :{}", _payload);
+    // ("payload :{}", _payload);
     let _res = _client
         .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive")
         .json(&_payload)
@@ -177,7 +177,7 @@ async fn check_message_new_message(
 
     json_response["response"]["new_message"].as_bool().unwrap()
 }
-
+#[allow(dead_code)]
 async fn check_autoreply(
     message: &Message,
     full_name: &FullName,
@@ -202,6 +202,7 @@ async fn check_autoreply(
 
     json_response["response"]["autoreply"].as_bool().unwrap()
 }
+#[allow(dead_code)]
 
 async fn get_prompt() -> String {
     let client = reqwest::Client::new();
@@ -217,6 +218,7 @@ async fn get_prompt() -> String {
     json_response["response"]["prompt"].to_string()
 }
 
+#[allow(dead_code)]
 async fn send_message(page: &Page, message: String) -> Result<(), CustomError> {
     const INPUT_SELECTOR: &str =
         "div[class='msg-form__msg-content-container--scrollable scrollable relative']";
@@ -225,13 +227,15 @@ async fn send_message(page: &Page, message: String) -> Result<(), CustomError> {
         Some(input) => {
             input.click_builder().click().await?;
             input.fill_builder(message.as_str()).fill().await?;
-            println!("{}", message) // fill input for note;
+            // ("{}", message) // fill input for note;
         }
         None => (),
     }
 
     Ok(())
 }
+
+#[allow(dead_code)]
 
 async fn get_reply(message: String, conversation: &Conversation, full_name: FullName) -> String {
     let client = reqwest::Client::new();
@@ -544,14 +548,14 @@ fn scrap_each_message(
         let message_text = content.text().collect::<String>().trim().to_owned();
         let url_send_from = url_send_from.value().attr("href").unwrap().to_owned();
         let url_send_to = url_send_to.value().attr("href").unwrap().to_owned();
-        println!("url_send_from: {}", url_send_from);
-        println!("conversation_owner_link: {}", conversation_owner_link);
+        // ("url_send_from: {}", url_send_from);
+        // ("conversation_owner_link: {}", conversation_owner_link);
         let received: bool = if conversation_owner_link == url_send_from {
             true
         } else {
             false
         };
-        println!("received became: {}", received);
+        // ("received became: {}", received);
         let message = Message {
             sender,
             timestamp,
@@ -560,7 +564,7 @@ fn scrap_each_message(
             url_send_to,
             received,
         };
-        println!("received in message: {}", message.received);
+        // ("received in message: {}", message.received);
 
         if received == true {
             full_text.push_str(format!("Candidate: {}\n", &message.message_text.clone()).as_str())

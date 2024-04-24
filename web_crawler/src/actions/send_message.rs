@@ -117,7 +117,7 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
         wait(1, 5); // random delay
         browser.page.close(Some(false)).await?;
         browser.browser.close().await?;
-        //println!("You have to be premium to send messages to this profile");
+        //// ("You have to be premium to send messages to this profile");
         return Err(CustomError::ButtonNotFound("Inmail needed".to_string()));
     } // Inmail needed to send message to this profile
       // Get the HTML content of the messaging container
@@ -128,7 +128,7 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
         .unwrap();
     let html = pick.inner_html().await?;
     let conversation_id = find_conversation(html.as_str(), entity_urn.as_str());
-    //println!("conversation_id: {}", conversation_id);
+    //// ("conversation_id: {}", conversation_id);
 
     let conversation_select = match browser
         .page
@@ -137,7 +137,7 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
     {
         Some(conversation) => Some(conversation),
         None => {
-            wait(1, 5); // random delay
+            wait(4, 9); // random delay
             let linkedin_nick_div = browser
                 .page
                 .query_selector(".pv-text-details__about-this-profile-entrypoint")
@@ -231,13 +231,13 @@ fn find_conversation(html: &str, entity_urn: &str) -> String {
     let mut correct_div = String::new();
     for conv_div in document.select(&conv_selector) {
         let id = conv_div.value().attr("id").unwrap();
-        //println!("{}", id);
+        //// ("{}", id);
         let href_elem = conv_div.select(&href_selector).next().unwrap();
 
         let href = href_elem.value().attr("href").unwrap();
 
         if href == code {
-            //println!(", {}", conv_div.inner_html());
+            //// (", {}", conv_div.inner_html());
             correct_div = id.to_owned();
             //let button = container.query_selector("button[class='msg-form__send-toggle artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view']").await?.unwrap();
             //   button.click_builder();
@@ -304,9 +304,9 @@ fn print_elements_with_datalet_in_id(html: &str) -> String {
                             let end = end + start;
                             right_id = format!("[id={}]", &element_html[start..end]);
                         }
-                        None => println!("Could not find end quote"),
+                        None => (), // ("Could not find end quote"),
                     },
-                    None => println!("Could not find 'bpr-guid-'"),
+                    None => (), // ("Could not find 'bpr-guid-'"),
                 }
             }
         }

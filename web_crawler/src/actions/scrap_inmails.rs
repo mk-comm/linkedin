@@ -139,7 +139,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
             ("button[class='ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _flat_1aegh9 a11y-conversation-button']")
         .await?.unwrap();
                     unread_button.click_builder().click().await?;
-                    println!("button unread was pressed");
+                    // // ("button unread was pressed");
                 }
                 None => {
                     return Err(CustomError::ButtonNotFound(
@@ -149,7 +149,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
             }; // select the conversation
         }
         let _fragment = true;
-        println!("unread {}", conversation.unread);
+        //// ("unread {}", conversation.unread);
         // needs to be fixed for broken characters
         let messages_container = match browser
             .page
@@ -166,7 +166,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
                 ));
             } // if search input is not found, means page was not loaded and sessuion cookie is not valid
         };
-        println!("conversation: {:?}", conversation);
+        // ("conversation: {:?}", conversation);
         let html = messages_container.inner_html().await?;
         let full_name = FullName::split_name(conversation.candidate_name.as_str());
         let messages_text = scrap_message(conversation.clone(), html.as_str(), &full_name).unwrap();
@@ -179,15 +179,15 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
             let result = check_message(text.as_str(), &api_key, &full_name).await;
             match result {
                 MessageCategory::Interested => {
-                    println!("changing interested {:?}", result);
+                    // ("changing interested {:?}", result);
                     change_stage(&stage_interested, &browser).await?;
                 }
                 MessageCategory::NotInterested => {
-                    println!("changing not-interested {:?}", result);
+                    // ("changing not-interested {:?}", result);
                     change_stage(&stage_not_interested, &browser).await?;
                 }
                 MessageCategory::NotFound => {
-                    println!("No category found");
+                    // ("No category found");
                 }
             }
         }
@@ -247,7 +247,7 @@ fn scrap_message(
             full_text.push_str(format!("Recruiter: {} \n", message_text).as_str());
         }
     }
-    println!("full text: {:?}", full_text);
+    // ("full text: {:?}", full_text);
     Ok((messages, full_text))
 }
 
@@ -261,7 +261,7 @@ async fn check_message(text: &str, api: &str, name: &FullName) -> MessageCategor
 
     });
 
-    //println!("payload: {:?}", payload);
+    //// ("payload: {:?}", payload);
     let res = client
         .post("https://overview.tribe.xyz/api/1.1/wf/check_inmail")
         .json(&payload)
@@ -271,7 +271,7 @@ async fn check_message(text: &str, api: &str, name: &FullName) -> MessageCategor
     let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the response
 
     let category = json_response["response"]["category"].as_str();
-    println!("response: {:?}", json_response);
+    // ("response: {:?}", json_response);
     match category {
         Some("Interested") => MessageCategory::Interested,
         Some("Not interested") => MessageCategory::NotInterested,
@@ -291,7 +291,7 @@ async fn create_message(message: &InmailMessage) -> Result<(), CustomError> {
 
     });
 
-    //println!("payload: {:?}", payload);
+    //// ("payload: {:?}", payload);
     let res = client
         .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive_inmail")
         .json(&payload)
@@ -302,7 +302,7 @@ async fn create_message(message: &InmailMessage) -> Result<(), CustomError> {
 }
 async fn change_stage(stage: &str, browser: &BrowserConfig) -> Result<(), CustomError> {
     wait(5, 6);
-    println!("changing stage: {:?}", stage);
+    // ("changing stage: {:?}", stage);
     let button_dropdown = browser.page.query_selector("div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-right.ember-view").await?;
     if button_dropdown.is_some() {
         button_dropdown.unwrap().click_builder().click().await?;
@@ -321,13 +321,13 @@ async fn change_stage(stage: &str, browser: &BrowserConfig) -> Result<(), Custom
                 Some(span) => {
                     let text = span.inner_text().await?;
                     if text.trim() == stage.trim() {
-                        print!("stage was found");
+                        // ("stage was found");
                         item.click_builder().click().await?;
-                        print!("stage was clicked");
+                        // ("stage was clicked");
                         break;
                     }
                 }
-                None => print!("stage was not found"),
+                None => (), // ("stage was not found"),
             }
         }
     }
