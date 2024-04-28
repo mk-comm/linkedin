@@ -2,17 +2,19 @@ use crate::actions::scrap_profile_f::misc::serialize_option_string;
 use crate::actions::scrap_profile_f::scrap_education::parse_education;
 use crate::actions::scrap_profile_f::scrap_education::Education;
 use crate::actions::scrap_profile_f::scrap_experience_new_tab::{parse_experience, Experience};
-use crate::actions::scrap_profile_f::scrap_experience_same_tab::parse_experience_same_page;
 use crate::actions::start_browser::start_browser;
 use crate::actions::wait::wait;
+use crate::structs::browser::BrowserConfig;
 use crate::structs::browser::BrowserInit;
-use crate::structs::candidate::Candidate;
-use crate::structs::entry::EntrySendConnection;
+use crate::structs::entry::EntryScrapProfile;
 use crate::structs::error::CustomError;
 use playwright::api::Page;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
-
+use tracing::{error, info};
+use serde_json::json;
+#[allow(deprecated)]
+use base64::encode;
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
 struct ResultJson {
@@ -76,13 +78,29 @@ struct Profile {
     search_url: Option<String>,
 }
 
-pub async fn scrap_profile(entry: EntrySendConnection) -> Result<(), CustomError> {
-    //path to  local browser
-    let candidate = Candidate::new(
-        entry.fullname.clone(),
-        entry.linkedin.clone(),
-        entry.message.clone(),
-    );
+pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> {
+    
+    let job = if entry.job.is_empty() {
+        None
+    } else {
+        Some(entry.job.clone())
+            
+    };
+    let aisearch = if entry.aisearch.is_empty() {
+        None
+    } else {
+        Some(entry.aisearch.clone())
+            
+    };
+
+    let sourcer = if entry.sourcer.is_empty() {
+        None
+    } else {
+        Some(entry.sourcer.clone())
+            
+    };
+    let urls = entry.urls;
+
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -91,38 +109,32 @@ pub async fn scrap_profile(entry: EntrySendConnection) -> Result<(), CustomError
         session_cookie: entry.session_cookie,
         user_id: entry.user_id,
         recruiter_session_cookie: None,
-        headless: false,
+        headless: true,
     };
     let browser = start_browser(browser_info).await?;
 
-    let search_input = browser
-        .page
-        .query_selector("input[class=search-global-typeahead__input]")
-        .await?;
-    wait(3, 15); // random delay
-                 //focus on search input and fill it with text
-    match search_input {
-        Some(search_input) => {
-            search_input.hover_builder(); // hover on search input
-            wait(1, 4); // random delay
-            search_input.click_builder().click().await?; // click on search input
-            wait(2, 5); // random delay
-            search_input
-                .fill_builder(&candidate.fullname)
-                .fill()
-                .await?; // fill search input with text
-            wait(1, 5); // random delay
-            search_input.press_builder("Enter").press().await?; // press Enter
-            wait(2, 6); // random delay
-        }
-        None => {
-            wait(1, 5); // random delay
-        } //
-    };
+    for url in urls {
+        scrap_each_profile(&browser, &url.url, &job, &sourcer, &aisearch, &url.url_id).await?;
+    }
+
+    Ok(())
+}
+async fn scrap_each_profile(
+    browser: &BrowserConfig,
+    url: &str,
+    job: &Option<String>,
+    sourcer: &Option<String>,
+    aisearch: &Option<String>,
+    url_id: &str,
+) -> Result<(), CustomError> {
+
+let job = job;
+    let search_url = aisearch;
+    let sourcer = sourcer;
     // go to candidate page
     let go_to = browser
         .page
-        .goto_builder(candidate.linkedin.as_str())
+        .goto_builder(url)
         .goto()
         .await;
     let mut x = 0;
@@ -131,7 +143,7 @@ pub async fn scrap_profile(entry: EntrySendConnection) -> Result<(), CustomError
             wait(3, 6);
             let build = browser
                 .page
-                .goto_builder(candidate.linkedin.as_str())
+                .goto_builder(url)
                 .goto()
                 .await;
             if build.is_ok() {
@@ -165,10 +177,11 @@ pub async fn scrap_profile(entry: EntrySendConnection) -> Result<(), CustomError
             "Page does not exist".to_string(),
         ));
     }
+
     let html_body = browser
         .page
         .query_selector(
-            "body[class='render-mode-BIGPIPE nav-v2 ember-application boot-complete icons-loaded']",
+            "body.render-mode-BIGPIPE.nav-v2.ember-application.icons-loaded.boot-complete",
         )
         .await?;
     let html = match html_body {
@@ -177,11 +190,14 @@ pub async fn scrap_profile(entry: EntrySendConnection) -> Result<(), CustomError
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound("Body is not found".to_string()));
+            return Err(CustomError::ButtonNotFound(
+                "Body er is not found".to_string(),
+            ));
         }
     };
     //wait(10000, 10000);
     let linkedin_url = get_linkedin_url(browser.page.clone());
+    let linkedin_url_update = linkedin_url.clone();
     let full_name = get_name_tuple(&html);
     let first_name = match full_name {
         Some(ref full_name) => Some(full_name.clone().0),
@@ -194,30 +210,14 @@ pub async fn scrap_profile(entry: EntrySendConnection) -> Result<(), CustomError
     let current_tittle = get_title(&html);
     let linkedin_nick = get_linkedin_nick(linkedin_url.clone());
     let linkedin_main_id = get_linkedin_main_id(&html);
-    let current_company_name: &str;
-    let current_company_id: &str;
     let profile_picture = get_profile_picture(&html);
     let about = get_about(&html);
-    let education: &str;
-    let experience: &str;
-    let certifications: &str;
-    let languages: &str;
+    let connection_level = Some(5);
     let location = get_location(&html);
     let entity_urn = find_entity_urn(&html);
-    println!("url {:?}", &linkedin_url.clone());
-    println!("fullname {:?}", full_name);
-    println!("first {:?}", first_name);
-    println!("last {:?}", last_name);
-    println!("tittle {:?}", current_tittle);
-    println!("nick {:?}", linkedin_nick);
-    println!("id {:?}", linkedin_main_id);
-    println!("profice pic {:?}", profile_picture);
-    println!("about {:?}", about);
-    println!("location {:?}", location);
-    println!("entity {:?}", entity_urn);
 
-    let experience_url = format!("{}/details/experience", candidate.linkedin.as_str());
-    let go_to = browser
+    let experience_url = format!("{}/details/experience", url);
+    let _go_to = browser
         .page
         .clone()
         .goto_builder(experience_url.as_str())
@@ -235,16 +235,17 @@ pub async fn scrap_profile(entry: EntrySendConnection) -> Result<(), CustomError
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound("Body is not found".to_string()));
+            return Err(CustomError::ButtonNotFound(
+                "1Body is not found".to_string(),
+            ));
         }
     };
     let experience = parse_experience(&html);
+    let current_company_name = &experience[0].companyName;
+    let current_company_id = &experience[0].companyId;
 
-    for exp in experience {
-        println!("{:?}", exp)
-    }
-    let education_url = format!("{}/details/education", candidate.linkedin.as_str());
-    let go_to = browser
+    let education_url = format!("{}/details/education", url);
+    let _go_to = browser
         .page
         .clone()
         .goto_builder(education_url.as_str())
@@ -262,14 +263,94 @@ pub async fn scrap_profile(entry: EntrySendConnection) -> Result<(), CustomError
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound("Body is not found".to_string()));
+            return Err(CustomError::ButtonNotFound(
+                "2Body is not found".to_string(),
+            ));
         }
     };
     let education = parse_education(&html);
-    //for exp in education {
-    //    println!("{:?}", exp)
-    //}
+
+    let profile = Profile {
+        AI: true,
+        linkedin: linkedin_url,
+        first: first_name,
+        last: last_name,
+        email: None,
+        job: job.clone(),
+        sourcer: sourcer.clone(),
+        title: current_tittle,
+        linkedin_unique: linkedin_nick,
+        linkedin_unique_number: linkedin_main_id,
+        connectionLevel: connection_level,
+        company: current_company_name.clone(),
+        company_unique: current_company_id.clone(),
+        about,
+        profilePicture: profile_picture,
+        education,
+        experience,
+        viewedIn: None,
+        location,
+        entityUrn: entity_urn,
+        extension_version: None,
+        timestamp: None,
+        search_url: search_url.clone()
+    };
+
+    send_url_chromedata_viewed(profile).await?;
+    send_url_update(url_id, linkedin_url_update).await?;
+
     Ok(())
+}
+
+#[allow(deprecated)]
+async fn send_url_chromedata_viewed(profile: Profile) -> Result<(), CustomError> {
+    let serialized = serde_json::to_vec(&profile).unwrap();
+    let encoded = encode(&serialized);
+    const WEBHOOK_URL: &str = "https://webhook-test.com/c1d9b28b2cb8c5f2c14bacf71c841210";
+    let client = reqwest::Client::new();
+
+    let target_json = json!({ 
+        "b64": encoded });
+    let res = client.post(WEBHOOK_URL).json(&target_json).send().await;
+    match res {
+        Ok(_) => (),
+        Err(e) => println!("{}", e),
+    }
+    Ok(())
+}
+
+async fn send_url_update(
+    url_id: &str,
+    linkedin_url: Option<String>
+) -> Result<(), reqwest::Error> {
+    let max_retries = 5;
+     let client = reqwest::Client::new();
+    let urls_json = json!({ 
+        "url_id": url_id,
+    "linkedin": linkedin_url
+    });
+    let target_url = "https://overview.tribe.xyz/version-test/api/1.1/wf/tribe_scrap_search_update_url";
+    
+    let mut retries = 0;
+    loop {
+        let response = client.post(target_url).json(&urls_json).send().await;
+        match response {
+            Ok(res) => {
+                info!("Send_urls/url_update/Ok: {}, status: {}", url_id, res.status());
+                return Ok(());
+            },
+            Err(error) => {
+                if retries < max_retries {
+                    retries += 1;
+                    wait(1,1);
+                    continue;
+                } else {
+                    error!(error = ?error, "Send_urls/url_update/Error {} returned error {}", url_id, error);
+                    return Err(error);
+                }
+            }
+        }
+    }
 }
 
 fn find_entity_urn(html: &str) -> Option<String> {
@@ -370,26 +451,20 @@ fn get_about(html: &str) -> Option<String> {
             .map(|span| span.text().collect::<Vec<_>>().join(""))
     })
 }
+fn get_profile_picture(html_content: &str) -> Option<String> {
+    let document = Html::parse_fragment(html_content);
+    let selector = Selector::parse("div.pv-top-card__non-self-photo-wrapper button img").unwrap();
 
-fn get_profile_picture(html: &str) -> Option<String> {
-    let document = Html::parse_document(html);
-    let picture_selector =
-        Selector::parse("img[class='pv-top-card-profile-picture__image pv-top-card-profile-picture__image--show evi-image ember-view']");
-    let picture_selector = match picture_selector {
-        Ok(selector) => selector,
-        Err(_) => return None,
-    };
-    let picture = document
-        .select(&picture_selector)
+    // Attempt to find the img element and extract the 'src' attribute
+    document
+        .select(&selector)
         .next()
-        // Extract the 'src' attribute if it exists
-        .and_then(|element| element.value().attr("src").map(String::from));
-    picture
+        .and_then(|img| img.value().attr("src").map(String::from))
 }
+
 fn get_linkedin_main_id(html: &str) -> Option<String> {
     let document = Html::parse_document(html);
-    let id_selector =
-        Selector::parse("section[class='artdeco-card KjYJHUsAbArdmYARDTlIvPWCMLPtSGIXXQFs']");
+    let id_selector = Selector::parse("section.artdeco-card[data-member-id]");
     let id_selector = match id_selector {
         Ok(selector) => selector,
         Err(_) => return None,

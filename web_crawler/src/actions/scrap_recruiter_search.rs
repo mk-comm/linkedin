@@ -325,35 +325,39 @@ async fn send_urls(
     url_list_id: &str,
 ) -> Result<(), reqwest::Error> {
     let max_retries = 5;
-     let client = reqwest::Client::new();
-    let urls_json = json!({ 
-        "urls": urls,
-        "ai_search": ai_search,
-        "url_list_id": url_list_id
-    });
+let client = reqwest::Client::new();
 
-    let mut retries = 0;
-    loop {
-        let response = client.post(target_url).json(&urls_json).send().await;
-        match response {
-            Ok(res) => {
-                info!("Send_urls/scrap_recruiter_search/Ok: {}, status: {}", ai_search, res.status());
-                return Ok(());
-            },
-            Err(error) => {
-                if retries < max_retries {
-                    retries += 1;
-                    wait(1,1);
-                    continue;
-                } else {
-                    error!(error = ?error, "Send_urls/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
-                    return Err(error);
+    for batch in urls.chunks(10) {
+        let urls_json = json!({
+            "urls": batch,
+            "ai_search": ai_search,
+            "url_list_id": url_list_id
+        });
+
+        let mut retries = 0;
+        loop {
+            let response = client.post(target_url).json(&urls_json).send().await;
+            match response {
+                Ok(res) => {
+                    info!("Send_urls/scrap_recruiter_search/Ok: {}, status: {}", ai_search, res.status());
+                    break;  // Proceed to the next batch
+                },
+                Err(error) => {
+                    if retries < max_retries {
+                        retries += 1;
+                        wait(1, 1);
+                        continue;
+                    } else {
+                        error!(error = ?error, "Send_urls/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
+                        return Err(error);
+                    }
                 }
             }
         }
     }
-}
 
+    Ok(())
+}
 async fn send_search_status(status: &str, ai_search: &str) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 

@@ -101,6 +101,52 @@ pub struct EntrySendInmail {
 }
 
 */
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EntryScrapProfile {
+    pub webhook: String,
+    pub ip: String,
+    pub username: String,
+    pub password: String,
+    pub user_agent: String,
+    pub user_id: String,
+    pub sourcer: String,
+    pub job: String,
+    pub aisearch: String,
+    pub session_cookie: String,
+    pub urls: Vec<Url>,
+    pub batch_id: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Url {
+    pub url: String,
+    pub batch_id: String,
+    pub url_id: String,
+}
+/* EntryScrapProfile
+{
+    "webhook": "<webhook>",
+    "ip": "<ip>",
+    "username": "<username>",
+    "password": "<password>",
+    "user_agent": "<user_agent>",
+    "session_cookie": "<session_cookie>",
+    "user_id": "<user_id>",
+    "sourcer": "<sourcer_id>",
+    "urls": [<
+        {
+            "url": "https://www.linkedin.com/in/leelaunches",
+            "batch_id": "123",
+            "url_id": "url"
+        },
+        {
+            "url": "https://www.linkedin.com/in/akamenev/",
+            "batch_id": "123",
+            "url_id": "url"
+        }
+    >],
+}
+*/
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct EntrySendConnection {

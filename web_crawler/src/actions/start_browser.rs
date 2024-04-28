@@ -40,14 +40,8 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     let chromium = playwright.chromium();
 
     let browser = chromium
-        //.persistent_context_launcher(path)
         .launcher()
         .proxy(proxy)
-        //.args(&[
-        //    "-disable-extensions-except=./chrome-linux/tribexyz-4.5.45".to_string(),
-        //    "--load-extension=./chrome-linux/tribexyz-4.5.45".to_string(),
-        //    "--no-incognito".to_string(),
-        //])
         .headless(browserinfo.headless)
         //.executable(path)
         .launch()

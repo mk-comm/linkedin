@@ -1,7 +1,7 @@
 use crate::structs::error::CustomError;
 
 use chrono::NaiveDate;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::Serializer;
 pub fn serialize_option_string<S>(value: &Option<String>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,

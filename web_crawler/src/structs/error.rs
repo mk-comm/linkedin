@@ -11,7 +11,7 @@ pub enum CustomError {
     ProxyNotWorking,
     EmailNeeded,
     ConnectionLimit,
-    ProfileNotFound,
+    //ProfileNotFound,
     AnyhowError(anyhow::Error),
     ChronoError(chrono::ParseError),
     SerdeJsonError(serde_json::Error),
@@ -26,7 +26,7 @@ impl fmt::Display for CustomError {
             CustomError::RecruiterSessionCookieExpired => {
                 write!(f, "Recruiter Session cookie expired")
             }
-            CustomError::ProfileNotFound => write!(f, "Profile not found"),
+            //CustomError::ProfileNotFound => write!(f, "Profile not found"),
             CustomError::EmailNeeded => write!(f, "Email needed"),
             CustomError::ConnectionLimit => write!(f, "Connection limit"),
             CustomError::ProxyNotWorking => write!(f, "Proxy not working"),

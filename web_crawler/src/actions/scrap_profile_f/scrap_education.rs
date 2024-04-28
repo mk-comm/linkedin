@@ -1,17 +1,9 @@
 use super::misc::split_around_comma;
-use crate::actions::start_browser::start_browser;
-use crate::actions::wait::wait;
-use crate::structs::browser::BrowserInit;
-use crate::structs::candidate::Candidate;
-use crate::structs::entry::EntrySendConnection;
-use crate::structs::error::CustomError;
-use chrono::NaiveDate;
-use serde::{Deserialize, Serialize, Serializer};
-//use hyper::client::connect::HttpInfo;
+use crate::actions::scrap_profile_f::misc::get_date;
 use crate::actions::scrap_profile_f::misc::serialize_option_i64;
 use crate::actions::scrap_profile_f::misc::serialize_option_string;
-use playwright::api::Page;
 use scraper::{Html, Selector};
+use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
@@ -35,14 +27,15 @@ pub struct Education {
     #[serde(serialize_with = "serialize_option_string")]
     description: Option<String>,
 }
-
+#[allow(non_snake_case)]
 pub fn parse_education(html_content: &str) -> Vec<Education> {
     let document = Html::parse_document(html_content);
     let education_selector = Selector::parse("li.pvs-list__paged-list-item").unwrap();
     let mut educations = Vec::new();
 
     for element in document.select(&education_selector) {
-        let id = element.value().id().map(String::from);
+        let id = extract_id(element.html().as_str());
+        //let id = element.value().id().map(String::from);
         let schoolName = if let Some(school_element) = element
             .select(
                 &Selector::parse(
@@ -84,20 +77,6 @@ pub fn parse_education(html_content: &str) -> Vec<Education> {
             None => (None, None),
         };
 
-        let url = if let Some(a_tag) = element
-            .select(
-                &Selector::parse(
-                    "a.optional-action-target-wrapper.display-flex.flex-column.full-width",
-                )
-                .unwrap(),
-            )
-            .next()
-        {
-            a_tag.value().attr("href").map(String::from)
-        } else {
-            None
-        };
-
         let periodText = if let Some(period) = element
             .select(
                 &Selector::parse("span.t-14.t-normal.t-black--light > span:nth-of-type(1)")
@@ -110,6 +89,23 @@ pub fn parse_education(html_content: &str) -> Vec<Education> {
             None
         };
 
+        //Extract Start Date & End Date
+        let date = periodText.clone();
+        let new_vec = get_date(date.as_deref());
+        let second_vec = get_date(date.as_deref());
+        let start_date = if second_vec.is_ok() {
+            let vect = second_vec.unwrap();
+            vect[0]
+        } else {
+            None
+        };
+        let end_date = if new_vec.is_ok() {
+            let vect = new_vec.unwrap();
+            vect[1]
+        } else {
+            None
+        };
+
         let description = Some(String::new());
         educations.push(Education {
             id,
@@ -118,11 +114,33 @@ pub fn parse_education(html_content: &str) -> Vec<Education> {
             degreeName,
             fieldOfStudy,
             periodText,
-            startDate: None,
-            endDate: None,
+            startDate: start_date,
+            endDate: end_date,
             description,
         });
     }
 
     educations
+}
+
+fn extract_id(html_content: &str) -> Option<String> {
+    let document = Html::parse_fragment(html_content);
+    // Selector for a section with the class 'artdeco-card' and containing the 'data-member-id' attribute
+    let selector = Selector::parse("a.optional-action-target-wrapper.display-flex[href]").unwrap();
+
+    // Attempt to find the section element and extract the 'data-member-id' attribute
+    let url = document
+        .select(&selector)
+        .next()
+        .and_then(|section| section.value().attr("href").map(String::from));
+    let id = if url.is_some() {
+        Some(
+            url.unwrap()
+                .replace("https://www.linkedin.com/company/", "")
+                .replace("/", ""),
+        )
+    } else {
+        None
+    };
+    id
 }

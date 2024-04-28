@@ -22,6 +22,7 @@ use crate::actions::send_inmails::send_inmails;
 use crate::actions::send_message::send_message;
 use crate::actions::serialize::serialize_json;
 use crate::actions::withdraw_pending_connection::withdraw_pending;
+use structs::entry::EntryScrapProfile;
 use structs::entry::EntryScrapSearchRecruiter;
 use structs::entry::EntryScrapSearchRegular;
 use structs::entry::EntrySendConnection;
@@ -249,30 +250,30 @@ async fn message(json: Json<EntrySendConnection>) -> impl IntoResponse {
     }))
 }
 
-async fn scrap_profiles(json: Json<EntrySendConnection>) -> impl IntoResponse {
-    let message_id = json.message_id.clone();
+async fn scrap_profiles(json: Json<EntryScrapProfile>) -> impl IntoResponse {
     let webhook = json.webhook.clone();
     let user_id = json.user_id.clone();
+    let batch = json.batch_id.clone();
     tokio::spawn(async move {
         let api = scrap_profile(json.0);
         match api.await {
             Ok(_) => {
                 let client = reqwest::Client::new();
                 let payload = json!({
-                    "message": message_id,
                     "result": "Profile was scrapped",
                     "user_id": user_id,
                     "error": "no",
+                    "batch_id": batch,
                 });
                 let _res = client.post(webhook).json(&payload).send().await;
             }
             Err(error) => {
                 let client = reqwest::Client::new();
                 let payload = json!({
-                    "message": message_id,
                     "result": error.to_string(),
                     "user_id": user_id,
                     "error": "yes",
+                    "batch_id": batch,
                 });
                 let _res = client.post(webhook).json(&payload).send().await;
             }
