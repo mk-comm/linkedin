@@ -96,7 +96,7 @@ pub fn parse_experience(html_content: &str) -> Vec<Experience> {
             }
             for el in li_elements {
                 let experience = parse_each_experience_type_two(el.inner_html().as_str(), &partial);
-                // println!("TWO Experience: {:?}", experience);
+                //println!("TWO Experience: {:?}", experience);
                 experiences.push(experience);
             }
         } else {
@@ -246,7 +246,7 @@ fn parse_each_experience_type_one(element: ElementRef) -> Experience {
                 if !skill_text.is_empty() {
                     let skill = Skill {
                         order,
-                        skill: Some(skill_text),
+                        skill: Some(skill_text.replace("Skills: ", "").trim().to_string()),
                     };
                     skills.push(skill);
                     order = order.checked_add(1).expect("Order value overflowed");

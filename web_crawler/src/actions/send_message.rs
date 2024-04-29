@@ -128,8 +128,7 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
         .unwrap();
     let html = pick.inner_html().await?;
     let conversation_id = find_conversation(html.as_str(), entity_urn.as_str());
-    //// ("conversation_id: {}", conversation_id);
-
+    println!("conversation_id: {}", conversation_id);
     let conversation_select = match browser
         .page
         .query_selector(format!("div[id='{}']", conversation_id).as_str())

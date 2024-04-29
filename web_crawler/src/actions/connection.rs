@@ -294,7 +294,9 @@ async fn message(page: &Page, message: &str) -> Result<(), CustomError> {
                 //press button send
                 //println!("reached sending");
                 //wait(100000, 100000);
-    let send = page.query_selector("button[aria-label='Send now']").await?;
+    let send = page
+        .query_selector("button[aria-label='Send invitation']")
+        .await?;
     match send {
         Some(send) => {
             send.click_builder().click().await?; // click on button "Send"
