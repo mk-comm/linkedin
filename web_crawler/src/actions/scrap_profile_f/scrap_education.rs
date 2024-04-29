@@ -133,14 +133,20 @@ fn extract_id(html_content: &str) -> Option<String> {
         .select(&selector)
         .next()
         .and_then(|section| section.value().attr("href").map(String::from));
-    let id = if url.is_some() {
+
+    let url_link = if url.is_some() {
+        url.unwrap()
+    } else {
+        return None;
+    };
+
+    if url_link.contains("search/results") {
+        None
+    } else {
         Some(
-            url.unwrap()
+            url_link
                 .replace("https://www.linkedin.com/company/", "")
                 .replace("/", ""),
         )
-    } else {
-        None
-    };
-    id
+    }
 }

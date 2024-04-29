@@ -115,6 +115,7 @@ pub struct EntryScrapProfile {
     pub session_cookie: String,
     pub urls: Vec<Url>,
     pub batch_id: String,
+    pub search_url: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

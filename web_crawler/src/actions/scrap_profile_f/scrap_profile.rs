@@ -8,13 +8,13 @@ use crate::structs::browser::BrowserConfig;
 use crate::structs::browser::BrowserInit;
 use crate::structs::entry::EntryScrapProfile;
 use crate::structs::error::CustomError;
+#[allow(deprecated)]
+use base64::encode;
 use playwright::api::Page;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
 use serde_json::json;
-#[allow(deprecated)]
-use base64::encode;
+use tracing::{error, info};
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
 struct ResultJson {
@@ -79,28 +79,30 @@ struct Profile {
 }
 
 pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> {
-    
     let job = if entry.job.is_empty() {
         None
     } else {
         Some(entry.job.clone())
-            
     };
-    let aisearch = if entry.aisearch.is_empty() {
+    let aisearch = if entry.search_url.is_empty() {
         None
     } else {
         Some(entry.aisearch.clone())
-            
     };
 
     let sourcer = if entry.sourcer.is_empty() {
         None
     } else {
         Some(entry.sourcer.clone())
-            
+    };
+    let search_url = if entry.search_url.is_empty() {
+        None
+    } else {
+        Some(entry.search_url.clone())
     };
     let urls = entry.urls;
-
+    let batch = entry.batch_id.as_str();
+    send_search_status("Starting the browser", &aisearch, batch).await?;
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -113,8 +115,21 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
     };
     let browser = start_browser(browser_info).await?;
 
+    send_search_status("Connected to linkedin", &aisearch, batch).await?;
     for url in urls {
-        scrap_each_profile(&browser, &url.url, &job, &sourcer, &aisearch, &url.url_id).await?;
+        scrap_each_profile(
+            &browser,
+            &url.url,
+            &job,
+            &sourcer,
+            &aisearch,
+            &url.url_id,
+            batch,
+            &search_url,
+        )
+        .await?;
+    send_search_status(format!("Profile {} finished", url.url).as_str(), &aisearch, batch).await?;
+
     }
 
     Ok(())
@@ -126,32 +141,27 @@ async fn scrap_each_profile(
     sourcer: &Option<String>,
     aisearch: &Option<String>,
     url_id: &str,
+    batch_id: &str,
+    search_url: &Option<String>,
 ) -> Result<(), CustomError> {
-
-let job = job;
-    let search_url = aisearch;
+    send_search_status(format!("Profile {} started", url).as_str(), aisearch, batch_id).await?;
+    let job = job;
+    let search_url = search_url;
     let sourcer = sourcer;
     // go to candidate page
-    let go_to = browser
-        .page
-        .goto_builder(url)
-        .goto()
-        .await;
+    let go_to = browser.page.goto_builder(url).goto().await;
     let mut x = 0;
     if go_to.is_err() {
         while x <= 3 {
             wait(3, 6);
-            let build = browser
-                .page
-                .goto_builder(url)
-                .goto()
-                .await;
+            let build = browser.page.goto_builder(url).goto().await;
             if build.is_ok() {
                 break;
             } else if build.is_err() && x == 3 {
                 wait(3, 6);
                 browser.page.close(Some(false)).await?;
                 browser.browser.close().await?; // close browser
+    send_search_status(format!("Profile {} candidate page is not loading", url).as_str(), aisearch, batch_id).await?;
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/Connection".to_string(),
                 )); // if error means page is not loading
@@ -173,6 +183,7 @@ let job = job;
         wait(1, 5);
         browser.page.close(Some(false)).await?;
         browser.browser.close().await?;
+        send_search_status(format!("Profile {}, page not found", url).as_str(), aisearch, batch_id).await?;
         return Err(CustomError::ButtonNotFound(
             "Page does not exist".to_string(),
         ));
@@ -190,6 +201,7 @@ let job = job;
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
+            send_search_status(format!("Profile {}, body not found", url).as_str(), aisearch, batch_id).await?;
             return Err(CustomError::ButtonNotFound(
                 "Body er is not found".to_string(),
             ));
@@ -197,6 +209,7 @@ let job = job;
     };
     //wait(10000, 10000);
     let linkedin_url = get_linkedin_url(browser.page.clone());
+    let redirect_url = linkedin_url.clone().unwrap();
     let linkedin_url_update = linkedin_url.clone();
     let full_name = get_name_tuple(&html);
     let first_name = match full_name {
@@ -216,7 +229,7 @@ let job = job;
     let location = get_location(&html);
     let entity_urn = find_entity_urn(&html);
 
-    let experience_url = format!("{}/details/experience", url);
+    let experience_url = format!("{}/details/experience", &redirect_url);
     let _go_to = browser
         .page
         .clone()
@@ -241,10 +254,17 @@ let job = job;
         }
     };
     let experience = parse_experience(&html);
-    let current_company_name = &experience[0].companyName;
-    let current_company_id = &experience[0].companyId;
+    println!("{:?}", &experience);
+let mut current_company_name: Option<String> = None;
+let mut current_company_id: Option<String> = None;
 
-    let education_url = format!("{}/details/education", url);
+// Check if there is at least one item in the vector
+if let Some(first_experience) = experience.get(0) {
+    current_company_name = first_experience.companyName.clone();
+    current_company_id = first_experience.companyId.clone();
+}    
+
+    let education_url = format!("{}/details/education", &redirect_url);
     let _go_to = browser
         .page
         .clone()
@@ -293,11 +313,41 @@ let job = job;
         entityUrn: entity_urn,
         extension_version: None,
         timestamp: None,
-        search_url: search_url.clone()
+        search_url: search_url.clone(),
     };
 
+    send_search_status(format!("Profile {} sending to chromedata", url).as_str(), aisearch, batch_id).await?;
     send_url_chromedata_viewed(profile).await?;
+
+    send_search_status(format!("Profile {} updating url", url).as_str(), aisearch, batch_id).await?;
     send_url_update(url_id, linkedin_url_update).await?;
+    Ok(())
+}
+
+async fn send_search_status(
+    status: &str,
+    ai_search: &Option<String>,
+    batch_id: &str,
+) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+
+    // Convert the Vec<String> into a JSON string
+    let urls_json = json!({ 
+        "status": status,
+        "batch_id": batch_id,
+        "ai_search": ai_search});
+    let target_url = "https://overview.tribe.xyz/api/1.1/wf/search_profile_logs";
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(target_url).json(&urls_json).send().await;
+    match response {
+        Ok(_) => info!(
+            "Send_search_status/scrap_recruiter_search/Ok, {:?} was done",
+            ai_search
+        ),
+        Err(error) => {
+            error!(error = ?error, "Send_search_status/scrap_recruiter_search/Error {:?} returned error {}", ai_search, error);
+        }
+    }
 
     Ok(())
 }
@@ -306,7 +356,7 @@ let job = job;
 async fn send_url_chromedata_viewed(profile: Profile) -> Result<(), CustomError> {
     let serialized = serde_json::to_vec(&profile).unwrap();
     let encoded = encode(&serialized);
-    const WEBHOOK_URL: &str = "https://webhook-test.com/c1d9b28b2cb8c5f2c14bacf71c841210";
+    const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
     let client = reqwest::Client::new();
 
     let target_json = json!({ 
@@ -319,30 +369,31 @@ async fn send_url_chromedata_viewed(profile: Profile) -> Result<(), CustomError>
     Ok(())
 }
 
-async fn send_url_update(
-    url_id: &str,
-    linkedin_url: Option<String>
-) -> Result<(), reqwest::Error> {
+async fn send_url_update(url_id: &str, linkedin_url: Option<String>) -> Result<(), reqwest::Error> {
     let max_retries = 5;
-     let client = reqwest::Client::new();
-    let urls_json = json!({ 
+    let client = reqwest::Client::new();
+    let urls_json = json!({
         "url_id": url_id,
     "linkedin": linkedin_url
     });
-    let target_url = "https://overview.tribe.xyz/version-test/api/1.1/wf/tribe_scrap_search_update_url";
-    
+    let target_url = "https://overview.tribe.xyz/api/1.1/wf/tribe_scrap_search_update_url";
+
     let mut retries = 0;
     loop {
         let response = client.post(target_url).json(&urls_json).send().await;
         match response {
             Ok(res) => {
-                info!("Send_urls/url_update/Ok: {}, status: {}", url_id, res.status());
+                info!(
+                    "Send_urls/url_update/Ok: {}, status: {}",
+                    url_id,
+                    res.status()
+                );
                 return Ok(());
-            },
+            }
             Err(error) => {
                 if retries < max_retries {
                     retries += 1;
-                    wait(1,1);
+                    wait(1, 1);
                     continue;
                 } else {
                     error!(error = ?error, "Send_urls/url_update/Error {} returned error {}", url_id, error);
@@ -361,7 +412,7 @@ fn find_entity_urn(html: &str) -> Option<String> {
     for link in document.select(&link_selector) {
         if let Some(href) = link.value().attr("href") {
             if let Some(urn) = extract_urn_from_href(href) {
-                return Some(urn.replace("urn%3Ali%3Afsd_profile%3A", ""));
+                return Some(urn.replace("urn%3Ali%3Afsd_profile%3A", "").replace("urn%3Ali%3Afs_normalized_profile%3A",""));
             }
         }
     }

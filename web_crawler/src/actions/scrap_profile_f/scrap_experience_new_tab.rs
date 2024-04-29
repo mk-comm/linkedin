@@ -96,12 +96,12 @@ pub fn parse_experience(html_content: &str) -> Vec<Experience> {
             }
             for el in li_elements {
                 let experience = parse_each_experience_type_two(el.inner_html().as_str(), &partial);
-                println!("TWO Experience: {:?}", experience);
+                // println!("TWO Experience: {:?}", experience);
                 experiences.push(experience);
             }
         } else {
             let experience = parse_each_experience_type_one(element);
-            println!("One Experience: {:?}", experience);
+            //println!("One Experience: {:?}", experience);
             experiences.push(experience);
         }
     }
