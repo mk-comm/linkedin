@@ -28,7 +28,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     };
 
     let browser = start_browser(browser_info).await?;
-
     let search_input = browser
         .page
         .query_selector("input[class=search-global-typeahead__input]")
@@ -83,7 +82,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
         wait(1, 3);
     }
-
     wait(7, 21); // random delay
                  //check if connect button is present
 
@@ -108,6 +106,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
         None => (),
     };
+
     let block = match block_option {
         Some(block) => block,
         None => {
@@ -115,12 +114,18 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
             match block_option {
                 Some(block) => block,
                 None => {
-                    wait(1, 5);
-                    browser.page.close(Some(false)).await?;
-                    browser.browser.close().await?;
-                    return Err(CustomError::ButtonNotFound(
-                        "block button not found".to_string(),
-                    ));
+                    let block_option = browser.page.query_selector("div[class='ph5 ']").await?;
+                    match block_option {
+                        Some(block) => block,
+                        None => {
+                            wait(1, 5);
+                            browser.page.close(Some(false)).await?;
+                            browser.browser.close().await?;
+                            return Err(CustomError::ButtonNotFound(
+                                "block button not found".to_string(),
+                            ));
+                        }
+                    }
                 }
             }
         }

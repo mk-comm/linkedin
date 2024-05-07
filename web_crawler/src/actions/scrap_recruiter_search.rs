@@ -323,9 +323,9 @@ async fn send_urls(
     target_url: &str,
     ai_search: &str,
     url_list_id: &str,
-) -> Result<(), reqwest::Error> {
+) -> Result<(), CustomError> {
     let max_retries = 5;
-let client = reqwest::Client::new();
+    let client = reqwest::Client::new();
 
     for batch in urls.chunks(10) {
         let urls_json = json!({
@@ -339,23 +339,49 @@ let client = reqwest::Client::new();
             let response = client.post(target_url).json(&urls_json).send().await;
             match response {
                 Ok(res) => {
-                    info!("Send_urls/scrap_recruiter_search/Ok: {}, status: {}", ai_search, res.status());
-                    break;  // Proceed to the next batch
-                },
+                    if res.status() == 200 {
+                        info!(
+                            "Send_urls/scrap_recruiter_search/Ok: {}, status: {}/URL {}",
+                            ai_search,
+                            res.status(),
+                            target_url
+                        );
+                        break; // Proceed to the next batch
+                    } else {
+                        if retries < max_retries {
+                            retries += 1;
+                            wait(1, 1); // Wait 1 second before retrying
+                            continue;
+                        } else {
+                            error!(
+                                "Send_urls/scrap_recruiter_search/Error {}: status {}/URL: {}",
+                                ai_search,
+                                res.status(),
+                                target_url
+                            );
+                            return Err(CustomError::ButtonNotFound(
+                                "Send url status is not 200, Status/Scrap Recruiter Search"
+                                    .to_string(),
+                            ));
+                        }
+                    }
+                }
                 Err(error) => {
                     if retries < max_retries {
                         retries += 1;
                         wait(1, 1);
                         continue;
                     } else {
-                        error!(error = ?error, "Send_urls/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
-                        return Err(error);
+                        error!(error = ?error, "Send_urls/scrap_recruiter_search/Error {} returned error {}/URL: {}", ai_search, error, target_url);
+
+                        return Err(CustomError::ButtonNotFound(
+                            "Scrap recruiter search send url, Error".to_string(),
+                        ));
                     }
                 }
             }
         }
     }
-
     Ok(())
 }
 async fn send_search_status(status: &str, ai_search: &str) -> Result<(), reqwest::Error> {

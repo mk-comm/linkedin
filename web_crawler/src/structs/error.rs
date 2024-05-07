@@ -27,6 +27,7 @@ impl fmt::Display for CustomError {
                 write!(f, "Recruiter Session cookie expired")
             }
             //CustomError::ProfileNotFound => write!(f, "Profile not found"),
+            CustomError::ReqwestError(err) => write!(f, "Reqwest error: {}", err),
             CustomError::EmailNeeded => write!(f, "Email needed"),
             CustomError::ConnectionLimit => write!(f, "Connection limit"),
             CustomError::ProxyNotWorking => write!(f, "Proxy not working"),

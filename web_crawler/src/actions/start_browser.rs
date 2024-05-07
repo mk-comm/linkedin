@@ -90,13 +90,12 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     let page_proxy = context.new_page().await?;
 
     let _build_proxy = page_proxy
-        .goto_builder("https://www.google.com/")
+        .goto_builder("https://ipchicken.com/")
         .goto()
         .await;
-
     wait(1, 4);
 
-    let google_search = page_proxy.query_selector("div.RNNXgb").await?;
+    let google_search = page_proxy.query_selector("td[valign=top]").await?;
 
     match google_search {
         Some(_) => println!("proxy is working"),

@@ -128,8 +128,12 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
             &search_url,
         )
         .await?;
-    send_search_status(format!("Profile {} finished", url.url).as_str(), &aisearch, batch).await?;
-
+        send_search_status(
+            format!("Profile {} finished", url.url).as_str(),
+            &aisearch,
+            batch,
+        )
+        .await?;
     }
 
     Ok(())
@@ -144,7 +148,12 @@ async fn scrap_each_profile(
     batch_id: &str,
     search_url: &Option<String>,
 ) -> Result<(), CustomError> {
-    send_search_status(format!("Profile {} started", url).as_str(), aisearch, batch_id).await?;
+    send_search_status(
+        format!("Profile {} started", url).as_str(),
+        aisearch,
+        batch_id,
+    )
+    .await?;
     let job = job;
     let search_url = search_url;
     let sourcer = sourcer;
@@ -161,7 +170,12 @@ async fn scrap_each_profile(
                 wait(3, 6);
                 browser.page.close(Some(false)).await?;
                 browser.browser.close().await?; // close browser
-    send_search_status(format!("Profile {} candidate page is not loading", url).as_str(), aisearch, batch_id).await?;
+                send_search_status(
+                    format!("Profile {} candidate page is not loading", url).as_str(),
+                    aisearch,
+                    batch_id,
+                )
+                .await?;
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/Connection".to_string(),
                 )); // if error means page is not loading
@@ -183,7 +197,12 @@ async fn scrap_each_profile(
         wait(1, 5);
         browser.page.close(Some(false)).await?;
         browser.browser.close().await?;
-        send_search_status(format!("Profile {}, page not found", url).as_str(), aisearch, batch_id).await?;
+        send_search_status(
+            format!("Profile {}, page not found", url).as_str(),
+            aisearch,
+            batch_id,
+        )
+        .await?;
         return Err(CustomError::ButtonNotFound(
             "Page does not exist".to_string(),
         ));
@@ -201,7 +220,12 @@ async fn scrap_each_profile(
             wait(1, 5);
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
-            send_search_status(format!("Profile {}, body not found", url).as_str(), aisearch, batch_id).await?;
+            send_search_status(
+                format!("Profile {}, body not found", url).as_str(),
+                aisearch,
+                batch_id,
+            )
+            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Body er is not found".to_string(),
             ));
@@ -255,14 +279,14 @@ async fn scrap_each_profile(
     };
     let experience = parse_experience(&html);
     println!("{:?}", &experience);
-let mut current_company_name: Option<String> = None;
-let mut current_company_id: Option<String> = None;
+    let mut current_company_name: Option<String> = None;
+    let mut current_company_id: Option<String> = None;
 
-// Check if there is at least one item in the vector
-if let Some(first_experience) = experience.get(0) {
-    current_company_name = first_experience.companyName.clone();
-    current_company_id = first_experience.companyId.clone();
-}    
+    // Check if there is at least one item in the vector
+    if let Some(first_experience) = experience.get(0) {
+        current_company_name = first_experience.companyName.clone();
+        current_company_id = first_experience.companyId.clone();
+    }
 
     let education_url = format!("{}/details/education", &redirect_url);
     let _go_to = browser
@@ -316,10 +340,20 @@ if let Some(first_experience) = experience.get(0) {
         search_url: search_url.clone(),
     };
 
-    send_search_status(format!("Profile {} sending to chromedata", url).as_str(), aisearch, batch_id).await?;
+    send_search_status(
+        format!("Profile {} sending to chromedata", url).as_str(),
+        aisearch,
+        batch_id,
+    )
+    .await?;
     send_url_chromedata_viewed(profile).await?;
 
-    send_search_status(format!("Profile {} updating url", url).as_str(), aisearch, batch_id).await?;
+    send_search_status(
+        format!("Profile {} updating url", url).as_str(),
+        aisearch,
+        batch_id,
+    )
+    .await?;
     send_url_update(url_id, linkedin_url_update).await?;
     Ok(())
 }
@@ -412,7 +446,10 @@ fn find_entity_urn(html: &str) -> Option<String> {
     for link in document.select(&link_selector) {
         if let Some(href) = link.value().attr("href") {
             if let Some(urn) = extract_urn_from_href(href) {
-                return Some(urn.replace("urn%3Ali%3Afsd_profile%3A", "").replace("urn%3Ali%3Afs_normalized_profile%3A",""));
+                return Some(
+                    urn.replace("urn%3Ali%3Afsd_profile%3A", "")
+                        .replace("urn%3Ali%3Afs_normalized_profile%3A", ""),
+                );
             }
         }
     }
