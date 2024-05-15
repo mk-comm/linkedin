@@ -61,6 +61,19 @@ pub struct EntryRecruiter {
     pub recruiter_stage_not_interested: String,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EntryScrapProjects {
+    pub ip: String,
+    pub username: String,
+    pub password: String,
+    pub user_agent: String,
+    pub webhook: String,
+    pub user_id: String,
+    pub session_cookie: String,
+    pub recruiter_session_cookie: String,
+    pub target_url: String,
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct EntrySendInmail {
     pub message_id: String,
