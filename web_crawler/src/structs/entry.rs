@@ -74,6 +74,26 @@ pub struct EntryScrapProjects {
     pub target_url: String,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EntryAddProfilesToProjects {
+    pub ip: String,
+    pub username: String,
+    pub password: String,
+    pub user_agent: String,
+    pub webhook: String,
+    pub user_id: String,
+    pub session_cookie: String,
+    pub recruiter_session_cookie: String,
+    pub target_url: String,
+    pub candidates: Vec<CandidateUrl>,
+}
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CandidateUrl {
+    pub url: String,
+    pub project: String,
+    pub stage: String,
+    pub id: String,
+}
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct EntrySendInmail {
     pub message_id: String,

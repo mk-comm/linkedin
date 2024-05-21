@@ -2,6 +2,7 @@ use crate::structs::entry::EntryRecruiter;
 use crate::structs::entry::EntryRegular;
 use crate::structs::entry::EntryScrapConnection;
 use serde_json::json;
+use structs::entry::EntryAddProfilesToProjects;
 use structs::entry::EntryScrapProjects;
 use tracing::{debug, error, info};
 
@@ -13,6 +14,7 @@ use std::net::SocketAddr;
 mod actions;
 mod structs;
 use crate::actions::connection::connection;
+use crate::actions::save_to_project::save;
 use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
 use crate::actions::scrap_inmails::scrap_inmails;
@@ -277,6 +279,38 @@ async fn message(json: Json<EntrySendConnection>) -> impl IntoResponse {
         "message": "Sending message started!"
     }))
 }
+async fn add_to_project(json: Json<EntryAddProfilesToProjects>) -> impl IntoResponse {
+    let webhook = json.webhook.clone();
+    let user_id = json.user_id.clone();
+    tokio::spawn(async move {
+        let api = save(json.0);
+        match api.await {
+            Ok(_) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "result": "Profile was scrapped",
+                    "user_id": user_id,
+                    "error": "no",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+            Err(error) => {
+                let client = reqwest::Client::new();
+                let payload = json!({
+                    "result": error.to_string(),
+                    "user_id": user_id,
+                    "error": "yes",
+                });
+                let _res = client.post(webhook).json(&payload).send().await;
+            }
+        }
+    });
+
+    Json(json!({
+        "status": "success",
+        "message": "Scrap profile started!"
+    }))
+}
 
 async fn scrap_profiles(json: Json<EntryScrapProfile>) -> impl IntoResponse {
     let webhook = json.webhook.clone();
@@ -441,6 +475,7 @@ async fn main() {
         .route("/scrap_regular_search", post(scrap_regular_search_url))
         .route("/serialize", post(serialize))
         .route("/scrap_linkedin_projects", post(scrap_linkedin_projects))
+        .route("/add_to_project", post(add_to_project))
         .route("/scrap_recruiter_search", post(scrap_recruiter_search_url));
 
     hyper::Server::bind(&address)

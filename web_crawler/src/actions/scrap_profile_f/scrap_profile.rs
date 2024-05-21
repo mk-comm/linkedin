@@ -438,7 +438,7 @@ async fn send_url_update(url_id: &str, linkedin_url: Option<String>) -> Result<(
     }
 }
 
-fn find_entity_urn(html: &str) -> Option<String> {
+pub fn find_entity_urn(html: &str) -> Option<String> {
     let document = Html::parse_document(html);
     let link_selector = Selector::parse("a").unwrap();
 

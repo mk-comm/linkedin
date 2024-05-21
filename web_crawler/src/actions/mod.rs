@@ -1,4 +1,7 @@
+pub mod change_stage_project;
 pub mod connection;
+pub mod save_each_to_project;
+pub mod save_to_project;
 pub mod scrap_connections;
 pub mod scrap_conversations;
 pub mod scrap_inmails;
