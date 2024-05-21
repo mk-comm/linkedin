@@ -16,14 +16,15 @@ pub async fn save(entry: EntryAddProfilesToProjects) -> Result<(), CustomError> 
     for candidate in candidates {
         let candidate_linkedin = candidate.url;
         save_each(&browser, &candidate_linkedin, candidate.project.as_str()).await?;
-        /*
-                change_stage(
-                    &browser,
-                    candidate.stage.as_str(),
-                    candidate.project.as_str(),
-                )
-                .await?;
-        */
+        if candidate.stage != "1. uncontacted" {
+            change_stage(
+                &browser,
+                candidate.stage.as_str(),
+                candidate.project.as_str(),
+            )
+            .await?;
+        }
+
         send_urls(&target_url, candidate.id.as_str()).await?;
         wait(7, 10); // random delay
     }

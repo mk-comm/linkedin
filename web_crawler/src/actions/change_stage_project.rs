@@ -14,9 +14,9 @@ pub async fn change_stage(
     let html_project_list = projects_list(&browser).await?;
     let id = find_project_id(&html_project_list, project_name)?;
     find_and_click_element_by_id(&browser, &id).await?;
-    wait(3, 5);
+    wait(7, 9);
     find_and_click_change_stage_dropdown(browser).await?;
-    wait(3, 5);
+    wait(6, 9);
     find_and_click_contacted_stage(browser).await?;
     return Ok(());
     let html_stages_list = find_stages_list(&browser).await?;
@@ -193,8 +193,7 @@ async fn find_and_click_stage_by_selector(
 }
 
 async fn find_and_click_contacted_stage(browser: &BrowserConfig) -> Result<(), CustomError> {
-    const DROPDOWN: &str =
-        "ol[class=requisition-pipeline-activity__stages] > li:nth-of-type(2) > p";
+    const DROPDOWN: &str = "div[class=artdeco-dropdown__content-inner] > ol > li:nth-of-type(2)";
     let dropdown = browser.page.query_selector(DROPDOWN).await?;
     let dropdown = match dropdown {
         Some(dropdown) => dropdown,
@@ -207,7 +206,16 @@ async fn find_and_click_contacted_stage(browser: &BrowserConfig) -> Result<(), C
             ));
         }
     };
+
+    let dropdown1 = browser
+        .page
+        .query_selector("div[class=artdeco-dropdown__content-inner]")
+        .await?;
+    println!("dropdown: {:#?}", dropdown1.unwrap().inner_html().await?);
+
+    println!("dropdown: {:#?}", dropdown.inner_html().await?);
     dropdown.hover_builder();
+
     dropdown.click_builder().click().await?;
     println!("Clicked contacted stage");
 
