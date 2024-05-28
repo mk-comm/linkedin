@@ -1,5 +1,6 @@
 pub mod change_stage_project;
 pub mod connection;
+pub mod evaluate;
 pub mod save_each_to_project;
 pub mod save_to_project;
 pub mod scrap_connections;

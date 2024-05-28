@@ -4,6 +4,7 @@ use crate::structs::entry::EntryScrapConnection;
 use serde_json::json;
 use structs::entry::EntryAddProfilesToProjects;
 use structs::entry::EntryScrapProjects;
+use structs::entry::EvaluateProfile;
 use tracing::{debug, error, info};
 
 use axum::routing::post;
@@ -14,6 +15,7 @@ use std::net::SocketAddr;
 mod actions;
 mod structs;
 use crate::actions::connection::connection;
+use crate::actions::evaluate::eval;
 use crate::actions::save_to_project::save;
 use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
@@ -45,6 +47,19 @@ async fn serialize(json: Json<PhantomGetJson>) -> impl IntoResponse {
     Json(json!({
         "status": "success",
         "message": "Serialization started!"
+    }))
+}
+async fn evaluate(json: Json<EvaluateProfile>) -> impl IntoResponse {
+    let profile_id = json.profile_id.clone();
+    let api = eval(json.0).await;
+    match api {
+        true => info!("Profile is not fit! id: {}", profile_id),
+        false => info!("Profile is fit! id: {}", profile_id),
+    };
+
+    Json(json!({
+        "status": "success",
+        "evaluation": api,
     }))
 }
 async fn scrap_conversations(json: Json<EntryRegular>) -> impl IntoResponse {
@@ -476,6 +491,7 @@ async fn main() {
         .route("/serialize", post(serialize))
         .route("/scrap_linkedin_projects", post(scrap_linkedin_projects))
         .route("/add_to_project", post(add_to_project))
+        .route("/evaluate", post(evaluate))
         .route("/scrap_recruiter_search", post(scrap_recruiter_search_url));
 
     hyper::Server::bind(&address)

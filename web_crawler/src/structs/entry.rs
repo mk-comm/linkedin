@@ -353,3 +353,42 @@ pub struct PhantomJobs {
     pub description: Option<String>,
     pub location: Option<String>,
 }
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EvaluateProfile {
+    pub profile_id: String,
+    pub filters: Vec<Filter>,
+    pub reasons: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct Filter {
+    pub filter: String,
+    pub condition: Condition,
+    pub response_key: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub enum Condition {
+    AND,
+    OR,
+}
+
+impl Filter {
+    pub fn update_filter(&mut self) -> Filter {
+        let response_key = match self.filter.as_str() {
+            "Total years of experience" => "Years of experience",
+            "Role" => "Job title",
+            "Skill" => "Skills",
+            "Recent job" => "ExperienceWithJob",
+            "Recent skills" => "Experience with skill",
+            "Months in current position" => "Months in current position",
+            _ => "Invalid filter type",
+        };
+        Filter {
+            filter: self.filter.clone(),
+            condition: self.condition.clone(),
+            response_key: Some(response_key.to_string()),
+        }
+    }
+}
