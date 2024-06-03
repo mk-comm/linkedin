@@ -79,6 +79,7 @@ struct Profile {
 }
 
 pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> {
+    let user_id = entry.user_id.clone();
     let job = if entry.job.is_empty() {
         None
     } else {
@@ -102,7 +103,7 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
     };
     let urls = entry.urls;
     let batch = entry.batch_id.as_str();
-    send_search_status("Starting the browser", &aisearch, batch).await?;
+    send_search_status("Starting the browser", &aisearch, batch, "none").await?;
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -115,7 +116,7 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
     };
     let browser = start_browser(browser_info).await?;
 
-    send_search_status("Connected to linkedin", &aisearch, batch).await?;
+    send_search_status("Connected to linkedin", &aisearch, batch, "none").await?;
     for url in urls {
         scrap_each_profile(
             &browser,
@@ -132,6 +133,7 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
             format!("Profile {} finished", url.url).as_str(),
             &aisearch,
             batch,
+            user_id.as_str(),
         )
         .await?;
     }
@@ -152,6 +154,7 @@ async fn scrap_each_profile(
         format!("Profile {} started", url).as_str(),
         aisearch,
         batch_id,
+        "none",
     )
     .await?;
     let job = job;
@@ -174,6 +177,7 @@ async fn scrap_each_profile(
                     format!("Profile {} candidate page is not loading", url).as_str(),
                     aisearch,
                     batch_id,
+                    "none",
                 )
                 .await?;
                 return Err(CustomError::ButtonNotFound(
@@ -201,6 +205,7 @@ async fn scrap_each_profile(
             format!("Profile {}, page not found", url).as_str(),
             aisearch,
             batch_id,
+            "none",
         )
         .await?;
         return Err(CustomError::ButtonNotFound(
@@ -224,6 +229,7 @@ async fn scrap_each_profile(
                 format!("Profile {}, body not found", url).as_str(),
                 aisearch,
                 batch_id,
+                "none",
             )
             .await?;
             return Err(CustomError::ButtonNotFound(
@@ -344,6 +350,7 @@ async fn scrap_each_profile(
         format!("Profile {} sending to chromedata", url).as_str(),
         aisearch,
         batch_id,
+        "none",
     )
     .await?;
     send_url_chromedata_viewed(profile).await?;
@@ -352,6 +359,7 @@ async fn scrap_each_profile(
         format!("Profile {} updating url", url).as_str(),
         aisearch,
         batch_id,
+        "none",
     )
     .await?;
     send_url_update(url_id, linkedin_url_update).await?;
@@ -362,14 +370,17 @@ async fn send_search_status(
     status: &str,
     ai_search: &Option<String>,
     batch_id: &str,
+    user_id: &str,
 ) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 
     // Convert the Vec<String> into a JSON string
-    let urls_json = json!({ 
+    let urls_json = json!({
         "status": status,
         "batch_id": batch_id,
-        "ai_search": ai_search});
+        "ai_search": ai_search,
+        "user_id": user_id,
+    });
     let target_url = "https://overview.tribe.xyz/api/1.1/wf/search_profile_logs";
     let response: Result<reqwest::Response, reqwest::Error> =
         client.post(target_url).json(&urls_json).send().await;
