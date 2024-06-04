@@ -1,13 +1,15 @@
 use playwright::Playwright;
 //use std::path::Path;
-
 use super::wait::wait;
 use crate::structs::browser::{BrowserConfig, BrowserInit};
 use crate::structs::error::CustomError;
 use crate::structs::user::User;
+use base64;
+use image::io::Reader;
 use playwright::api::{Cookie, Page, ProxySettings, Viewport};
+use serde_json::json;
 use std::collections::HashMap;
-use tracing::info;
+use tracing::{error, info};
 
 pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
     info!("Starting browser");
@@ -136,8 +138,16 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
                 break;
             } else if build.is_err() && x == 3 {
                 wait(1, 3);
+                let screenshot = page.screenshot_builder().screenshot().await?;
                 page.close(Some(false)).await?;
                 browser.close().await?;
+                send_screenshot(
+                    screenshot,
+                    &user.user_id,
+                    "Feed is not loading",
+                    "Start Browser",
+                )
+                .await?;
                 return Err(CustomError::ButtonNotFound(
                     "Feed is not loading".to_string(),
                 )); // if error means page is not loading
@@ -156,15 +166,25 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         page.reload_builder().reload().await?;
     }
     wait(7, 14);
+    println!("checking if cookie is valid{}", cookie);
 
     let cookie_second_try = session_cookie_is_valid(&page).await?;
     if !cookie_second_try {
         wait(1, 3);
+        let screenshot = page.screenshot_builder().screenshot().await?;
         page.close(Some(false)).await?;
         browser.close().await?;
+        send_screenshot(
+            screenshot,
+            &user.user_id,
+            "Session cookie expired",
+            "Start Browser",
+        )
+        .await?;
         return Err(CustomError::SessionCookieExpired);
     }
 
+    println!("checking if cookie is valid{}", cookie_second_try);
     let browser_config = BrowserConfig {
         proxy: None,
         playwright,
@@ -202,4 +222,36 @@ async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
             }
         }
     }
+}
+
+pub async fn send_screenshot(
+    screenshot: Vec<u8>,
+    api_key: &str,
+    variant: &str,
+    message_id: &str,
+) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+
+    let screenshot = base64::encode(&screenshot);
+    let send_json = json!({
+        "screenshot": screenshot,
+        "api_key":  api_key,
+        "variant": variant,
+        "message_id": message_id,
+    });
+    const TARGET_URL: &str = "
+       https://tribexyz.bubbleapps.io/version-test/api/1.1/wf/sequence_status_screenshot/";
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(TARGET_URL).json(&send_json).send().await;
+    match response {
+        Ok(_) => info!(
+            "Send_search_number/send_screenshot_expired_session_cookie/Ok, {} was done",
+            api_key
+        ),
+        Err(error) => {
+            error!(error = ?error, "Send_search_number/send_screenshot_expired_session_cookie/Error {} returned error {}", api_key, error);
+        }
+    }
+
+    Ok(())
 }

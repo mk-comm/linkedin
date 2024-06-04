@@ -9,6 +9,7 @@ use serde_json::json;
 use tracing::{error, info};
 
 pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), CustomError> {
+    let ai_search = entry.aisearch.clone();
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -21,7 +22,6 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
     };
 
     let browser = start_browser(browser_info).await?;
-
     browser.page.goto_builder(&entry.url).goto().await?;
     wait(7, 10);
 
@@ -94,10 +94,33 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
     wait(5, 12);
 
     browser.page.close(Some(false)).await?;
-    browser.browser.close().await?; // close browser
+    browser.browser.close().await?;
+    let _ = send_search_status("Search scraped successfully", &ai_search).await;
+
     Ok(())
 }
+async fn send_search_status(status: &str, ai_search: &str) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
 
+    // Convert the Vec<String> into a JSON string
+    let urls_json = json!({ 
+        "status": status,
+        "ai_search": ai_search});
+    let target_url = "https://overview.tribe.xyz/api/1.1/wf/search_logs";
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(target_url).json(&urls_json).send().await;
+    match response {
+        Ok(_) => info!(
+            "Send_search_status/scrap_recruiter_search/Ok, {} was done",
+            ai_search
+        ),
+        Err(error) => {
+            error!(error = ?error, "Send_search_status/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
+        }
+    }
+
+    Ok(())
+}
 fn scrap(html: &str, url_list: &mut Vec<String>) {
     let document = Html::parse_document(html);
 

@@ -1,4 +1,4 @@
-use crate::actions::start_browser::start_browser;
+use crate::actions::start_browser::{send_screenshot, start_browser};
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::candidate::Candidate;
@@ -9,12 +9,14 @@ use tracing::{info, instrument};
 pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     info!("Sending connection request to {}", entry.fullname);
     //path to  local browser
+    let message_id = entry.message_id;
 
     let candidate = Candidate::new(
         entry.fullname.clone(),
         entry.linkedin.clone(),
         entry.message.clone(),
     );
+    let user_id = entry.user_id.clone();
 
     let browser_info = BrowserInit {
         ip: entry.ip,
@@ -71,8 +73,16 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
                 break;
             } else if build.is_err() && x == 3 {
                 wait(3, 6);
+                let screenshot = browser.page.screenshot_builder().screenshot().await?;
                 browser.page.close(Some(false)).await?;
                 browser.browser.close().await?; // close browser
+                send_screenshot(
+                    screenshot,
+                    &user_id,
+                    "Candidate page is not loading/Connection",
+                    &message_id,
+                )
+                .await?;
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/Connection".to_string(),
                 )); // if error means page is not loading
@@ -98,8 +108,11 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     match page_not_found {
         Some(_) => {
             wait(1, 5);
+            let screenshot = browser.page.screenshot_builder().screenshot().await?;
+
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
+            send_screenshot(screenshot, &user_id, "Page does not exist", &message_id).await?;
             return Err(CustomError::ButtonNotFound(
                 "Page does not exist".to_string(),
             ));
@@ -119,8 +132,16 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
                         Some(block) => block,
                         None => {
                             wait(1, 5);
+                            let screenshot = browser.page.screenshot_builder().screenshot().await?;
                             browser.page.close(Some(false)).await?;
                             browser.browser.close().await?;
+                            send_screenshot(
+                                screenshot,
+                                &user_id,
+                                "block button not found",
+                                &message_id,
+                            )
+                            .await?;
                             return Err(CustomError::ButtonNotFound(
                                 "block button not found".to_string(),
                             ));
@@ -156,8 +177,12 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         Some(more) => more,
         None => {
             wait(1, 5);
+            let screenshot = browser.page.screenshot_builder().screenshot().await?;
+
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
+            send_screenshot(screenshot, &user_id, "More button not found", &message_id).await?;
+
             return Err(CustomError::ButtonNotFound(
                 "More button not found".to_string(),
             ));
@@ -176,8 +201,17 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
         None => {
             wait(1, 5);
+            let screenshot = browser.page.screenshot_builder().screenshot().await?;
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Connect button not found/Requires investigation",
+                &message_id,
+            )
+            .await?;
+
             return Err(CustomError::ButtonNotFound(
                 "Connect button not found/Requires investigation".to_string(),
             ));
@@ -202,8 +236,17 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
                 Some(connect) => connect.click_builder().click().await?,
                 None => {
                     wait(1, 5);
+                    let screenshot = browser.page.screenshot_builder().screenshot().await?;
                     browser.page.close(Some(false)).await?;
                     browser.browser.close().await?;
+                    send_screenshot(
+                        screenshot,
+                        &user_id,
+                        "Connect button in popup_how is not found",
+                        &message_id,
+                    )
+                    .await?;
+
                     return Err(CustomError::ButtonNotFound(
                         "Connect button in popup_how is not found".to_string(),
                     ));
@@ -218,14 +261,22 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     match email_needed {
         Some(_) => {
             wait(1, 5);
+            let screenshot = browser.page.screenshot_builder().screenshot().await?;
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
+            send_screenshot(screenshot, &user_id, "Email needed", &message_id).await?;
             return Err(CustomError::EmailNeeded);
         }
         None => (),
     };
 
-    message(&browser.page, candidate.message.as_str()).await?;
+    message(
+        &browser.page,
+        candidate.message.as_str(),
+        &user_id,
+        &message_id,
+    )
+    .await?;
     wait(4, 8);
     let pending_button = block.query_selector("li-icon[type=clock]").await?;
 
@@ -250,8 +301,10 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     match connection_limit {
         Some(_) => {
             wait(1, 5);
+            let screenshot = browser.page.screenshot_builder().screenshot().await?;
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?;
+            send_screenshot(screenshot, &user_id, "Connection Limit", &message_id).await?;
             return Err(CustomError::ConnectionLimit);
         }
         None => (),
@@ -263,7 +316,12 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     Ok(())
 }
 #[instrument]
-async fn message(page: &Page, message: &str) -> Result<(), CustomError> {
+async fn message(
+    page: &Page,
+    message: &str,
+    user_id: &str,
+    message_id: &str,
+) -> Result<(), CustomError> {
     //press button add note
     wait(5, 7);
     let add_note = page
@@ -272,9 +330,18 @@ async fn message(page: &Page, message: &str) -> Result<(), CustomError> {
     match add_note {
         Some(add_note) => add_note.click_builder().click().await?, // click on button "Other"
         None => {
+            let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Add note button not found",
+                &message_id,
+            )
+            .await?;
+
             return Err(CustomError::ButtonNotFound(
-                "Add not button not found".to_string(),
-            ))
+                "Add note button not found".to_string(),
+            ));
         }
     };
     info!("Filling in the message field");
@@ -290,9 +357,11 @@ async fn message(page: &Page, message: &str) -> Result<(), CustomError> {
             text_input.fill_builder(message).fill().await?; // fill input for note;
         }
         None => {
+            let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(screenshot, &user_id, "Text input not found", &message_id).await?;
             return Err(CustomError::ButtonNotFound(
                 "Text input not found".to_string(),
-            ))
+            ));
         }
     };
     wait(1, 3); // random delay
@@ -308,9 +377,11 @@ async fn message(page: &Page, message: &str) -> Result<(), CustomError> {
             return Ok(()); // return Ok
         }
         None => {
+            let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(screenshot, &user_id, "Send button not found", &message_id).await?;
             return Err(CustomError::ButtonNotFound(
                 "Send button not found".to_string(),
-            ))
+            ));
         }
     };
 }
