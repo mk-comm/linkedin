@@ -171,11 +171,23 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
             ));
         }
     };
+    wait(2, 3);
+    let name = get_conversation_owner(html.as_str());
+    let candidate_reply = is_last_message_from_owner(
+        conversation_select.inner_html().await?.as_str(),
+        name.unwrap().as_str(),
+    );
     wait(2, 4);
     let regular_input = conversation_select
     .query_selector("div.msg-form__contenteditable.t-14.t-black--light.t-normal.flex-grow-1.full-height.notranslate")
     .await?;
 
+    wait(1, 5); // random delay
+    if candidate_reply {
+        browser.page.close(Some(false)).await?;
+        browser.browser.close().await?;
+        return Err(CustomError::ButtonNotFound("Candidate replied".to_string()));
+    };
     match regular_input {
         Some(input) => {
             input.hover_builder(); // hover on input for note
@@ -219,7 +231,51 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
     browser.browser.close().await?;
     Ok(())
 }
+fn get_conversation_owner(html: &str) -> Option<String> {
+    // Parse the HTML document
+    let document = Html::parse_document(html);
 
+    // Create a selector to find the owner of the conversation
+    let owner_selector = Selector::parse("h2.msg-overlay-bubble-header__title span").unwrap();
+
+    // Find the owner element
+    if let Some(owner_element) = document.select(&owner_selector).next() {
+        // Get the text content of the owner element
+        let owner = owner_element.text().collect::<Vec<_>>().join(" ");
+        println!("owner {}", owner);
+        let owner = owner.to_string().trim().to_string();
+        println!("owner {}", owner);
+        return Some(owner);
+    }
+
+    None
+}
+
+fn is_last_message_from_owner(html: &str, owner: &str) -> bool {
+    // Parse the HTML document
+    let document = Html::parse_document(html);
+
+    // Create a selector to find all message items
+    let message_selector = Selector::parse("li.msg-s-message-list__event").unwrap();
+    let name_selector = Selector::parse("span.msg-s-message-group__name").unwrap();
+
+    // Get all message items
+    let messages: Vec<_> = document.select(&message_selector).collect();
+
+    // Check if there are any messages
+    if let Some(last_message) = messages.last() {
+        // Find the name span within the last message
+        if let Some(name_element) = last_message.select(&name_selector).next() {
+            // Get the text content of the name span
+            let name = name_element.text().collect::<Vec<_>>().join(" ");
+            // Check if the name is the owner
+            return name.contains(owner);
+        }
+    }
+
+    // If no messages or the last message is not from the owner, return false
+    false
+}
 fn find_conversation(html: &str, entity_urn: &str) -> String {
     // Parse the HTML content and find the required div
     let document = Html::parse_document(html);
