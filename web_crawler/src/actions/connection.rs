@@ -172,21 +172,27 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
     let more_option = block
         .query_selector("button[aria-label='More actions']")
         .await?;
-
+    let more_de = block
+        .query_selector("button[aria-label='Weitere Aktionen']")
+        .await?;
+    //wait(100000, 100000);
     let more = match more_option {
         Some(more) => more,
-        None => {
-            wait(1, 5);
-            let screenshot = browser.page.screenshot_builder().screenshot().await?;
+        None => match more_de {
+            Some(more) => more,
+            None => {
+                wait(1, 5);
+                let screenshot = browser.page.screenshot_builder().screenshot().await?;
 
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            send_screenshot(screenshot, &user_id, "More button not found", &message_id).await?;
+                browser.page.close(Some(false)).await?;
+                browser.browser.close().await?;
+                send_screenshot(screenshot, &user_id, "More button not found", &message_id).await?;
 
-            return Err(CustomError::ButtonNotFound(
-                "More button not found".to_string(),
-            ));
-        }
+                return Err(CustomError::ButtonNotFound(
+                    "More button not found".to_string(),
+                ));
+            }
+        },
     };
     more.hover_builder();
     wait(1, 4);
@@ -324,26 +330,29 @@ async fn message(
 ) -> Result<(), CustomError> {
     //press button add note
     wait(5, 7);
+
     let add_note = page
         .query_selector("button[aria-label='Add a note']")
         .await?;
-    match add_note {
-        Some(add_note) => add_note.click_builder().click().await?, // click on button "Other"
-        None => {
-            let screenshot = page.screenshot_builder().screenshot().await?;
-            send_screenshot(
-                screenshot,
-                &user_id,
-                "Add note button not found",
-                &message_id,
-            )
-            .await?;
+    let add_note_de = page
+        .query_selector("button[aria-label='Nachricht hinzufügen']")
+        .await?;
+    let note = match add_note {
+        Some(add_note) => add_note, // click on button "Other"
+        None => match add_note_de {
+            Some(note) => note,
+            None => {
+                let screenshot = page.screenshot_builder().screenshot().await?;
+                send_screenshot(screenshot, user_id, "Add note button not found", message_id)
+                    .await?;
 
-            return Err(CustomError::ButtonNotFound(
-                "Add note button not found".to_string(),
-            ));
-        }
+                return Err(CustomError::ButtonNotFound(
+                    "Add note button not found".to_string(),
+                ));
+            }
+        },
     };
+    note.click_builder().click().await?;
     info!("Filling in the message field");
     wait(5, 7); // random delay
                 //find input for note
@@ -358,7 +367,7 @@ async fn message(
         }
         None => {
             let screenshot = page.screenshot_builder().screenshot().await?;
-            send_screenshot(screenshot, &user_id, "Text input not found", &message_id).await?;
+            send_screenshot(screenshot, user_id, "Text input not found", message_id).await?;
             return Err(CustomError::ButtonNotFound(
                 "Text input not found".to_string(),
             ));
@@ -368,20 +377,27 @@ async fn message(
                 //press button send
                 //println!("reached sending");
                 //wait(100000, 100000);
+                //wait(199999, 199999);
+
     let send = page
         .query_selector("button[aria-label='Send invitation']")
         .await?;
-    match send {
-        Some(send) => {
-            send.click_builder().click().await?; // click on button "Send"
-            return Ok(()); // return Ok
-        }
-        None => {
-            let screenshot = page.screenshot_builder().screenshot().await?;
-            send_screenshot(screenshot, &user_id, "Send button not found", &message_id).await?;
-            return Err(CustomError::ButtonNotFound(
-                "Send button not found".to_string(),
-            ));
-        }
+    let send_de = page
+        .query_selector("button[aria-label='Einladung senden']")
+        .await?;
+    let button = match send {
+        Some(send) => send,
+        None => match send_de {
+            Some(send) => send,
+            None => {
+                let screenshot = page.screenshot_builder().screenshot().await?;
+                send_screenshot(screenshot, user_id, "Send button not found", message_id).await?;
+                return Err(CustomError::ButtonNotFound(
+                    "Send button not found".to_string(),
+                ));
+            }
+        },
     };
+    button.click_builder().click().await?; // click on button "Send"
+    return Ok(()); // return Ok
 }

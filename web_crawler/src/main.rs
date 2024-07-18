@@ -1,10 +1,11 @@
 use crate::structs::entry::EntryRecruiter;
 use crate::structs::entry::EntryRegular;
 use crate::structs::entry::EntryScrapConnection;
+use actions::evaluate;
+use actions::evaluate::EvaluateProfile;
 use serde_json::json;
 use structs::entry::EntryAddProfilesToProjects;
 use structs::entry::EntryScrapProjects;
-use structs::entry::EvaluateProfile;
 use tracing::{debug, error, info};
 
 use axum::routing::post;
@@ -16,6 +17,8 @@ mod actions;
 mod structs;
 use crate::actions::connection::connection;
 use crate::actions::evaluate::eval;
+use crate::actions::keyword_filter::keyword;
+use crate::actions::keyword_filter::EntryKeyword;
 use crate::actions::save_to_project::save;
 use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
@@ -53,8 +56,20 @@ async fn evaluate(json: Json<EvaluateProfile>) -> impl IntoResponse {
     let profile_id = json.profile_id.clone();
     let api = eval(json.0).await;
     match api {
-        true => info!("Profile is not fit! id: {}", profile_id),
-        false => info!("Profile is fit! id: {}", profile_id),
+        true => info!("Profile is fit! id: {}", profile_id),
+        false => info!("Profile is not fit! id: {}", profile_id),
+    };
+
+    Json(json!({
+        "status": "success",
+        "evaluation": api,
+    }))
+}
+async fn keyword_filter(json: Json<EntryKeyword>) -> impl IntoResponse {
+    let api = keyword(json.0).await;
+    match api {
+        true => info!("Keyword presented"),
+        false => info!("Keyword not presented"),
     };
 
     Json(json!({
@@ -492,6 +507,7 @@ async fn main() {
         .route("/scrap_linkedin_projects", post(scrap_linkedin_projects))
         .route("/add_to_project", post(add_to_project))
         .route("/evaluate", post(evaluate))
+        .route("/keyword_filter", post(keyword_filter))
         .route("/scrap_recruiter_search", post(scrap_recruiter_search_url));
 
     hyper::Server::bind(&address)

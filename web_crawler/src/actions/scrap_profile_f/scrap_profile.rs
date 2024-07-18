@@ -136,6 +136,7 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
             user_id.as_str(),
         )
         .await?;
+        wait(3, 7);
     }
 
     Ok(())
