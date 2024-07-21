@@ -35,6 +35,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     };
 
     let browser = start_browser(browser_info).await?;
+
     let search_input = browser
         .page
         .query_selector("input[class=search-global-typeahead__input]")
@@ -120,7 +121,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     let entity_urn = find_entity_urn(&browser.page).await?;
 
     // ("entity_urn: {:?}", entity_urn);
-    //// ("entity_urn: {:?}", entity_urn);
     const VIEW_IN_RECRUITER: &str = "button[class='artdeco-button artdeco-button--2 artdeco-button--secondary ember-view pvs-profile-actions__action']";
     if entity_urn.is_some() {
         let url = format!(
@@ -220,7 +220,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             button.hover_builder(); // hover on search input
             wait(1, 4); // random delay
             button.click_builder().click().await?; // click on search input
-            wait(2, 5); // random delay
+            wait(5, 7); // random delay
         }
         None => {
             wait(1, 5); // random delay
@@ -237,7 +237,18 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             "Inmail file not send".to_string(),
         ));
     }
+    let remove_ai_text = browser
+        .page
+        .query_selector("button[class='compose-textarea-ghost-cta__button t-14 t-black--light']")
+        .await?;
 
+    if remove_ai_text.is_some() {
+        let button = remove_ai_text.unwrap();
+        button.hover_builder();
+        wait(1, 2);
+        button.click_builder().click().await?;
+        wait(2, 3);
+    }
     let subject_input = browser
         .page
         .query_selector("input[class='compose-subject__input']")
@@ -287,7 +298,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             ));
         }
     };
-
     //checking between 2 possible button variations
     let first_button = browser
         .page

@@ -204,7 +204,6 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
             return Err(CustomError::ButtonNotFound("Input not found".to_string()));
         } // means you can't send message to this profile
     }
-
     let send = conversation_select
         .query_selector("button.msg-form__send-button.artdeco-button.artdeco-button--1")
         .await?;
