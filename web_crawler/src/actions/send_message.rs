@@ -27,7 +27,6 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
     };
 
     let browser = start_browser(browser_info).await?;
-
     let search_input = browser
         .page
         .query_selector("input[class=search-global-typeahead__input]")
@@ -207,6 +206,8 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
     let send = conversation_select
         .query_selector("button.msg-form__send-button.artdeco-button.artdeco-button--1")
         .await?;
+    let send_new = conversation_select.query_selector("button[class='msg-form__send-btn artdeco-button artdeco-button--circle artdeco-button--1 artdeco-button--primary ember-view']")
+        .await?;
 
     match send {
         Some(send) => {
@@ -216,12 +217,22 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
             wait(2, 5); // random delay
         }
         None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound(
-                "Send button not found".to_string(),
-            ));
+            match send_new {
+                Some(send) => {
+                    send.hover_builder(); // hover on search input
+                    wait(1, 4); // random delay
+                    send.click_builder().click().await?; // click on search input
+                    wait(2, 5); // random delay
+                }
+                None => {
+                    wait(1, 5); // random delay
+                    browser.page.close(Some(false)).await?;
+                    browser.browser.close().await?;
+                    return Err(CustomError::ButtonNotFound(
+                        "Send button not found".to_string(),
+                    ));
+                }
+            }
         } // means you can't send message to this profile
     }
 
