@@ -8,7 +8,7 @@ pub mod scrap_connections;
 pub mod scrap_conversations;
 pub mod scrap_inmails;
 pub mod scrap_messages;
-pub mod scrap_profile_f;
+pub mod scrap_profile;
 pub mod scrap_projects;
 pub mod scrap_recruiter_search;
 pub mod scrap_regular_search;

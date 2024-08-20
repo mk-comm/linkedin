@@ -1,19 +1,20 @@
-use crate::actions::scrap_profile_f::misc::serialize_option_string;
-use crate::actions::scrap_profile_f::scrap_education::parse_education;
-use crate::actions::scrap_profile_f::scrap_education::Education;
-use crate::actions::scrap_profile_f::scrap_experience_new_tab::{parse_experience, Experience};
-use crate::actions::start_browser::start_browser;
+use crate::actions::scrap_profile::misc::serialize_option_string;
+use crate::actions::scrap_profile::scrap_education::parse_education;
+use crate::actions::scrap_profile::scrap_education::Education;
+use crate::actions::scrap_profile::scrap_experience_new_tab::{parse_experience, Experience};
+use crate::structs::entry::Url;
+use serde::{Deserialize, Serialize};
+
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserConfig;
-use crate::structs::browser::BrowserInit;
-use crate::structs::entry::EntryScrapProfile;
 use crate::structs::error::CustomError;
 #[allow(deprecated)]
 use base64::encode;
 use playwright::api::Page;
 use scraper::{Html, Selector};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 use tracing::{error, info};
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
@@ -25,12 +26,6 @@ struct ResultJson {
 #[derive(Debug, Deserialize, Serialize)]
 struct BodyJsonB64 {
     body: ResultJson,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug, Deserialize, Serialize)]
-struct BodyJson {
-    body: Profile,
 }
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
@@ -77,116 +72,62 @@ struct Profile {
     timestamp: Option<String>,
     search_url: Option<String>,
 }
-
-pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> {
-    let user_id = entry.user_id.clone();
-    let job = if entry.job.is_empty() {
-        None
-    } else {
-        Some(entry.job.clone())
-    };
-    let aisearch = if entry.search_url.is_empty() {
-        None
-    } else {
-        Some(entry.aisearch.clone())
-    };
-
-    let sourcer = if entry.sourcer.is_empty() {
-        None
-    } else {
-        Some(entry.sourcer.clone())
-    };
-    let search_url = if entry.search_url.is_empty() {
-        None
-    } else {
-        Some(entry.search_url.clone())
-    };
-    let urls = entry.urls;
-    let batch = entry.batch_id.as_str();
-    send_search_status("Starting the browser", &aisearch, batch, "none").await?;
-    let browser_info = BrowserInit {
-        ip: entry.ip,
-        username: entry.username,
-        password: entry.password,
-        user_agent: entry.user_agent,
-        session_cookie: entry.session_cookie,
-        user_id: entry.user_id,
-        recruiter_session_cookie: None,
-        headless: true,
-    };
-    let browser = start_browser(browser_info).await?;
-
-    send_search_status("Connected to linkedin", &aisearch, batch, "none").await?;
-    for url in urls {
-        scrap_each_profile(
-            &browser,
-            &url.url,
-            &job,
-            &sourcer,
-            &aisearch,
-            &url.url_id,
-            batch,
-            &search_url,
-        )
-        .await?;
-        send_search_status(
-            format!("Profile {} finished", url.url).as_str(),
-            &aisearch,
-            batch,
-            user_id.as_str(),
-        )
-        .await?;
-        wait(3, 7);
-    }
-
-    Ok(())
-}
-async fn scrap_each_profile(
-    browser: &BrowserConfig,
-    url: &str,
-    job: &Option<String>,
-    sourcer: &Option<String>,
-    aisearch: &Option<String>,
-    url_id: &str,
-    batch_id: &str,
-    search_url: &Option<String>,
+pub async fn scrap_each_profile(
+    browser: Arc<RwLock<BrowserConfig>>,
+    url: Arc<RwLock<Url>>,
+    job: Arc<RwLock<Option<String>>>,
+    sourcer: Arc<RwLock<Option<String>>>,
+    aisearch: Arc<RwLock<Option<String>>>,
+    search_url: Arc<RwLock<Option<String>>>,
 ) -> Result<(), CustomError> {
-    send_search_status(
-        format!("Profile {} started", url).as_str(),
-        aisearch,
-        batch_id,
-        "none",
-    )
-    .await?;
+    let search_url = search_url.read().await;
+    let aisearch = aisearch.read().await;
+    /*
+        send_search_status(
+            format!("Profile {} started", url).as_str(),
+            &aisearch,
+            batch_id.as_str(),
+            "none",
+        )
+        .await?;
+    */
+    let url_id = &url.read().await.url_id;
+    let url = &url.read().await.url;
+    let browser = &browser.clone();
+    let browser = &browser.read().await.context;
+    let page = browser.new_page().await?;
+
+    //let ai_search = aisearch.to_owned().lock().await.clone();
     let job = job;
     let search_url = search_url;
     let sourcer = sourcer;
     // go to candidate page
-    let go_to = browser.page.goto_builder(url).goto().await;
+    let go_to = page.goto_builder(url.as_str()).goto().await;
     let mut x = 0;
     if go_to.is_err() {
         while x <= 3 {
             wait(3, 6);
-            let build = browser.page.goto_builder(url).goto().await;
+            let build = page.goto_builder(url.as_str()).goto().await;
             if build.is_ok() {
                 break;
             } else if build.is_err() && x == 3 {
                 wait(3, 6);
-                browser.page.close(Some(false)).await?;
-                browser.browser.close().await?; // close browser
-                send_search_status(
-                    format!("Profile {} candidate page is not loading", url).as_str(),
-                    aisearch,
-                    batch_id,
-                    "none",
-                )
-                .await?;
+                page.close(Some(false)).await?;
+                browser.close().await?; // close browser
+                                        /*
+                                        send_search_status(
+                                            format!("Profile {} candidate page is not loading", url).as_str(),
+                                            Some(aisearch),
+                                            batch_id,
+                                            "none",
+                                        )
+                                        .await?;
+                                        */
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/Connection".to_string(),
                 )); // if error means page is not loading
             }
             x += 1;
-            //println!("retrying to load page")
         }
         wait(1, 3);
     }
@@ -194,14 +135,14 @@ async fn scrap_each_profile(
     wait(7, 21); // random delay
                  //check if connect button is present
 
-    let page_not_found = browser
-        .page
+    let page_not_found = page
         .query_selector("header[class='not-found__header not-found__container']")
         .await?;
     if page_not_found.is_some() {
         wait(1, 5);
-        browser.page.close(Some(false)).await?;
-        browser.browser.close().await?;
+        page.close(Some(false)).await?;
+        browser.close().await?;
+        /*
         send_search_status(
             format!("Profile {}, page not found", url).as_str(),
             aisearch,
@@ -209,13 +150,13 @@ async fn scrap_each_profile(
             "none",
         )
         .await?;
+        */
         return Err(CustomError::ButtonNotFound(
             "Page does not exist".to_string(),
         ));
     }
 
-    let html_body = browser
-        .page
+    let html_body = page
         .query_selector(
             "body.render-mode-BIGPIPE.nav-v2.ember-application.icons-loaded.boot-complete",
         )
@@ -224,8 +165,9 @@ async fn scrap_each_profile(
         Some(body) => body.inner_html().await?,
         None => {
             wait(1, 5);
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+            page.close(Some(false)).await?;
+            browser.close().await?;
+            /*
             send_search_status(
                 format!("Profile {}, body not found", url).as_str(),
                 aisearch,
@@ -233,13 +175,14 @@ async fn scrap_each_profile(
                 "none",
             )
             .await?;
+            */
             return Err(CustomError::ButtonNotFound(
                 "Body er is not found".to_string(),
             ));
         }
     };
     //wait(10000, 10000);
-    let linkedin_url = get_linkedin_url(browser.page.clone());
+    let linkedin_url = get_linkedin_url(page.clone());
     let redirect_url = linkedin_url.clone().unwrap();
     let linkedin_url_update = linkedin_url.clone();
     let full_name = get_name_tuple(&html);
@@ -260,30 +203,58 @@ async fn scrap_each_profile(
     let location = get_location(&html);
     let entity_urn = find_entity_urn(&html);
 
-    let experience_url = format!("{}/details/experience", &redirect_url);
-    let _go_to = browser
-        .page
-        .clone()
-        .goto_builder(experience_url.as_str())
-        .goto()
-        .await?;
-
+    let experience_url = format!("{}details/experience", &redirect_url);
+    let build = page
+        .goto_builder(experience_url.as_str());
+    let mut go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> =
+        build.goto().await;
+    let mut x = 0;
+    if go_to.is_err() {
+        while x <= 3 {
+            wait(3, 6);
+            let build: Result<
+                Option<playwright::api::Response>,
+                std::sync::Arc<playwright::Error>,
+            > = page
+                .goto_builder(experience_url.as_str())
+                .goto()
+                .await;
+            if build.is_ok() {
+                go_to = build;
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(1, 3);
+                page.close(Some(false)).await?;
+                browser.close().await?;
+                
+                
+                return Err(CustomError::ButtonNotFound(
+                    "Experience is not loading".to_string(),
+                )); // if error means page is not loading
+            }
+            x += 1;
+            //println!("retrying to load page")
+        }
+        wait(1, 3);
+    } else {
+        wait(1, 3);
+    }
     wait(5, 13);
-    let html_body = browser
-        .page
+    let html_body = page
         .query_selector("div[class='authentication-outlet']")
         .await?;
     let html = match html_body {
         Some(body) => body.inner_html().await?,
         None => {
             wait(1, 5);
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+            // browser.close(Some(false)).await?;
+            //browser.browser.close().await?;
             return Err(CustomError::ButtonNotFound(
                 "1Body is not found".to_string(),
             ));
         }
     };
+
     let experience = parse_experience(&html);
     println!("{:?}", &experience);
     let mut current_company_name: Option<String> = None;
@@ -295,25 +266,53 @@ async fn scrap_each_profile(
         current_company_id = first_experience.companyId.clone();
     }
 
-    let education_url = format!("{}/details/education", &redirect_url);
-    let _go_to = browser
-        .page
-        .clone()
-        .goto_builder(education_url.as_str())
-        .goto()
-        .await?;
+    let education_url = format!("{}details/education", &redirect_url);
+    let build = page
+        .goto_builder(education_url.as_str());
+    let mut go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> =
+        build.goto().await;
+    let mut x = 0;
+    if go_to.is_err() {
+        while x <= 3 {
+            wait(3, 6);
+            let build: Result<
+                Option<playwright::api::Response>,
+                std::sync::Arc<playwright::Error>,
+            > = page
+                .goto_builder(education_url.as_str())
+                .goto()
+                .await;
+            if build.is_ok() {
+                go_to = build;
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(1, 3);
+                page.close(Some(false)).await?;
+                browser.close().await?;
+                
+                
+                return Err(CustomError::ButtonNotFound(
+                    "Education is not loading".to_string(),
+                )); // if error means page is not loading
+            }
+            x += 1;
+            //println!("retrying to load page")
+        }
+        wait(1, 3);
+    } else {
+        wait(1, 3);
+    }
 
     wait(5, 13);
-    let html_body = browser
-        .page
+    let html_body = page
         .query_selector("main[class='scaffold-layout__main']")
         .await?;
     let html = match html_body {
         Some(body) => body.inner_html().await?,
         None => {
             wait(1, 5);
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+            // browser.close(Some(false)).await?;
+            // browser.browser.close().await?;
             return Err(CustomError::ButtonNotFound(
                 "2Body is not found".to_string(),
             ));
@@ -321,14 +320,20 @@ async fn scrap_each_profile(
     };
     let education = parse_education(&html);
 
+    let job = job.read().await.clone();
+    let sourcer = sourcer.read().await.clone();
+    //let current_company_name = Some(String::from("a"));
+    //let current_company_id = Some(String::from("a"));
+    //let job = Some("to".to_string());
+    //let sourcer= Some("to".to_string());
     let profile = Profile {
         AI: true,
         linkedin: linkedin_url,
         first: first_name,
         last: last_name,
         email: None,
-        job: job.clone(),
-        sourcer: sourcer.clone(),
+        job,
+        sourcer,
         title: current_tittle,
         linkedin_unique: linkedin_nick,
         linkedin_unique_number: linkedin_main_id,
@@ -346,28 +351,30 @@ async fn scrap_each_profile(
         timestamp: None,
         search_url: search_url.clone(),
     };
-
-    send_search_status(
-        format!("Profile {} sending to chromedata", url).as_str(),
-        aisearch,
-        batch_id,
-        "none",
-    )
-    .await?;
     send_url_chromedata_viewed(profile).await?;
+    /*
+        send_search_status(
+            format!("Profile {} sending to chromedata", url).as_str(),
+            aisearch,
+            batch_id,
+            "none",
+        )
+        .await?;
 
-    send_search_status(
-        format!("Profile {} updating url", url).as_str(),
-        aisearch,
-        batch_id,
-        "none",
-    )
-    .await?;
-    send_url_update(url_id, linkedin_url_update).await?;
+        send_search_status(
+            format!("Profile {} updating url", url).as_str(),
+            aisearch,
+            batch_id,
+            "none",
+        )
+        .await?;
+    */
+    send_url_update(&url_id, linkedin_url_update).await?;
+    page.close(Some(false)).await?;
     Ok(())
 }
 
-async fn send_search_status(
+pub async fn send_search_status(
     status: &str,
     ai_search: &Option<String>,
     batch_id: &str,
@@ -378,7 +385,7 @@ async fn send_search_status(
     // Convert the Vec<String> into a JSON string
     let urls_json = json!({
         "status": status,
-        "batch_id": batch_id,
+        "batch_id": *batch_id,
         "ai_search": ai_search,
         "user_id": user_id,
     });
@@ -403,6 +410,7 @@ async fn send_url_chromedata_viewed(profile: Profile) -> Result<(), CustomError>
     let serialized = serde_json::to_vec(&profile).unwrap();
     let encoded = encode(&serialized);
     const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
+    //const WEBHOOK_URL: &str = "https://webhook.site/76c7ef3e-d792-4b01-80e2-3a9ac8c2bca0";
     let client = reqwest::Client::new();
 
     let target_json = json!({ 

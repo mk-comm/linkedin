@@ -1,4 +1,4 @@
-use crate::actions::scrap_profile_f::scrap_profile::find_entity_urn;
+use crate::actions::scrap_profile::scrap_each_profile::find_entity_urn;
 use crate::actions::wait::wait;
 use crate::structs::browser::{BrowserConfig, BrowserInit};
 use crate::structs::error::CustomError;

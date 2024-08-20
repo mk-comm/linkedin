@@ -23,7 +23,7 @@ use crate::actions::save_to_project::save;
 use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
 use crate::actions::scrap_inmails::scrap_inmails;
-use crate::actions::scrap_profile_f::scrap_profile::scrap_profile;
+use crate::actions::scrap_profile::scrap_profiles::scrap_profile;
 use crate::actions::scrap_projects::scrap_projects;
 use crate::actions::scrap_recruiter_search::scrap_recruiter_search;
 use crate::actions::scrap_regular_search::scrap_regular_search;

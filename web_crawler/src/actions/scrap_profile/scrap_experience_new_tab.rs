@@ -1,7 +1,7 @@
 use super::misc::split_around_dot;
-use crate::actions::scrap_profile_f::misc::get_date;
-use crate::actions::scrap_profile_f::misc::serialize_option_i64;
-use crate::actions::scrap_profile_f::misc::serialize_option_string;
+use crate::actions::scrap_profile::misc::get_date;
+use crate::actions::scrap_profile::misc::serialize_option_i64;
+use crate::actions::scrap_profile::misc::serialize_option_string;
 use scraper::ElementRef;
 //use crate::actions::scrap_profile_f::misc::split_around_dot;
 use scraper::{Html, Selector};

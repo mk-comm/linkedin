@@ -1,6 +1,6 @@
+use std::error::Error as StdError;
 use std::fmt;
 use std::sync::Arc;
-
 #[derive(Debug)]
 pub enum CustomError {
     PlaywrightError(Arc<playwright::Error>),
@@ -15,8 +15,10 @@ pub enum CustomError {
     AnyhowError(anyhow::Error),
     ChronoError(chrono::ParseError),
     SerdeJsonError(serde_json::Error),
+    BoxedError(Box<dyn StdError + Send + Sync>),
 }
-
+unsafe impl Send for CustomError {}
+unsafe impl Sync for CustomError {}
 impl fmt::Display for CustomError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -37,10 +39,27 @@ impl fmt::Display for CustomError {
             CustomError::SerdeJsonError(e) => write!(f, "{}", e),
             CustomError::ChronoError(e) => write!(f, "{}", e),
             //CustomError::IoError(e) => write!(f, "{}", e),
+            CustomError::BoxedError(err) => write!(f, "Boxed error: {}", err),
         }
     }
 }
-
+impl StdError for CustomError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            CustomError::PlaywrightError(err) => Some(err.as_ref()),
+            CustomError::ReqwestError(err) => Some(err),
+            CustomError::AnyhowError(err) => Some(err.root_cause()),
+            CustomError::ChronoError(err) => Some(err),
+            CustomError::SerdeJsonError(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+impl From<Box<dyn StdError + Send + Sync>> for CustomError {
+    fn from(error: Box<dyn StdError + Send + Sync>) -> Self {
+        CustomError::BoxedError(error)
+    }
+}
 impl From<Arc<playwright::Error>> for CustomError {
     fn from(err: Arc<playwright::Error>) -> CustomError {
         CustomError::PlaywrightError(err)

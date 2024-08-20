@@ -1,7 +1,6 @@
 use playwright::api::{
     Browser, BrowserContext, BrowserType, Page, Playwright, ProxySettings, Response,
 };
-
 pub struct BrowserConfig {
     pub proxy: Option<ProxySettings>,
     pub playwright: Playwright,

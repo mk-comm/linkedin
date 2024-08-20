@@ -151,7 +151,7 @@ pub struct EntryScrapProfile {
     pub search_url: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Url {
     pub url: String,
     pub batch_id: String,
