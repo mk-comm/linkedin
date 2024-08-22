@@ -12,7 +12,7 @@ pub struct BrowserConfig {
     pub headless: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BrowserInit {
     pub ip: String,
     pub username: String,

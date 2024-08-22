@@ -70,7 +70,9 @@ struct Profile {
     extension_version: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
     timestamp: Option<String>,
+    #[serde(serialize_with = "serialize_option_string")]
     search_url: Option<String>,
+    profile_url_id: String,
 }
 pub async fn scrap_each_profile(
     browser: Arc<RwLock<BrowserConfig>>,
@@ -112,8 +114,8 @@ pub async fn scrap_each_profile(
                 break;
             } else if build.is_err() && x == 3 {
                 wait(3, 6);
-                page.close(Some(false)).await?;
-                browser.close().await?; // close browser
+                //page.close(Some(false)).await?;
+                //browser.close().await?; // close browser
                                         /*
                                         send_search_status(
                                             format!("Profile {} candidate page is not loading", url).as_str(),
@@ -124,7 +126,7 @@ pub async fn scrap_each_profile(
                                         .await?;
                                         */
                 return Err(CustomError::ButtonNotFound(
-                    "Candidate page is not loading/Connection".to_string(),
+                    "Candidate page is not loading/scrap_profile".to_string(),
                 )); // if error means page is not loading
             }
             x += 1;
@@ -140,8 +142,8 @@ pub async fn scrap_each_profile(
         .await?;
     if page_not_found.is_some() {
         wait(1, 5);
-        page.close(Some(false)).await?;
-        browser.close().await?;
+        //page.close(Some(false)).await?;
+        //browser.close().await?;
         /*
         send_search_status(
             format!("Profile {}, page not found", url).as_str(),
@@ -165,8 +167,8 @@ pub async fn scrap_each_profile(
         Some(body) => body.inner_html().await?,
         None => {
             wait(1, 5);
-            page.close(Some(false)).await?;
-            browser.close().await?;
+            //page.close(Some(false)).await?;
+            //browser.close().await?;
             /*
             send_search_status(
                 format!("Profile {}, body not found", url).as_str(),
@@ -224,8 +226,8 @@ pub async fn scrap_each_profile(
                 break;
             } else if build.is_err() && x == 3 {
                 wait(1, 3);
-                page.close(Some(false)).await?;
-                browser.close().await?;
+                //page.close(Some(false)).await?;
+                //browser.close().await?;
                 
                 
                 return Err(CustomError::ButtonNotFound(
@@ -287,8 +289,8 @@ pub async fn scrap_each_profile(
                 break;
             } else if build.is_err() && x == 3 {
                 wait(1, 3);
-                page.close(Some(false)).await?;
-                browser.close().await?;
+                //page.close(Some(false)).await?;
+                //browser.close().await?;
                 
                 
                 return Err(CustomError::ButtonNotFound(
@@ -350,6 +352,7 @@ pub async fn scrap_each_profile(
         extension_version: None,
         timestamp: None,
         search_url: search_url.clone(),
+        profile_url_id: url_id.to_owned(),
     };
     send_url_chromedata_viewed(profile).await?;
     /*

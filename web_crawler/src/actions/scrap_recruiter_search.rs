@@ -23,7 +23,6 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     let ai_search = entry.aisearch.as_str();
     let _ = send_search_status("Starting the browser", ai_search).await;
     let browser = start_browser(browser_info).await?;
-    // wait(100000, 100000);
 
     let _ = send_search_status("Connected to Linkedin", ai_search).await;
     let _ = send_search_status("Opening the search page", ai_search).await;
@@ -32,12 +31,6 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     wait(12, 15);
 
     let _ = send_search_status("Page opened", ai_search).await;
-    //let pagination = browser
-    //.page
-    //.query_selector("ol.pagination__list")
-    //.await?
-    //;
-    //wait(10000, 100000);
     let search_container = browser
         .page
         .query_selector("div.hp-core-temp.profile-list.profile-list-container")

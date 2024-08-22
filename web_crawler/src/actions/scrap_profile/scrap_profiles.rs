@@ -2,8 +2,10 @@ use crate::actions::scrap_profile::scrap_each_profile::scrap_each_profile;
 use crate::actions::scrap_profile::scrap_each_profile::send_search_status;
 use crate::actions::start_browser::start_browser;
 use crate::actions::wait::wait;
+use crate::structs::browser::BrowserConfig;
 use crate::structs::browser::BrowserInit;
 use crate::structs::entry::EntryScrapProfile;
+use crate::structs::entry::Url;
 use crate::structs::error::CustomError;
 use futures::future::join_all;
 use std::sync::Arc;
@@ -17,7 +19,7 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
     let aisearch = Some(entry.aisearch.clone()).filter(|s| !s.is_empty());
     let sourcer = Some(entry.sourcer.clone()).filter(|s| !s.is_empty());
     let search_url = Some(entry.search_url.clone()).filter(|s| !s.is_empty());
-    let urls = entry.urls;
+    let urls = entry.urls.clone();
     let batch = entry.batch_id.clone();
 
     let browser_info = BrowserInit {
@@ -30,9 +32,9 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
         recruiter_session_cookie: None,
         headless: true,
     };
-    let browser = start_browser(browser_info).await?;
-    let browser = Arc::new(RwLock::new(browser));
 
+    let browser = start_browser(browser_info.clone()).await?;
+    let browser = Arc::new(RwLock::new(browser));
     let mut tasks = Vec::new();
     send_search_status("Connected to linkedin", &aisearch, batch.as_str(), "none").await?;
     let urls_chunks = urls
@@ -40,7 +42,51 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
         .map(|chunk| chunk.to_vec())
         .collect::<Vec<_>>();
 
-    for chunk in urls_chunks {
+    run_loop(
+        urls_chunks,
+        browser,
+        aisearch.clone(),
+        job.clone(),
+        sourcer.clone(),
+        search_url.clone(),
+        &mut tasks,
+    )
+    .await;
+
+    let results = join_all(tasks).await;
+
+    // Check results for any errors
+    for result in results {
+        println!("{:?}", result);
+        match result {
+            Ok(nested_result) => {
+                if nested_result.is_err() {
+                    return Err(CustomError::ButtonNotFound(format!(
+                        "Nestef Error {:?} /scrap_profile",
+                        nested_result
+                    )));
+                }
+            }
+            Err(e) => {
+                return Err(CustomError::ButtonNotFound(format!(
+                    "Error {} /scrap_profile",
+                    e
+                )));
+            }
+        };
+    }
+    Ok(())
+}
+async fn run_loop(
+    url_chunks: Vec<Vec<Url>>,
+    browser: Arc<RwLock<BrowserConfig>>,
+    aisearch: Option<String>,
+    job: Option<String>,
+    sourcer: Option<String>,
+    search_url: Option<String>,
+    tasks: &mut Vec<task::JoinHandle<Result<(), Box<dyn std::error::Error + Send + Sync>>>>,
+) {
+    for chunk in url_chunks {
         for url in chunk {
             let aisearch = Arc::new(RwLock::new(aisearch.clone()));
             let job = Arc::new(RwLock::new(job.clone()));
@@ -67,17 +113,9 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
                 Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
             });
 
-            wait(2, 5);
+            wait(1, 2);
             tasks.push(task);
         }
         wait(45, 57);
     }
-
-    let results = join_all(tasks).await;
-
-    // Check results for any errors
-    for result in results {
-        //result??;
-    }
-    Ok(())
 }
