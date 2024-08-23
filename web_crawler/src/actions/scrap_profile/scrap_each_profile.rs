@@ -5,6 +5,7 @@ use crate::actions::scrap_profile::scrap_experience_new_tab::{parse_experience, 
 use crate::structs::entry::Url;
 use serde::{Deserialize, Serialize};
 
+use crate::actions::start_browser::send_screenshot;
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserConfig;
 use crate::structs::error::CustomError;
@@ -83,7 +84,7 @@ pub async fn scrap_each_profile(
     search_url: Arc<RwLock<Option<String>>>,
 ) -> Result<(), CustomError> {
     let search_url = search_url.read().await;
-    let aisearch = aisearch.read().await;
+    //let aisearch = aisearch.read().await;
     /*
         send_search_status(
             format!("Profile {} started", url).as_str(),
@@ -99,10 +100,6 @@ pub async fn scrap_each_profile(
     let browser = &browser.read().await.context;
     let page = browser.new_page().await?;
 
-    //let ai_search = aisearch.to_owned().lock().await.clone();
-    let job = job;
-    let search_url = search_url;
-    let sourcer = sourcer;
     // go to candidate page
     let go_to = page.goto_builder(url.as_str()).goto().await;
     let mut x = 0;
@@ -125,6 +122,13 @@ pub async fn scrap_each_profile(
                                         )
                                         .await?;
                                         */
+                let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(
+                screenshot,
+                "aisearch",
+                "Candidate page is not loading/scrap_profile",
+                "scrap each profile",
+            ).await?;
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/scrap_profile".to_string(),
                 )); // if error means page is not loading
@@ -153,6 +157,13 @@ pub async fn scrap_each_profile(
         )
         .await?;
         */
+         let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(
+                screenshot,
+                "aisearch",
+                "Page does not exist",
+                "scrap each profile",
+            ).await?;
         return Err(CustomError::ButtonNotFound(
             "Page does not exist".to_string(),
         ));
@@ -177,9 +188,15 @@ pub async fn scrap_each_profile(
                 "none",
             )
             .await?;
-            */
+            */let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(
+                screenshot,
+                "aisearch",
+                "Body HTML is not found",
+                "scrap each profile",
+            ).await?;
             return Err(CustomError::ButtonNotFound(
-                "Body er is not found".to_string(),
+                "Body HTML is not found".to_string(),
             ));
         }
     };
@@ -229,7 +246,13 @@ pub async fn scrap_each_profile(
                 //page.close(Some(false)).await?;
                 //browser.close().await?;
                 
-                
+                let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(
+                screenshot,
+                "aisearch",
+                "Experience is not loading",
+                "scrap each profile",
+            ).await?;
                 return Err(CustomError::ButtonNotFound(
                     "Experience is not loading".to_string(),
                 )); // if error means page is not loading
@@ -251,8 +274,16 @@ pub async fn scrap_each_profile(
             wait(1, 5);
             // browser.close(Some(false)).await?;
             //browser.browser.close().await?;
+    let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(
+                screenshot,
+                "aisearch",
+                "Body is not found",
+                "scrap each profile",
+            ).await?;
+                
             return Err(CustomError::ButtonNotFound(
-                "1Body is not found".to_string(),
+                "Body is not found".to_string(),
             ));
         }
     };
@@ -291,7 +322,13 @@ pub async fn scrap_each_profile(
                 wait(1, 3);
                 //page.close(Some(false)).await?;
                 //browser.close().await?;
-                
+                let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(
+                screenshot,
+                "aisearch",
+                "Education is not loading",
+                "scrap each profile",
+            ).await?;
                 
                 return Err(CustomError::ButtonNotFound(
                     "Education is not loading".to_string(),
@@ -315,8 +352,15 @@ pub async fn scrap_each_profile(
             wait(1, 5);
             // browser.close(Some(false)).await?;
             // browser.browser.close().await?;
+             let screenshot = page.screenshot_builder().screenshot().await?;
+            send_screenshot(
+                screenshot,
+                "aisearch",
+                "Education is not loading",
+                "Body 2 is not found",
+            ).await?;
             return Err(CustomError::ButtonNotFound(
-                "2Body is not found".to_string(),
+                "Body 2 is not found".to_string(),
             ));
         }
     };

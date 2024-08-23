@@ -124,13 +124,15 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         );
         context.add_cookies(&[recruiter_cookie]).await?;
     }
-
+    const INITIAL_PAGE: &str = "https://www.linkedin.com/mypreferences/d/categories/account";
     let page = context.new_page().await?;
-    let build = page.goto_builder("https://www.linkedin.com/feed/");
+    let build = page.goto_builder(INITIAL_PAGE);
     wait(1, 3);
 
     let mut go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> =
         build.goto().await;
+
+    wait(7, 14);
     let mut x = 0;
     if go_to.is_err() {
         while x <= 3 {
@@ -138,10 +140,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
             let build: Result<
                 Option<playwright::api::Response>,
                 std::sync::Arc<playwright::Error>,
-            > = page
-                .goto_builder("https://www.linkedin.com/feed/")
-                .goto()
-                .await;
+            > = page.goto_builder(INITIAL_PAGE).goto().await;
             if build.is_ok() {
                 go_to = build;
                 break;
@@ -169,7 +168,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         wait(1, 3);
     }
 
-    wait(3, 7);
+    wait(7, 14);
     let cookie = session_cookie_is_valid(&page).await?;
     if !cookie {
         page.reload_builder().reload().await?;
@@ -209,27 +208,12 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
 }
 
 async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
-    let profile = page
-        .query_selector("div.feed-identity-module__actor-meta.break-words")
-        .await?;
-
-    if profile.is_some() {
-        Ok(true)
+    wait(1, 3);
+    let email_input = page.query_selector("input[name=email-address]").await?;
+    if email_input.is_some() {
+        Ok(false)
     } else {
-        wait(1, 3);
-        let email_input = page.query_selector("input[name=email-address]").await?;
-        if email_input.is_some() {
-            Ok(false)
-        } else {
-            let search_bar = page
-                .query_selector("input.search-global-typeahead__input")
-                .await?;
-            if search_bar.is_some() {
-                Ok(true)
-            } else {
-                Ok(false)
-            }
-        }
+        Ok(true)
     }
 }
 async fn valid_proxy(proxy_url: &str) -> Result<bool, Error> {

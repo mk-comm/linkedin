@@ -113,7 +113,7 @@ async fn run_loop(
                 Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
             });
 
-            wait(1, 2);
+            wait(2, 3);
             tasks.push(task);
         }
         wait(45, 57);

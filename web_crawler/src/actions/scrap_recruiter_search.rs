@@ -1,8 +1,8 @@
+use crate::actions::start_browser::send_screenshot;
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::error::CustomError;
 use crate::{actions::start_browser::start_browser, structs::entry::EntryScrapSearchRecruiter};
-
 use playwright::api::Page;
 use reqwest;
 use scraper::{Html, Selector};
@@ -10,6 +10,7 @@ use serde_json::json;
 use tracing::{error, info};
 
 pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<(), CustomError> {
+    let user_id = entry.user_id.clone();
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -27,7 +28,6 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     let _ = send_search_status("Connected to Linkedin", ai_search).await;
     let _ = send_search_status("Opening the search page", ai_search).await;
     browser.page.goto_builder(&entry.url).goto().await?;
-
     wait(12, 15);
 
     let _ = send_search_status("Page opened", ai_search).await;
@@ -38,6 +38,14 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
 
     if search_container.is_none() {
         error!("search container not found");
+        let screenshot = browser.page.screenshot_builder().screenshot().await?;
+        send_screenshot(
+            screenshot,
+            &user_id,
+            "Search list of candidates not found/Recruiter search",
+            "scrap recruiter search",
+        )
+        .await?;
         return Err(CustomError::ButtonNotFound(
             "Search list of candidates not found/Recruiter search".to_string(),
         ));
@@ -96,6 +104,15 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
 
         if search_container_inside.is_none() {
             error!("search container not found");
+            let screenshot = browser.page.screenshot_builder().screenshot().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Search container not found/Scrap Recruiter Search",
+                "scrap recruter search",
+            )
+            .await?;
+
             return Err(CustomError::ButtonNotFound(
                 "Search container not found/Scrap Recruiter Search".to_string(),
             ));
