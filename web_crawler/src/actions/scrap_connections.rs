@@ -8,6 +8,7 @@ use crate::structs::fullname::FullName;
 use scraper::{Html, Selector};
 use serde_json::json;
 
+use crate::actions::start_browser::send_screenshot;
 pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), CustomError> {
     let api_key = entry.user_id.clone();
 
@@ -16,12 +17,17 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
         username: entry.username,
         password: entry.password,
         user_agent: entry.user_agent,
-        session_cookie: entry.session_cookie,
         user_id: entry.user_id,
-        recruiter_session_cookie: None,
         headless: true,
+        session_cookie: entry.cookies.session_cookie,
+        recruiter_session_cookie: entry.cookies.recruiter_session_cookie,
+        bscookie: entry.cookies.bscookie,
+        bcookie: entry.cookies.bcookie,
+        fcookie: entry.cookies.fcookie,
+        fidcookie: entry.cookies.fidcookie,
+        jsessionid: entry.cookies.jsessionid,
     };
-
+    let user_id = browser_info.user_id.clone();
     let browser = start_browser(browser_info).await?;
 
     wait(7, 12);
@@ -39,6 +45,15 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
             wait(1, 3);
         }
         None => {
+            let screenshot = browser.page.screenshot_builder().screenshot().await?;
+
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Network button is missing",
+                "Scrap connection",
+            )
+            .await?;
             browser.page.close(Some(false)).await?;
             browser.browser.close().await?; // close browser
             return Err(CustomError::ButtonNotFound(

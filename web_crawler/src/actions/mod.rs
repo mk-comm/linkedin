@@ -16,6 +16,7 @@ pub mod send_inmails;
 pub mod send_message;
 pub mod serialize;
 pub mod start_browser;
+pub mod start_browser_new;
 pub mod wait;
 pub mod withdraw_connection;
 pub mod withdraw_pending_connection;

@@ -17,10 +17,15 @@ pub async fn withdraw(entry: Entry) -> Result<(), CustomError> {
         username: entry.username,
         password: entry.password,
         user_agent: entry.user_agent,
-        session_cookie: entry.session_cookie,
         user_id: entry.user_id,
-        recruiter_session_cookie: Some(entry.recruiter_session_cookie),
         headless: true,
+        session_cookie: entry.cookies.session_cookie,
+        recruiter_session_cookie: entry.cookies.recruiter_session_cookie,
+        bscookie: entry.cookies.bscookie,
+        bcookie: entry.cookies.bcookie,
+        fcookie: entry.cookies.fcookie,
+        fidcookie: entry.cookies.fidcookie,
+        jsessionid: entry.cookies.jsessionid,
     };
 
     let browser = start_browser(browser_info).await?;

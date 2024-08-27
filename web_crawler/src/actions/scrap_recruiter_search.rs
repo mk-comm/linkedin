@@ -16,10 +16,15 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         username: entry.username,
         password: entry.password,
         user_agent: entry.user_agent,
-        session_cookie: entry.session_cookie,
         user_id: entry.user_id,
-        recruiter_session_cookie: Some(entry.recruiter_session_cookie),
         headless: true,
+        session_cookie: entry.cookies.session_cookie,
+        recruiter_session_cookie: entry.cookies.recruiter_session_cookie,
+        bscookie: entry.cookies.bscookie,
+        bcookie: entry.cookies.bcookie,
+        fcookie: entry.cookies.fcookie,
+        fidcookie: entry.cookies.fidcookie,
+        jsessionid: entry.cookies.jsessionid,
     };
     let ai_search = entry.aisearch.as_str();
     let _ = send_search_status("Starting the browser", ai_search).await;
@@ -29,7 +34,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     let _ = send_search_status("Opening the search page", ai_search).await;
     browser.page.goto_builder(&entry.url).goto().await?;
     wait(12, 15);
-
+    let url_list_id = entry.url_list_id.to_string();
     let _ = send_search_status("Page opened", ai_search).await;
     let search_container = browser
         .page
@@ -75,23 +80,11 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         }
         None => send_search_number(1003, &entry.aisearch).await?,
     };
-    //let search_container = search_container.unwrap();
-
-    /*
-        let pages_count = count_pages(search_container.inner_html().await?);
-        if pages_count.is_err() {
-            error!("pages count not found");
-            return Err(CustomError::ButtonNotFound(
-                "Pages count not found/Scrap Recruiter Search".to_string(),
-            ));
-        }
-        let pages_count = pages_count.unwrap();
-        println!("pages count: {}", pages_count);
-    */
     let total_candidates = format!("Total candidates: {}", total_candidates);
     let _ = send_search_status(total_candidates.as_str(), ai_search).await;
     let mut pages_number = 0;
     let mut pages_left = true;
+    let mut number = 0;
     while pages_left {
         pages_number += 1;
         let page_scraped = format!("Started scraping page {}", pages_number);
@@ -152,7 +145,8 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 .await;
             }
         };
-
+        number += 25;
+        update_url_list(url_list_id.as_str(), number).await?;
         let _ = send_search_status("Opening next page", ai_search).await;
         const NEXT_ICON: &str = ".mini-pagination__quick-link[rel='next']";
 
@@ -257,78 +251,7 @@ fn extract_part_from_url(url: &str) -> Option<&str> {
         None
     }
 }
-/*
-fn count_pages(html: String) -> Result<i32, CustomError> {
-    let document = Html::parse_document(&html);
 
-    // Selector for the last pagination number
-    let last_page_selector =
-        Selector::parse("li.pagination__link:last-child span[aria-hidden='true']");
-
-    if last_page_selector.is_err() {
-        return Err(CustomError::ButtonNotFound(
-            "last_page_selector is error/Scrap Recruiter Search".to_string(),
-        ));
-    }
-    let last_page_selector = last_page_selector.unwrap();
-
-    if let Some(last_page_elem) = document.select(&last_page_selector).next() {
-        if let Some(text_content) = last_page_elem.text().next() {
-            return Ok(text_content.trim().parse().unwrap_or(1));
-        }
-    }
-
-    Ok(1) // Default to 1 if the element isn't found or doesn't contain a valid number
-}
-
-async fn send_urls(
-    urls: Vec<String>,
-    target_url: &str,
-    ai_search: &str,
-    url_list_id: &str,
-) -> Result<(), reqwest::Error> {
-    let client = reqwest::Client::new();
-
-    // Convert the Vec<String> into a JSON string
-    let urls_json = json!({
-        "urls": urls,
-        "ai_search": ai_search,
-    "url_list_id": url_list_id});
-
-    let response: Result<reqwest::Response, reqwest::Error> =
-        client.post(target_url).json(&urls_json).send().await;
-    match response {
-        Ok(res) => {
-            info!(
-                "Send_urls/scrap_recruiter_search/Ok, {} was done, response {:?}",
-                ai_search,
-                res.status()
-            );
-            println!("API RESPONSE OK {:?}", res);
-        }
-        Err(error) => {
-            error!(error = ?error, "Send_urls/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
-            println!("API RESPONSE {:?}", error);
-
-            return Err(error);
-        }
-    }
-
-    Ok(())
-}
-*/
-
-/// Sends a list of URLs as JSON to a specified target URL with retries on failure.
-///
-/// # Arguments
-/// * `urls` - A vector of URLs to send.
-/// * `target_url` - The endpoint where the URLs will be sent.
-/// * `ai_search` - A descriptive string associated with the search.
-/// * `url_list_id` - Identifier for the list of URLs.
-/// * `retry_delay` - Delay between retries in seconds.
-///
-/// # Returns
-/// * `Result<(), reqwest::Error>` - Result of the POST request.
 async fn send_urls(
     urls: Vec<String>,
     target_url: &str,
@@ -412,6 +335,28 @@ async fn send_search_status(status: &str, ai_search: &str) -> Result<(), reqwest
         ),
         Err(error) => {
             error!(error = ?error, "Send_search_status/scrap_recruiter_search/Error {} returned error {}", ai_search, error);
+        }
+    }
+
+    Ok(())
+}
+async fn update_url_list(url_list_id: &str, number: i32) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+
+    // Convert the Vec<String> into a JSON string
+    let urls_json = json!({ 
+        "url_list_id": url_list_id,
+        "number": number});
+    let target_url = "https://overview.tribe.xyz/api/1.1/wf/tribe_update_url";
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(target_url).json(&urls_json).send().await;
+    match response {
+        Ok(_) => info!(
+            "Update_url_list/scrap_recruiter_search/Ok, {} was done",
+            url_list_id
+        ),
+        Err(error) => {
+            error!(error = ?error, "Update_url_list/scrap_recruiter_search/Error {} returned error {}", url_list_id, error);
         }
     }
 

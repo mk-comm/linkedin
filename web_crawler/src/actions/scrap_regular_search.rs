@@ -15,10 +15,15 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         username: entry.username,
         password: entry.password,
         user_agent: entry.user_agent,
-        session_cookie: entry.session_cookie,
         user_id: entry.user_id,
-        recruiter_session_cookie: None,
         headless: true,
+        session_cookie: entry.cookies.session_cookie,
+        recruiter_session_cookie: entry.cookies.recruiter_session_cookie,
+        bscookie: entry.cookies.bscookie,
+        bcookie: entry.cookies.bcookie,
+        fcookie: entry.cookies.fcookie,
+        fidcookie: entry.cookies.fidcookie,
+        jsessionid: entry.cookies.jsessionid,
     };
 
     let browser = start_browser(browser_info).await?;
@@ -51,6 +56,7 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
             send_search_number(1003, &entry.aisearch).await?
         }
     };
+    let url_list_id = entry.url_list_id.to_string();
     let search_container = browser
         .page
         .query_selector("div.search-results-container")
@@ -59,6 +65,7 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
 
     let pages_count = count_pages(search_container.inner_html().await?);
     println!("pages count: {}", pages_count);
+
     for i in 1..=pages_count {
         let mut url_list: Vec<String> = Vec::new();
         let page_number = format!("button[aria-label='Page {}']", i);
@@ -86,7 +93,9 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
             &entry.url_list_id,
         )
         .await?;
+        update_url_list(url_list_id.as_str(), i).await?;
         wait(3, 5);
+
     }
 
     //println!("url list: {:?}", url_list);
@@ -96,6 +105,28 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
     browser.page.close(Some(false)).await?;
     browser.browser.close().await?;
     let _ = send_search_status("Search scraped successfully", &ai_search).await;
+
+    Ok(())
+}
+async fn update_url_list(url_list_id: &str, number: i32) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+
+    // Convert the Vec<String> into a JSON string
+    let urls_json = json!({ 
+        "url_list_id": url_list_id,
+        "number": number});
+    let target_url = "https://overview.tribe.xyz/api/1.1/wf/tribe_update_url";
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(target_url).json(&urls_json).send().await;
+    match response {
+        Ok(_) => info!(
+            "Update_url_list/scrap_recruiter_search/Ok, {} was done",
+            url_list_id
+        ),
+        Err(error) => {
+            error!(error = ?error, "Update_url_list/scrap_recruiter_search/Error {} returned error {}", url_list_id, error);
+        }
+    }
 
     Ok(())
 }

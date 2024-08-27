@@ -29,8 +29,14 @@ pub struct Education {
 }
 #[allow(non_snake_case)]
 pub fn parse_education(html_content: &str) -> Vec<Education> {
-    let document = Html::parse_document(html_content);
-    let education_selector = Selector::parse("li.pvs-list__paged-list-item").unwrap();
+    let html = find_education(html_content);
+    let html = if let Some(html) = html {
+        html
+    } else {
+        return vec![];
+    };
+    let document = Html::parse_document(html.as_str());
+    let education_selector = Selector::parse("li.artdeco-list__item").unwrap();
     let mut educations = Vec::new();
 
     for element in document.select(&education_selector) {
@@ -134,8 +140,8 @@ fn extract_id(html_content: &str) -> Option<String> {
         .next()
         .and_then(|section| section.value().attr("href").map(String::from));
 
-    let url_link = if url.is_some() {
-        url.unwrap()
+    let url_link = if let Some(url_link) = url {
+        url_link
     } else {
         return None;
     };
@@ -149,4 +155,24 @@ fn extract_id(html_content: &str) -> Option<String> {
                 .replace("/", ""),
         )
     }
+}
+
+fn find_education(html: &str) -> Option<String> {
+    let document = Html::parse_document(html);
+
+    // Selector for sections with class `artdeco-card pv-profile-card break-words`
+    let section_selector =
+        Selector::parse("section.artdeco-card.pv-profile-card.break-words").unwrap();
+    // Selector for div with id `education`
+    let education_div_selector = Selector::parse("div#education.pv-profile-card__anchor").unwrap();
+
+    for section in document.select(&section_selector) {
+        if section.select(&education_div_selector).next().is_some() {
+            // Found the section containing the education div, print its HTML
+            println!("found sections {}", section.html());
+            return Some(section.html());
+        }
+    }
+
+    None
 }

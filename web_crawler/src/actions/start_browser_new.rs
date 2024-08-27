@@ -83,7 +83,6 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         user.session_cookie.as_str(),
         "https://.www.linkedin.com",
     );
-
     if let Some(bcookie_value) = browserinfo.bcookie {
         let bcookie = Cookie::with_url(
             "bcookie",
@@ -140,74 +139,10 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         );
         context.add_cookies(&[recruiter_cookie]).await?;
     }
-    const INITIAL_PAGE: &str = "https://www.linkedin.com/feed/";
     let page = context.new_page().await?;
-    let build = page.goto_builder(INITIAL_PAGE);
-    wait(1, 3);
-
-    let mut go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> =
+    let build = page.goto_builder("https://google.com");
+    let go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> =
         build.goto().await;
-
-    wait(7, 14);
-    let mut x = 0;
-    if go_to.is_err() {
-        while x <= 3 {
-            wait(3, 6);
-            let build: Result<
-                Option<playwright::api::Response>,
-                std::sync::Arc<playwright::Error>,
-            > = page.goto_builder(INITIAL_PAGE).goto().await;
-            if build.is_ok() {
-                go_to = build;
-                break;
-            } else if build.is_err() && x == 3 {
-                wait(1, 3);
-                let screenshot = page.screenshot_builder().screenshot().await?;
-                page.close(Some(false)).await?;
-                browser.close().await?;
-                send_screenshot(
-                    screenshot,
-                    &user.user_id,
-                    "Feed is not loading",
-                    "Start Browser",
-                )
-                .await?;
-                return Err(CustomError::ButtonNotFound(
-                    "Feed is not loading".to_string(),
-                )); // if error means page is not loading
-            }
-            x += 1;
-            //println!("retrying to load page")
-        }
-        wait(1, 3);
-    } else {
-        wait(1, 3);
-    }
-
-    wait(7, 14);
-    let cookie = session_cookie_is_valid(&page).await?;
-    if !cookie {
-        page.reload_builder().reload().await?;
-        wait(7, 14);
-        let cookie_second_try = session_cookie_is_valid(&page).await?;
-        if !cookie_second_try {
-            wait(1, 3);
-            let screenshot = page.screenshot_builder().screenshot().await?;
-            page.close(Some(false)).await?;
-            browser.close().await?;
-            send_screenshot(
-                screenshot,
-                &user.user_id,
-                "Session cookie expired",
-                "Start Browser",
-            )
-            .await?;
-            return Err(CustomError::SessionCookieExpired);
-        }
-
-        println!("checking if cookie is valid{}", cookie_second_try);
-    }
-    println!("checking if cookie is valid{}", cookie);
 
     let browser_config = BrowserConfig {
         proxy: None,
@@ -223,7 +158,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     Ok(browser_config)
 }
 
-async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
+pub async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
     wait(1, 3);
     let email_input = page.query_selector("input[name=email-address]").await?;
     if email_input.is_some() {

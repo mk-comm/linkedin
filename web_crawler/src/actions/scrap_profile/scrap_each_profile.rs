@@ -4,6 +4,7 @@ use crate::actions::scrap_profile::scrap_education::Education;
 use crate::actions::scrap_profile::scrap_experience_new_tab::{parse_experience, Experience};
 use crate::structs::entry::Url;
 use serde::{Deserialize, Serialize};
+use crate::actions::start_browser_new::session_cookie_is_valid;
 
 use crate::actions::start_browser::send_screenshot;
 use crate::actions::wait::wait;
@@ -75,6 +76,8 @@ struct Profile {
     search_url: Option<String>,
     profile_url_id: String,
 }
+
+
 pub async fn scrap_each_profile(
     browser: Arc<RwLock<BrowserConfig>>,
     url: Arc<RwLock<Url>>,
@@ -99,7 +102,6 @@ pub async fn scrap_each_profile(
     let browser = &browser.clone();
     let browser = &browser.read().await.context;
     let page = browser.new_page().await?;
-
     // go to candidate page
     let go_to = page.goto_builder(url.as_str()).goto().await;
     let mut x = 0;
@@ -113,22 +115,23 @@ pub async fn scrap_each_profile(
                 wait(3, 6);
                 //page.close(Some(false)).await?;
                 //browser.close().await?; // close browser
-                                        /*
-                                        send_search_status(
-                                            format!("Profile {} candidate page is not loading", url).as_str(),
-                                            Some(aisearch),
-                                            batch_id,
-                                            "none",
-                                        )
-                                        .await?;
-                                        */
+                /*
+                send_search_status(
+                    format!("Profile {} candidate page is not loading", url).as_str(),
+                    Some(aisearch),
+                    batch_id,
+                    "none",
+                )
+                .await?;
+                */
                 let screenshot = page.screenshot_builder().screenshot().await?;
-            send_screenshot(
-                screenshot,
-                "aisearch",
-                "Candidate page is not loading/scrap_profile",
-                "scrap each profile",
-            ).await?;
+                send_screenshot(
+                    screenshot,
+                    "aisearch",
+                    "Candidate page is not loading/scrap_profile",
+                    "scrap each profile",
+                )
+                .await?;
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/scrap_profile".to_string(),
                 )); // if error means page is not loading
@@ -138,8 +141,7 @@ pub async fn scrap_each_profile(
         wait(1, 3);
     }
 
-    wait(7, 21); // random delay
-                 //check if connect button is present
+    wait(15, 18); // random delay
 
     let page_not_found = page
         .query_selector("header[class='not-found__header not-found__container']")
@@ -157,19 +159,41 @@ pub async fn scrap_each_profile(
         )
         .await?;
         */
-         let screenshot = page.screenshot_builder().screenshot().await?;
-            send_screenshot(
-                screenshot,
-                "aisearch",
-                "Page does not exist",
-                "scrap each profile",
-            ).await?;
+        let screenshot = page.screenshot_builder().screenshot().await?;
+        send_screenshot(
+            screenshot,
+            "aisearch",
+            "Page does not exist",
+            "scrap each profile",
+        )
+        .await?;
         return Err(CustomError::ButtonNotFound(
             "Page does not exist".to_string(),
         ));
     }
+let cookie = session_cookie_is_valid(&page).await?;
+    if !cookie {
+        page.reload_builder().reload().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&page).await?;
+        if !cookie_second_try {
+            wait(1, 3);
+            let screenshot = page.screenshot_builder().screenshot().await?;
+            page.close(Some(false)).await?;
+            browser.close().await?;
+            send_screenshot(
+                screenshot,
+                "Scrap each profile",
+                "Session cookie expired",
+                "Scrap each profile",
+            )
+            .await?;
+            return Err(CustomError::SessionCookieExpired);
+        }
 
-    let html_body = page
+        println!("checking if cookie is valid{}", cookie_second_try);
+    }
+        let html_body = page
         .query_selector(
             "body.render-mode-BIGPIPE.nav-v2.ember-application.icons-loaded.boot-complete",
         )
@@ -188,13 +212,15 @@ pub async fn scrap_each_profile(
                 "none",
             )
             .await?;
-            */let screenshot = page.screenshot_builder().screenshot().await?;
+            */
+            let screenshot = page.screenshot_builder().screenshot().await?;
             send_screenshot(
                 screenshot,
                 "aisearch",
                 "Body HTML is not found",
                 "scrap each profile",
-            ).await?;
+            )
+            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Body HTML is not found".to_string(),
             ));
@@ -220,8 +246,12 @@ pub async fn scrap_each_profile(
     let about = get_about(&html);
     let connection_level = Some(5);
     let location = get_location(&html);
-    let entity_urn = find_entity_urn(&html);
-
+    let entity_urn = find_entity_urn(&html); 
+    
+    let education = parse_education(&html);
+    wait(4,8);
+    let mut current_company_name: Option<String> = None;
+    let mut current_company_id: Option<String> = None;
     let experience_url = format!("{}details/experience", &redirect_url);
     let build = page
         .goto_builder(experience_url.as_str());
@@ -245,7 +275,7 @@ pub async fn scrap_each_profile(
                 wait(1, 3);
                 //page.close(Some(false)).await?;
                 //browser.close().await?;
-                
+
                 let screenshot = page.screenshot_builder().screenshot().await?;
             send_screenshot(
                 screenshot,
@@ -281,7 +311,7 @@ pub async fn scrap_each_profile(
                 "Body is not found",
                 "scrap each profile",
             ).await?;
-                
+
             return Err(CustomError::ButtonNotFound(
                 "Body is not found".to_string(),
             ));
@@ -290,8 +320,7 @@ pub async fn scrap_each_profile(
 
     let experience = parse_experience(&html);
     println!("{:?}", &experience);
-    let mut current_company_name: Option<String> = None;
-    let mut current_company_id: Option<String> = None;
+    
 
     // Check if there is at least one item in the vector
     if let Some(first_experience) = experience.get(0) {
@@ -299,79 +328,13 @@ pub async fn scrap_each_profile(
         current_company_id = first_experience.companyId.clone();
     }
 
-    let education_url = format!("{}details/education", &redirect_url);
-    let build = page
-        .goto_builder(education_url.as_str());
-    let mut go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> =
-        build.goto().await;
-    let mut x = 0;
-    if go_to.is_err() {
-        while x <= 3 {
-            wait(3, 6);
-            let build: Result<
-                Option<playwright::api::Response>,
-                std::sync::Arc<playwright::Error>,
-            > = page
-                .goto_builder(education_url.as_str())
-                .goto()
-                .await;
-            if build.is_ok() {
-                go_to = build;
-                break;
-            } else if build.is_err() && x == 3 {
-                wait(1, 3);
-                //page.close(Some(false)).await?;
-                //browser.close().await?;
-                let screenshot = page.screenshot_builder().screenshot().await?;
-            send_screenshot(
-                screenshot,
-                "aisearch",
-                "Education is not loading",
-                "scrap each profile",
-            ).await?;
-                
-                return Err(CustomError::ButtonNotFound(
-                    "Education is not loading".to_string(),
-                )); // if error means page is not loading
-            }
-            x += 1;
-            //println!("retrying to load page")
-        }
-        wait(1, 3);
-    } else {
-        wait(1, 3);
-    }
 
-    wait(5, 13);
-    let html_body = page
-        .query_selector("main[class='scaffold-layout__main']")
-        .await?;
-    let html = match html_body {
-        Some(body) => body.inner_html().await?,
-        None => {
-            wait(1, 5);
-            // browser.close(Some(false)).await?;
-            // browser.browser.close().await?;
-             let screenshot = page.screenshot_builder().screenshot().await?;
-            send_screenshot(
-                screenshot,
-                "aisearch",
-                "Education is not loading",
-                "Body 2 is not found",
-            ).await?;
-            return Err(CustomError::ButtonNotFound(
-                "Body 2 is not found".to_string(),
-            ));
-        }
-    };
-    let education = parse_education(&html);
+    wait(5, 7);
+
 
     let job = job.read().await.clone();
     let sourcer = sourcer.read().await.clone();
-    //let current_company_name = Some(String::from("a"));
-    //let current_company_id = Some(String::from("a"));
-    //let job = Some("to".to_string());
-    //let sourcer= Some("to".to_string());
+   
     let profile = Profile {
         AI: true,
         linkedin: linkedin_url,
@@ -416,7 +379,7 @@ pub async fn scrap_each_profile(
         )
         .await?;
     */
-    send_url_update(&url_id, linkedin_url_update).await?;
+    send_url_update(url_id, linkedin_url_update).await?;
     page.close(Some(false)).await?;
     Ok(())
 }
@@ -457,7 +420,7 @@ async fn send_url_chromedata_viewed(profile: Profile) -> Result<(), CustomError>
     let serialized = serde_json::to_vec(&profile).unwrap();
     let encoded = encode(&serialized);
     const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
-    //const WEBHOOK_URL: &str = "https://webhook.site/76c7ef3e-d792-4b01-80e2-3a9ac8c2bca0";
+    //const WEBHOOK_URL: &str = "https://webhook.site/ccfdd061-5a7c-4537-a51b-8b070a470842";
     let client = reqwest::Client::new();
 
     let target_json = json!({ 
