@@ -16,7 +16,6 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         password: entry.password,
         user_agent: entry.user_agent,
         user_id: entry.user_id,
-        headless: true,
         session_cookie: entry.cookies.session_cookie,
         recruiter_session_cookie: entry.cookies.recruiter_session_cookie,
         bscookie: entry.cookies.bscookie,
@@ -95,7 +94,6 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         .await?;
         update_url_list(url_list_id.as_str(), i).await?;
         wait(3, 5);
-
     }
 
     //println!("url list: {:?}", url_list);

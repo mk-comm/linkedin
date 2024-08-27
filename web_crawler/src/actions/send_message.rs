@@ -21,7 +21,6 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<(), CustomError>
         password: entry.password,
         user_agent: entry.user_agent,
         user_id: entry.user_id,
-        headless: true,
         session_cookie: entry.cookies.session_cookie,
         recruiter_session_cookie: entry.cookies.recruiter_session_cookie,
         bscookie: entry.cookies.bscookie,

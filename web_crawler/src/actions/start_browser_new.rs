@@ -1,11 +1,9 @@
-use playwright::Playwright;
-use tokio::time::{timeout, Duration};
-//use std::path::Path;
-use super::wait::wait;
-use crate::structs::browser::{BrowserConfig, BrowserInit};
+use crate::structs::browser::{BrowserConfigNew, BrowserInit};
 use crate::structs::error::CustomError;
 use crate::structs::user::User;
 use base64;
+use playwright::Playwright;
+use tokio::time::{timeout, Duration};
 
 use playwright::api::{Cookie, Page, ProxySettings, Viewport};
 use reqwest::{Client, Error, Proxy};
@@ -13,7 +11,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use tracing::{error, info};
 
-pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
+pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfigNew, CustomError> {
     let proxy_check = format!(
         "{}:{}@{}",
         browserinfo.username, browserinfo.password, browserinfo.ip
@@ -53,7 +51,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     let browser = chromium
         .launcher()
         .proxy(proxy.clone())
-        .headless(browserinfo.headless)
+        .headless(true)
         .chromium_sandbox(false)
         //.executable(path)
         .launch()
@@ -139,32 +137,47 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         );
         context.add_cookies(&[recruiter_cookie]).await?;
     }
-    let page = context.new_page().await?;
-    let build = page.goto_builder("https://google.com");
-    let go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> =
-        build.goto().await;
 
-    let browser_config = BrowserConfig {
+    let browser_config = BrowserConfigNew {
         proxy: None,
         playwright,
         browser_type: chromium,
         browser,
         context,
-        page,
-        build: go_to.unwrap().unwrap(),
-        headless: browserinfo.headless,
     };
 
     Ok(browser_config)
 }
 
 pub async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
-    wait(1, 3);
-    let email_input = page.query_selector("input[name=email-address]").await?;
+    let email_input = page
+        .query_selector(
+            "input[data-tracking-control-name='seo-authwall-base_join-form-email-or-phone']",
+        )
+        .await?;
+    let sing_in_button = page
+        .query_selector(
+            "button[class='sign-in-modal__outlet-btn cursor-pointer btn-md btn-primary']",
+        )
+        .await?;
+    let sing_in_button_main_screen = page
+        .query_selector("a[class='sign-in-modal__outlet-btn cursor-pointer btn-md btn-primary']")
+        .await?;
+
+    println!("email_input{:?}", email_input);
+    println!("signin_input{:?}", sing_in_button);
     if email_input.is_some() {
         Ok(false)
     } else {
-        Ok(true)
+        if sing_in_button.is_some() {
+            Ok(false)
+        } else {
+            if sing_in_button_main_screen.is_some() {
+                Ok(false)
+            } else {
+                Ok(true)
+            }
+        }
     }
 }
 async fn valid_proxy(proxy_url: &str) -> Result<bool, Error> {

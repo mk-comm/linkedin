@@ -53,7 +53,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     let browser = chromium
         .launcher()
         .proxy(proxy.clone())
-        .headless(browserinfo.headless)
+        .headless(true)
         .chromium_sandbox(false)
         //.executable(path)
         .launch()
@@ -217,21 +217,43 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         context,
         page,
         build: go_to.unwrap().unwrap(),
-        headless: browserinfo.headless,
     };
 
     Ok(browser_config)
 }
 
-async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
-    wait(1, 3);
-    let email_input = page.query_selector("input[name=email-address]").await?;
+pub async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
+    let email_input = page
+        .query_selector(
+            "input[data-tracking-control-name='seo-authwall-base_join-form-email-or-phone']",
+        )
+        .await?;
+    let sing_in_button = page
+        .query_selector(
+            "button[class='sign-in-modal__outlet-btn cursor-pointer btn-md btn-primary']",
+        )
+        .await?;
+    let sing_in_button_main_screen = page
+        .query_selector("a[class='sign-in-modal__outlet-btn cursor-pointer btn-md btn-primary'")
+        .await?;
+
+    println!("email_input{:?}", email_input);
+    println!("signin_input{:?}", sing_in_button);
     if email_input.is_some() {
         Ok(false)
     } else {
-        Ok(true)
+        if sing_in_button.is_some() {
+            Ok(false)
+        } else {
+            if sing_in_button_main_screen.is_some() {
+                Ok(false)
+            } else {
+                Ok(true)
+            }
+        }
     }
 }
+
 async fn valid_proxy(proxy_url: &str) -> Result<bool, Error> {
     let proxy = Proxy::all(proxy_url)?;
     let client = Client::builder()
@@ -296,12 +318,9 @@ pub async fn send_screenshot(
     let response: Result<reqwest::Response, reqwest::Error> =
         client.post(TARGET_URL).json(&send_json).send().await;
     match response {
-        Ok(_) => info!(
-            "Send_search_number/send_screenshot_expired_session_cookie/Ok, {} was done",
-            api_key
-        ),
+        Ok(_) => info!("{}/Ok, {} was done", variant, api_key),
         Err(error) => {
-            error!(error = ?error, "Send_search_number/send_screenshot_expired_session_cookie/Error {} returned error {}", api_key, error);
+            error!(error = ?error, "{}/Error {} returned error {}", variant, api_key, error);
         }
     }
 

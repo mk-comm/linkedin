@@ -10,7 +10,6 @@ pub struct BrowserConfig {
     pub context: BrowserContext,
     pub page: Page,
     pub build: Response,
-    pub headless: bool,
 }
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BrowserInit {
@@ -21,7 +20,6 @@ pub struct BrowserInit {
     pub session_cookie: String,
     pub user_id: String,
     pub recruiter_session_cookie: Option<String>,
-    pub headless: bool,
     pub bcookie: Option<String>,
     pub bscookie: Option<String>,
     pub fcookie: Option<String>,
@@ -29,4 +27,10 @@ pub struct BrowserInit {
     pub jsessionid: Option<String>,
 }
 
-
+pub struct BrowserConfigNew {
+    pub proxy: Option<ProxySettings>,
+    pub playwright: Playwright,
+    pub browser_type: BrowserType,
+    pub browser: Browser,
+    pub context: BrowserContext,
+}

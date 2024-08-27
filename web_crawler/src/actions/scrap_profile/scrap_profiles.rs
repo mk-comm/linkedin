@@ -1,20 +1,16 @@
-use crate::actions::scrap_profile::scrap_each_profile::scrap_each_profile;
-use crate::actions::scrap_profile::scrap_each_profile::send_search_status;
+use crate::actions::scrap_profile::scrap_each_profile::{scrap_each_profile, send_search_status};
 use crate::actions::start_browser_new::start_browser;
-use crate::actions::wait::wait;
-use crate::structs::browser::BrowserConfig;
-use crate::structs::browser::BrowserInit;
-use crate::structs::entry::EntryScrapProfile;
-use crate::structs::entry::Url;
+use crate::structs::browser::{BrowserConfigNew, BrowserInit};
+use crate::structs::entry::{EntryScrapProfile, Url};
 use crate::structs::error::CustomError;
 use futures::future::join_all;
+use random_number::random;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::task;
+use tokio::time::{sleep, Duration};
 
 pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> {
-    //let user_id = Arc::new(RwLock::new(entry.user_id.clone()));
-
     let job = Some(entry.job.clone()).filter(|j| !j.is_empty());
     let aisearch = Some(entry.aisearch.clone()).filter(|s| !s.is_empty());
     let sourcer = Some(entry.sourcer.clone()).filter(|s| !s.is_empty());
@@ -28,7 +24,6 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
         password: entry.password,
         user_agent: entry.user_agent,
         user_id: entry.user_id,
-        headless: true,
         session_cookie: entry.cookies.session_cookie,
         recruiter_session_cookie: entry.cookies.recruiter_session_cookie,
         bscookie: entry.cookies.bscookie,
@@ -81,7 +76,7 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
 
 async fn run_loop(
     urls: Vec<Url>,
-    browser: Arc<RwLock<BrowserConfig>>,
+    browser: Arc<RwLock<BrowserConfigNew>>,
     aisearch: Option<String>,
     job: Option<String>,
     sourcer: Option<String>,
@@ -113,8 +108,8 @@ async fn run_loop(
 
             Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
         });
-
-        wait(20, 21);
         tasks.push(task);
+        let delay: u64 = random!(18, 23);
+        sleep(Duration::from_secs(delay)).await;
     }
 }
