@@ -94,38 +94,29 @@ pub async fn scrap_each_profile(
     let browser = &browser.read().await.context;
     let page = browser.new_page().await?;
     // go to candidate page
-    let result = timeout(Duration::from_secs(30), async {
-        let go_to = page.goto_builder(url).goto().await;
+    let go_to = page.goto_builder(url).goto().await;
 
-        let mut x = 0;
-        if go_to.is_err() {
-            while x <= 3 {
-                let build = page.goto_builder(url).goto().await;
-                if build.is_ok() {
-                    break;
-                } else if build.is_err() && x == 3 {
-                    let screenshot = page.screenshot_builder().screenshot().await?;
-                    send_screenshot(
-                        screenshot,
-                        "aisearch",
-                        "Candidate page is not loading within 30 sec/scrap_profile",
-                        "scrap each profile",
-                    )
-                    .await?;
-                    return Err(CustomError::ButtonNotFound(
-                        "Candidate page is not loading within 30 sec/scrap_profile".to_string(),
-                    )); // if error means page is not loading
-                }
-                x += 1;
+    let mut x = 0;
+    if go_to.is_err() {
+        while x <= 3 {
+            let build = page.goto_builder(url).goto().await;
+            if build.is_ok() {
+                break;
+            } else if build.is_err() && x == 3 {
+                let screenshot = page.screenshot_builder().screenshot().await?;
+                send_screenshot(
+                    screenshot,
+                    "aisearch",
+                    "Candidate page is not loading within 30 sec/scrap_profile",
+                    "scrap each profile",
+                )
+                .await?;
+                return Err(CustomError::ButtonNotFound(
+                    "Candidate page is not loading within 30 sec/scrap_profile".to_string(),
+                )); // if error means page is not loading
             }
+            x += 1;
         }
-        Ok(())
-    })
-    .await;
-    if result.is_err() {
-        return Err(CustomError::ButtonNotFound(
-            "Candidate page is not loading within 30 seconds/scrap_profile".to_string(),
-        ));
     }
 
     wait(15, 18); // random delay
@@ -220,7 +211,6 @@ pub async fn scrap_each_profile(
     let mut current_company_id: Option<String> = None;
 
     let experience_url = format!("{}details/experience", &redirect_url);
-    let result = timeout(Duration::from_secs(30), async {
         let build = page.goto_builder(experience_url.as_str());
         let mut go_to: Result<
             Option<playwright::api::Response>,
@@ -261,15 +251,7 @@ pub async fn scrap_each_profile(
         } else {
             wait(1, 3);
         }
-        Ok(())
-    })
-    .await;
-    if result.is_err() {
-        return Err(CustomError::ButtonNotFound(
-            "Experience page is not loading within 30 seconds/scrap_profile".to_string(),
-        ));
-    }
-
+       
     wait(5, 13);
     let cookie = session_cookie_is_valid(&page).await?;
     if !cookie {

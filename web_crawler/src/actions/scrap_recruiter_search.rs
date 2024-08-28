@@ -32,7 +32,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     let _ = send_search_status("Connected to Linkedin", ai_search).await;
     let _ = send_search_status("Opening the search page", ai_search).await;
     browser.page.goto_builder(&entry.url).goto().await?;
-    wait(12, 15);
+    wait(22, 27);
     let url_list_id = entry.url_list_id.to_string();
     let _ = send_search_status("Page opened", ai_search).await;
     let search_container = browser
@@ -83,7 +83,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     let _ = send_search_status(total_candidates.as_str(), ai_search).await;
     let mut pages_number = 0;
     let mut pages_left = true;
-    let mut number = 0;
+    let mut number = entry.urls_scraped;
     while pages_left {
         pages_number += 1;
         let page_scraped = format!("Started scraping page {}", pages_number);
@@ -154,7 +154,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         match next_page {
             Some(next_page) => {
                 next_page.click_builder().click().await?;
-                wait(10, 15);
+                wait(20, 25);
                 //pagination.scroll_into_view_if_needed(Some(1000.0)).await?;
                 //println!("url list: {:?}", url_list);
                 wait(3, 5);
@@ -163,7 +163,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 let next_page = browser.page.query_selector(NEXT_ICON).await?;
                 if next_page.is_some() {
                     next_page.unwrap().click_builder().click().await?;
-                    wait(10, 15);
+                    wait(20, 25);
                 } else {
                     println!("next page is empty");
 

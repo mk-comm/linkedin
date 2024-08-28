@@ -1,14 +1,13 @@
 use crate::actions::scrap_profile::scrap_each_profile::{scrap_each_profile, send_search_status};
 use crate::actions::start_browser_new::start_browser;
+use crate::actions::wait::wait;
 use crate::structs::browser::{BrowserConfigNew, BrowserInit};
 use crate::structs::entry::{EntryScrapProfile, Url};
 use crate::structs::error::CustomError;
 use futures::future::join_all;
-use random_number::random;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::task;
-use tokio::time::{sleep, Duration};
 
 pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> {
     let job = Some(entry.job.clone()).filter(|j| !j.is_empty());
@@ -109,7 +108,6 @@ async fn run_loop(
             Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
         });
         tasks.push(task);
-        let delay: u64 = random!(18, 23);
-        sleep(Duration::from_secs(delay)).await;
+        wait(18, 23);
     }
 }

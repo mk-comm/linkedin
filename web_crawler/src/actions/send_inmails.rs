@@ -39,7 +39,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     };
 
     let browser = start_browser(browser_info).await?;
-
     let search_input = browser
         .page
         .query_selector("input[class=search-global-typeahead__input]")
@@ -276,10 +275,9 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         }
     };
     wait(2, 5);
-
     let text_input = browser
         .page
-        .query_selector("textarea[class='compose-textarea__textarea']")
+        .query_selector("div[class='ql-editor ql-blank']")
         .await?;
 
     match text_input {
@@ -302,6 +300,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             ));
         }
     };
+
     //checking between 2 possible button variations
     let first_button = browser
         .page

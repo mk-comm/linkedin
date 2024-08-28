@@ -184,6 +184,7 @@ pub struct EntryScrapSearchRecruiter {
     pub url_list_id: String,
     pub aisearch: String,
     pub cookies: Cookies,
+    pub urls_scraped: i32,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

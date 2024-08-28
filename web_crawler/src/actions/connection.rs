@@ -1,4 +1,5 @@
 use crate::actions::start_browser::{send_screenshot, start_browser};
+use crate::actions::start_browser_new::session_cookie_is_valid;
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::candidate::Candidate;
@@ -123,7 +124,29 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         }
         None => (),
     };
+    let cookie = session_cookie_is_valid(&browser.page).await?;
+    if !cookie {
+        browser.page.reload_builder().reload().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&browser.page).await?;
+        if !cookie_second_try {
+            wait(1, 3);
+            let screenshot = browser.page.screenshot_builder().screenshot().await?;
+            browser.page.close(Some(false)).await?;
+            browser.browser.close().await?;
+            send_screenshot(
+                screenshot,
+                "Scrap each profile",
+                "Session cookie expired",
+                "Scrap each profile",
+            )
+            .await?;
+            return Err(CustomError::SessionCookieExpired);
+        }
 
+        println!("checking if cookie is valid{}", cookie_second_try);
+    }
+    use crate::actions::start_browser_new::session_cookie_is_valid;
     let block = match block_option {
         Some(block) => block,
         None => {

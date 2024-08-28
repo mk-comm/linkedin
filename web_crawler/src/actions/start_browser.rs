@@ -148,7 +148,7 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     let mut go_to: Result<Option<playwright::api::Response>, std::sync::Arc<playwright::Error>> =
         build.goto().await;
 
-    wait(7, 14);
+    wait(20, 24);
     let mut x = 0;
     if go_to.is_err() {
         while x <= 3 {
@@ -234,7 +234,7 @@ pub async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
         )
         .await?;
     let sing_in_button_main_screen = page
-        .query_selector("a[class='sign-in-modal__outlet-btn cursor-pointer btn-md btn-primary'")
+        .query_selector("a[class='sign-in-modal__outlet-btn cursor-pointer btn-md btn-primary']")
         .await?;
 
     println!("email_input{:?}", email_input);
