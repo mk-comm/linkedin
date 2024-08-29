@@ -1,6 +1,7 @@
 use crate::actions::start_browser::send_screenshot;
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
+use crate::structs::error::error_and_screenshot;
 use crate::structs::error::CustomError;
 use crate::{actions::start_browser::start_browser, structs::entry::EntryScrapSearchRecruiter};
 use playwright::api::Page;
@@ -42,6 +43,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
 
     if search_container.is_none() {
         error!("search container not found");
+
         let screenshot = browser.page.screenshot_builder().screenshot().await?;
         send_screenshot(
             screenshot,

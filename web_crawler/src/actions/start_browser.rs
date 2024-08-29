@@ -3,6 +3,7 @@ use tokio::time::{timeout, Duration};
 //use std::path::Path;
 use super::wait::wait;
 use crate::structs::browser::{BrowserConfig, BrowserInit};
+use crate::structs::error::error_and_screenshot;
 use crate::structs::error::CustomError;
 use crate::structs::user::User;
 use base64;
@@ -183,7 +184,6 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
     } else {
         wait(1, 3);
     }
-
     wait(7, 14);
     let cookie = session_cookie_is_valid(&page).await?;
     if !cookie {
@@ -193,8 +193,10 @@ pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, Cu
         if !cookie_second_try {
             wait(1, 3);
             let screenshot = page.screenshot_builder().screenshot().await?;
+
             page.close(Some(false)).await?;
             browser.close().await?;
+
             send_screenshot(
                 screenshot,
                 &user.user_id,
@@ -228,6 +230,9 @@ pub async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
             "input[data-tracking-control-name='seo-authwall-base_join-form-email-or-phone']",
         )
         .await?;
+    let email_input_another = page
+        .query_selector("div[class='form__input--floating mt-24']")
+        .await?;
     let sing_in_button = page
         .query_selector(
             "button[class='sign-in-modal__outlet-btn cursor-pointer btn-md btn-primary']",
@@ -237,7 +242,7 @@ pub async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
         .query_selector("a[class='sign-in-modal__outlet-btn cursor-pointer btn-md btn-primary']")
         .await?;
 
-    println!("email_input{:?}", email_input);
+    println!("email_input_another{:?}", email_input_another);
     println!("signin_input{:?}", sing_in_button);
     if email_input.is_some() {
         Ok(false)
@@ -248,7 +253,11 @@ pub async fn session_cookie_is_valid(page: &Page) -> Result<bool, CustomError> {
             if sing_in_button_main_screen.is_some() {
                 Ok(false)
             } else {
-                Ok(true)
+                if email_input_another.is_some() {
+                    Ok(false)
+                } else {
+                    Ok(true)
+                }
             }
         }
     }

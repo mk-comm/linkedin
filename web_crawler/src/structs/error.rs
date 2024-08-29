@@ -1,10 +1,14 @@
+use playwright::api::Page;
+use serde_json::json;
 use std::error::Error as StdError;
 use std::fmt;
 use std::sync::Arc;
+use tracing::{error, info};
 #[derive(Debug)]
 pub enum CustomError {
     PlaywrightError(Arc<playwright::Error>),
     ButtonNotFound(String),
+    ErrorWithString(String),
     ReqwestError(reqwest::Error),
     SessionCookieExpired,
     RecruiterSessionCookieExpired,
@@ -24,6 +28,7 @@ impl fmt::Display for CustomError {
         match self {
             CustomError::PlaywrightError(e) => write!(f, "{}", e),
             CustomError::ButtonNotFound(e) => write!(f, "{}", e),
+            CustomError::ErrorWithString(e) => write!(f, "{}", e),
             CustomError::SessionCookieExpired => write!(f, "Session cookie expired"),
             CustomError::RecruiterSessionCookieExpired => {
                 write!(f, "Recruiter Session cookie expired")
@@ -34,15 +39,14 @@ impl fmt::Display for CustomError {
             CustomError::ConnectionLimit => write!(f, "Connection limit"),
             CustomError::ProxyNotWorking => write!(f, "Proxy not working"),
             CustomError::ReqwestError(e) => write!(f, "{}", e),
-            //CustomError::ActixError(e) => write!(f, "{}", e),
             CustomError::AnyhowError(e) => write!(f, "{}", e),
             CustomError::SerdeJsonError(e) => write!(f, "{}", e),
             CustomError::ChronoError(e) => write!(f, "{}", e),
-            //CustomError::IoError(e) => write!(f, "{}", e),
             CustomError::BoxedError(err) => write!(f, "Boxed error: {}", err),
         }
     }
 }
+
 impl StdError for CustomError {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match self {
@@ -94,4 +98,44 @@ impl From<chrono::ParseError> for CustomError {
     fn from(err: chrono::ParseError) -> Self {
         CustomError::ChronoError(err)
     }
+}
+
+pub async fn error_and_screenshot(
+    page: &Page,
+    error: &str,
+    function: &str,
+    user_id: &str,
+) -> CustomError {
+    let screenshot = page.screenshot_builder().screenshot().await;
+    send_screenshot(screenshot.unwrap(), &user_id, &error, &function).await;
+    CustomError::ErrorWithString(error.to_string())
+}
+
+pub async fn send_screenshot(
+    screenshot: Vec<u8>,
+    api_key: &str,
+    variant: &str,
+    message_id: &str,
+) -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+
+    let screenshot = base64::encode(&screenshot);
+    let send_json = json!({
+        "screenshot": screenshot,
+        "api_key":  api_key,
+        "variant": variant,
+        "message_id": message_id,
+    });
+    const TARGET_URL: &str = "
+       https://tribexyz.bubbleapps.io/version-test/api/1.1/wf/sequence_status_screenshot/";
+    let response: Result<reqwest::Response, reqwest::Error> =
+        client.post(TARGET_URL).json(&send_json).send().await;
+    match response {
+        Ok(_) => info!("{}/Ok, {} was done", variant, api_key),
+        Err(error) => {
+            error!(error = ?error, "{}/Error {} returned error {}", variant, api_key, error);
+        }
+    }
+
+    Ok(())
 }
