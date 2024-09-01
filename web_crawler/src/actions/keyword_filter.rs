@@ -6,7 +6,23 @@ use std::fmt;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct EntryKeyword {
     filters: Vec<Filters>,
-    linkedin_sections: Vec<LinkedinSection>,
+    linkedin_sections: Response,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Response {
+    status: String,
+    response: ResponseData,
+}
+#[derive(Debug, Serialize, Deserialize)]
+struct ResponseData {
+    sections: Vec<LinkedinSection>,
+}
+#[derive(Debug, Deserialize, Serialize)]
+pub struct LinkedinSection {
+    pub text: Option<String>,
+    #[serde(rename = "type")]
+    pub linkedin_sections: LinkedinSections,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -74,12 +90,6 @@ pub enum InclusionIndicator {
     #[serde(rename = "is not contained")]
     NotContained,
 }
-#[derive(Debug, Deserialize, Serialize)]
-pub struct LinkedinSection {
-    pub text: String,
-    #[serde(rename = "type")]
-    pub linkedin_sections: LinkedinSections,
-}
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum Condition {
     AND,
@@ -123,7 +133,7 @@ pub struct FilterGroup {
 }
 pub async fn keyword(entry: EntryKeyword) -> bool {
     let filters = entry.filters;
-    let sections = entry.linkedin_sections;
+    let sections = entry.linkedin_sections.response.sections;
     let group_filters = group_filters(filters);
 
     let result = check_keywords_in_groups(group_filters, sections);
@@ -170,9 +180,11 @@ fn check_keywords_in_groups(
                     .iter()
                     .find(|&ls| &ls.linkedin_sections == section)
                 {
-                    let keywords_present = filter.keywords.iter().all(|keyword| {
+                    let keywords_present = filter.keywords.iter().any(|keyword| {
                         linkedin_section
                             .text
+                            .clone()
+                            .unwrap_or("".to_string())
                             .to_lowercase()
                             .contains(&keyword.to_lowercase())
                     });

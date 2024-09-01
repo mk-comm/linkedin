@@ -1,0 +1,5 @@
+[toolchain]
+channel = "stable"  # or specify a specific version like "1.69.0"
+components = ["rustfmt", "clippy"]  # optional components
+targets = ["x86_64-unknown-linux-gnu"]  # optional targets
+profile = "minimal"  # optional: choose between "minimal", "default", or "complete"
