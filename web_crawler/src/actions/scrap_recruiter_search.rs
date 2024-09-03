@@ -1,13 +1,14 @@
+use crate::actions::init_browser::init_browser;
 use crate::actions::start_browser::send_screenshot;
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
-use crate::structs::error::error_and_screenshot;
+use crate::structs::entry::EntryScrapSearchRecruiter;
 use crate::structs::error::CustomError;
-use crate::{actions::start_browser::start_browser, structs::entry::EntryScrapSearchRecruiter};
-use playwright::api::Page;
 use reqwest;
 use scraper::{Html, Selector};
 use serde_json::json;
+use thirtyfour::By;
+use thirtyfour::WebDriver;
 use tracing::{error, info};
 
 pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<(), CustomError> {
@@ -28,23 +29,42 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     };
     let ai_search = entry.aisearch.as_str();
     let _ = send_search_status("Starting the browser", ai_search).await;
-    let browser = start_browser(browser_info).await?;
-
+    let browser = init_browser(&browser_info).await?;
     let _ = send_search_status("Connected to Linkedin", ai_search).await;
     let _ = send_search_status("Opening the search page", ai_search).await;
-    browser.page.goto_builder(&entry.url).goto().await?;
-    wait(22, 27);
+    browser.goto(&entry.url).await?;
+    let recruiter_session_cookie_check = check_recruiter_cookie(&browser).await?;
+    if !recruiter_session_cookie_check {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = check_recruiter_cookie(&browser).await?;
+        if !cookie_second_try {
+            wait(1, 3);
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Recruiter Session cookie expired",
+                "Start Browser",
+            )
+            .await?;
+            return Err(CustomError::RecruiterSessionCookieExpired);
+        }
+
+        println!("checking if cookie is valid{}", cookie_second_try);
+    }
+    wait(60, 65);
     let url_list_id = entry.url_list_id.to_string();
     let _ = send_search_status("Page opened", ai_search).await;
-    let search_container = browser
-        .page
-        .query_selector("div.hp-core-temp.profile-list.profile-list-container")
-        .await?;
 
-    if search_container.is_none() {
+    const SEARCH_CONTAINER: &str = "div.hp-core-temp.profile-list.profile-list-container";
+    let search_container = browser.find(By::Css(SEARCH_CONTAINER)).await;
+    if search_container.is_err() {
         error!("search container not found");
 
-        let screenshot = browser.page.screenshot_builder().screenshot().await?;
+        let screenshot = browser.screenshot_as_png().await?;
         send_screenshot(
             screenshot,
             &user_id,
@@ -60,14 +80,14 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     let _ = send_search_status("Counting candidates", ai_search).await;
     const CANDIDATE_NUMBER: &str =
         "span[class='profile-list__header-info-text t-14 profile-list__header-info-text--reflow']";
-    let number_candidates = browser.page.query_selector(CANDIDATE_NUMBER).await?;
+    let number_candidates = browser.find(By::Css(CANDIDATE_NUMBER)).await;
     let mut total_candidates: i32 = 0;
     match number_candidates {
-        Some(number) => {
-            let text = number.text_content().await?;
+        Ok(number) => {
+            let text = number.text().await;
             let text = match text {
-                Some(text) => text,
-                None => String::from("1001"),
+                Ok(text) => text,
+                Err(_) => String::from("1001"),
             };
             println!("{:?}", text);
             let result = if text.contains('M') || text.contains('K') {
@@ -79,7 +99,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             total_candidates = result;
             send_search_number(result, &entry.aisearch).await?
         }
-        None => send_search_number(1003, &entry.aisearch).await?,
+        Err(_) => send_search_number(1003, &entry.aisearch).await?,
     };
     let total_candidates = format!("Total candidates: {}", total_candidates);
     let _ = send_search_status(total_candidates.as_str(), ai_search).await;
@@ -91,14 +111,12 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         let page_scraped = format!("Started scraping page {}", pages_number);
         let _ = send_search_status(page_scraped.as_str(), ai_search).await;
         let mut url_list: Vec<String> = Vec::new();
-        let search_container_inside = browser
-            .page
-            .query_selector("div.hp-core-temp.profile-list.profile-list-container")
-            .await?;
+        const SEARCH_CONTAINER: &str = "div.hp-core-temp.profile-list.profile-list-container";
 
-        if search_container_inside.is_none() {
+        let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
+        if search_container_inside.is_err() {
             error!("search container not found");
-            let screenshot = browser.page.screenshot_builder().screenshot().await?;
+            let screenshot = browser.screenshot_as_png().await?;
             send_screenshot(
                 screenshot,
                 &user_id,
@@ -112,7 +130,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             ));
         }
         let search_container_inside = search_container_inside.unwrap();
-        scroll(&browser.page).await?;
+        scroll(&browser).await?;
         wait(5, 7);
         let _scrap = scrap(
             search_container_inside.inner_html().await?.as_str(),
@@ -152,20 +170,19 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         const NEXT_ICON: &str = ".mini-pagination__quick-link[rel='next']";
 
         const NEXT_BUTTON: &str = "a[class='pagination__quick-link pagination__quick-link--next']";
-        let next_page = browser.page.query_selector(NEXT_BUTTON).await?;
+        let next_page = browser.find(By::Css(NEXT_BUTTON)).await;
         match next_page {
-            Some(next_page) => {
-                next_page.click_builder().click().await?;
-                wait(20, 25);
-                //pagination.scroll_into_view_if_needed(Some(1000.0)).await?;
-                //println!("url list: {:?}", url_list);
+            Ok(next_page) => {
+                next_page.click().await?;
+                wait(40, 45);
                 wait(3, 5);
             }
-            None => {
-                let next_page = browser.page.query_selector(NEXT_ICON).await?;
-                if next_page.is_some() {
-                    next_page.unwrap().click_builder().click().await?;
-                    wait(20, 25);
+            Err(_) => {
+                let next_page = browser.find(By::Css(NEXT_ICON)).await;
+
+                if next_page.is_ok() {
+                    next_page.unwrap().click().await?;
+                    wait(40, 45);
                 } else {
                     println!("next page is empty");
 
@@ -180,13 +197,30 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
 
     wait(5, 12);
 
-    browser.page.close(Some(false)).await?;
-    browser.browser.close().await?; //close browser
+    browser.quit().await?;
     let _ = send_search_status("Search scraped successfully", ai_search).await;
     Ok(())
 }
 
-async fn scroll(page: &Page) -> Result<(), CustomError> {
+async fn check_recruiter_cookie(page: &WebDriver) -> Result<bool, CustomError> {
+    let sign_in_text = page
+        .find(By::Css(
+            "input[data-tracking-control-name='seo-authwall-base_join-form-email-or-phone']",
+        ))
+        .await;
+    match sign_in_text {
+        Ok(sign_in_text) => {
+            if sign_in_text.text().await?.trim() == "Sign in to LinkedIn Talent Solutions" {
+                Ok(false)
+            } else {
+                Ok(true)
+            }
+        }
+        Err(_) => Ok(true),
+    }
+}
+
+async fn scroll(page: &WebDriver) -> Result<(), CustomError> {
     let mut x = 0;
 
     while x < 25 {
@@ -197,16 +231,13 @@ async fn scroll(page: &Page) -> Result<(), CustomError> {
     Ok(())
 }
 
-async fn move_scroll(page: &Page) -> Result<(), CustomError> {
+async fn move_scroll(page: &WebDriver) -> Result<(), CustomError> {
     let scroll_code = r#"
-    function() {
-        let totalHeight = document.body.scrollHeight;
         let scrollDistance = 365;
         window.scrollBy(0, scrollDistance);
-    }
     "#;
-
-    page.evaluate(scroll_code, ()).await?;
+    let scrolling = page.execute(scroll_code, vec![]).await?;
+    println!("scroll: {:?}", scrolling);
 
     wait(1, 2);
     Ok(())

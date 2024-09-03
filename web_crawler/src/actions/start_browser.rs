@@ -3,7 +3,6 @@ use tokio::time::{timeout, Duration};
 //use std::path::Path;
 use super::wait::wait;
 use crate::structs::browser::{BrowserConfig, BrowserInit};
-use crate::structs::error::error_and_screenshot;
 use crate::structs::error::CustomError;
 use crate::structs::user::User;
 use base64;
@@ -15,15 +14,16 @@ use std::collections::HashMap;
 use tracing::{error, info};
 
 pub async fn start_browser(browserinfo: BrowserInit) -> Result<BrowserConfig, CustomError> {
-    let proxy_check = format!(
-        "{}:{}@{}",
-        browserinfo.username, browserinfo.password, browserinfo.ip
-    );
-    let proxy_validation = valid_proxy(proxy_check.as_str()).await?;
-    if proxy_validation == false {
-        return Err(CustomError::ProxyNotWorking);
-    };
-
+    /*
+        let proxy_check = format!(
+            "{}:{}@{}",
+            browserinfo.username, browserinfo.password, browserinfo.ip
+        );
+        let proxy_validation = valid_proxy(proxy_check.as_str()).await?;
+        if proxy_validation == false {
+            return Err(CustomError::ProxyNotWorking);
+        };
+    */
     info!("Starting browser");
     //path to  local browser
 

@@ -3,6 +3,7 @@ use serde_json::json;
 use std::error::Error as StdError;
 use std::fmt;
 use std::sync::Arc;
+use thirtyfour::error::WebDriverError;
 use tracing::{error, info};
 #[derive(Debug)]
 pub enum CustomError {
@@ -13,6 +14,7 @@ pub enum CustomError {
     SessionCookieExpired,
     RecruiterSessionCookieExpired,
     ProxyNotWorking,
+    WebDriverError(WebDriverError),
     EmailNeeded,
     ConnectionLimit,
     //ProfileNotFound,
@@ -33,12 +35,12 @@ impl fmt::Display for CustomError {
             CustomError::RecruiterSessionCookieExpired => {
                 write!(f, "Recruiter Session cookie expired")
             }
+            CustomError::WebDriverError(err) => write!(f, "WebDriverError: {}", err),
             //CustomError::ProfileNotFound => write!(f, "Profile not found"),
             CustomError::ReqwestError(err) => write!(f, "Reqwest error: {}", err),
             CustomError::EmailNeeded => write!(f, "Email needed"),
             CustomError::ConnectionLimit => write!(f, "Connection limit"),
             CustomError::ProxyNotWorking => write!(f, "Proxy not working"),
-            CustomError::ReqwestError(e) => write!(f, "{}", e),
             CustomError::AnyhowError(e) => write!(f, "{}", e),
             CustomError::SerdeJsonError(e) => write!(f, "{}", e),
             CustomError::ChronoError(e) => write!(f, "{}", e),
@@ -47,6 +49,11 @@ impl fmt::Display for CustomError {
     }
 }
 
+impl From<WebDriverError> for CustomError {
+    fn from(err: WebDriverError) -> CustomError {
+        CustomError::WebDriverError(err.into())
+    }
+}
 impl StdError for CustomError {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match self {

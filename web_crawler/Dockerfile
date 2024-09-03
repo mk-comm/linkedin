@@ -18,7 +18,9 @@ RUN playwright install-deps
 
 # Install Chromium using Playwright
 RUN npx playwright install chromium webkit firefox
-
+# Copy chromedriver from the src folder to /usr/local/bin and make it executable
+RUN cp ./src/chromedriver /usr/local/bin/chromedriver && chmod +x /usr/local/bin/chromedriver
+RUN cp ./src/chromedriver /usr/local/bin/chromedriver_PATCHED && chmod +x /usr/local/bin/chromedriver_PATCHED
 # The rest of your existing Dockerfile
 RUN apt-get update && apt-get install -y pkg-config libssl-dev
 RUN apt-get update && \
