@@ -279,11 +279,11 @@ async fn message(json: Json<EntrySendConnection>) -> impl IntoResponse {
     let result = tokio::spawn(async move {
         let api = send_message(json.0);
         match api.await {
-            Ok(_) => {
+            Ok(text) => {
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
-                    "result": "Message was sent",
+                    "result": text,
                     "user_id": user_id,
                     "error": "no",
                 });

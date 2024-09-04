@@ -93,6 +93,11 @@ pub async fn session_cookie_is_valid(page: &WebDriver) -> Result<bool, CustomErr
             "a[class='nav__button-secondary btn-secondary-emphasis btn-md']",
         ))
         .await;
+    let sing_in_button_main_screen_another = page
+        .find(By::Css(
+            "a[class='nav__button-secondary btn-secondary-emphasis btn-sm ml-3']",
+        ))
+        .await;
 
     if email_input.is_ok() {
         Ok(false)
@@ -106,7 +111,11 @@ pub async fn session_cookie_is_valid(page: &WebDriver) -> Result<bool, CustomErr
                 if email_input_another.is_ok() {
                     Ok(false)
                 } else {
-                    Ok(true)
+                    if sing_in_button_main_screen_another.is_ok() {
+                        Ok(false)
+                    } else {
+                        Ok(true)
+                    }
                 }
             }
         }

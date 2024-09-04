@@ -202,7 +202,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     Ok(())
 }
 
-async fn check_recruiter_cookie(page: &WebDriver) -> Result<bool, CustomError> {
+pub async fn check_recruiter_cookie(page: &WebDriver) -> Result<bool, CustomError> {
     let sign_in_text = page
         .find(By::Css(
             "input[data-tracking-control-name='seo-authwall-base_join-form-email-or-phone']",

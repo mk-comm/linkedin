@@ -143,6 +143,7 @@ pub struct EntrySendConnection {
     pub user_agent: String,
     pub user_id: String,
     pub cookies: Cookies,
+    pub check_reply: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
