@@ -18,9 +18,14 @@ RUN playwright install-deps
 
 # Install Chromium using Playwright
 RUN npx playwright install chromium webkit firefox
-# Copy chromedriver from the src folder to /usr/local/bin and make it executable
-RUN cp ./src/chromedriver /usr/local/bin/chromedriver && chmod +x /usr/local/bin/chromedriver
-RUN cp ./src/chromedriver /usr/local/bin/chromedriver_PATCHED && chmod +x /usr/local/bin/chromedriver_PATCHED
+# Add Google's official GPG key and set up the stable repository
+RUN curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+
+# Install Google Chrome
+RUN apt-get update && apt-get install -y \
+    google-chrome-stable \
+    --no-install-recommends
 # The rest of your existing Dockerfile
 RUN apt-get update && apt-get install -y pkg-config libssl-dev
 RUN apt-get update && \
@@ -48,9 +53,9 @@ RUN apt-get update && \
     libpango1.0-0 \
     libcairo2 \
     wget && \
-    wget https://mirror.combahton.net/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1-1ubuntu2.1~18.04.21_amd64.deb && \
-    dpkg -i libssl1.1_1.1.1-1ubuntu2.1~18.04.21_amd64.deb && \
-    rm -f libssl1.1_1.1.1-1ubuntu2.1~18.04.21_amd64.deb && \
+    wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1-1ubuntu2.1~18.04.23_amd64.deb && \
+    dpkg -i libssl1.1_1.1.1-1ubuntu2.1~18.04.23_amd64.deb && \
+    rm -f libssl1.1_1.1.1-1ubuntu2.1~18.04.23_amd64.deb && \
     apt-get install -y curl && \
     curl https://sh.rustup.rs -sSf | sh -s -- -y && \
     echo "source $HOME/.cargo/env" >> ~/.bashrc && \
