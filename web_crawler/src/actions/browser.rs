@@ -45,7 +45,7 @@ pub async fn chrome(
         socks_password: None,           // Replace with your SOCKS proxy password
         no_proxy: None,
     })?;
-    //caps.set_headless()?;
+    caps.set_headless()?;
 
     let mut driver = None;
     let mut attempt = 0;
@@ -57,7 +57,6 @@ pub async fn chrome(
         }
     }
     let driver = driver.unwrap();
-    driver.set_window_rect(0, 0, 384, 768).await?;
     Ok(driver)
 }
 

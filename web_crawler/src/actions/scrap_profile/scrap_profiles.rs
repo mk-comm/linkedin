@@ -1,4 +1,5 @@
 
+
 use crate::actions::init_browser::init_browser;
 use crate::actions::scrap_profile::scrap_each_profile::scrap_each_profile_main;
 use crate::actions::scrap_profile::scrap_each_profile::send_search_status;
@@ -38,11 +39,18 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
     };
     let browser = init_browser(&browser_info).await?;
     send_search_status("Connected to linkedin", &aisearch, batch.as_str(), "none").await?;
-    let result = start_scraping(&browser, aisearch, batch, urls, job, sourcer, search_url).await;
-    if let Err(error) = result {
-        browser.quit().await?;
-        return Err(error);
-    };
+    let chunks = urls.chunks(5);
+
+    for chunk in chunks {
+        let urls = chunk.to_vec();
+        let result = start_scraping(&browser, aisearch.clone(), &batch, urls, job.clone(), sourcer.clone(), search_url.clone()).await;
+        if let Err(error) = result {
+            browser.quit().await?;
+            return Err(error);
+        };
+
+    }
+    
 
     Ok(())
 }
@@ -50,13 +58,13 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
 async fn start_scraping(
     browser: &WebDriver,
     aisearch: Option<String>,
-    batch: String,
+    batch: &str,
     urls: Vec<Url>,
     job: Option<String>,
     sourcer: Option<String>,
     search_url: Option<String>,
 ) -> Result<(), CustomError> {
-    send_search_status("Connected to linkedin", &aisearch, batch.as_str(), "none").await?;
+    send_search_status("Connected to linkedin", &aisearch, batch, "none").await?;
 
     let tabs = open_urls(&browser, urls).await?;
     let main = scrap_main_profiles(&browser, tabs, job, sourcer, aisearch, search_url).await?;
@@ -100,7 +108,7 @@ async fn scrap_main_profiles(
             url_id.url_id,
         )
         .await?;
-        profiles.push(profile)
+        profiles.push(profile);
     }
     Ok(profiles)
 }
@@ -142,8 +150,8 @@ async fn scrap_experience_to_profile(
 async fn send_url_chromedata_viewed(profile: &Profile) -> Result<(), CustomError> {
     let serialized = serde_json::to_vec(&profile).unwrap();
     let encoded = encode(&serialized);
-    //const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
-    const WEBHOOK_URL: &str = "https://webhook.site/edf0826d-61e4-4de5-bdd1-678d485785a9";
+    const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
+    //const WEBHOOK_URL: &str = "https://webhook.site/edf0826d-61e4-4de5-bdd1-678d485785a9";
     let client = reqwest::Client::new();
 
     let target_json = json!({ 
@@ -166,9 +174,9 @@ async fn send_url_update(
         "url_id": url_id,
     "linkedin": linkedin_url
     });
-    //let target_url = "https://overview.tribe.xyz/api/1.1/wf/tribe_scrap_search_update_url";
+    let target_url = "https://overview.tribe.xyz/api/1.1/wf/tribe_scrap_search_update_url";
 
-    let target_url = "https://webhook.site/edf0826d-61e4-4de5-bdd1-678d485785a9";
+    //let target_url = "https://webhook.site/edf0826d-61e4-4de5-bdd1-678d485785a9";
     let mut retries = 0;
     loop {
         let response = client.post(target_url).json(&urls_json).send().await;

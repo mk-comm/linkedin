@@ -293,7 +293,7 @@ async fn send_urls(
     let max_retries = 5;
     let client = reqwest::Client::new();
 
-    for batch in urls.chunks(5) {
+    for batch in urls.chunks(10) {
         let urls_json = json!({
             "urls": batch,
             "ai_search": ai_search,
