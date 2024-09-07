@@ -54,7 +54,7 @@ async fn add_cookie(
     driver: &mut WebDriver,
 ) -> Result<(), CustomError> {
     driver.goto("https://www.linkedin.com/login").await?;
-    wait(10, 12);
+    wait(1, 2);
 
     let mut session_cookie = Cookie::new("li_at", session_cookie);
     session_cookie.set_domain(".www.linkedin.com");
@@ -70,7 +70,7 @@ async fn add_cookie(
     driver
         .goto("https://www.linkedin.com/mypreferences/d/categories/account")
         .await?;
-    wait(10, 12);
+    wait(1, 2);
     Ok(())
 }
 

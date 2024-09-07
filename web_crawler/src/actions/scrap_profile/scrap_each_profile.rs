@@ -1,23 +1,22 @@
+use crate::actions::init_browser::session_cookie_is_valid;
 use crate::actions::scrap_profile::misc::serialize_option_string;
 use crate::actions::scrap_profile::scrap_education::parse_education;
 use crate::actions::scrap_profile::scrap_education::Education;
 use crate::actions::scrap_profile::scrap_experience_new_tab::{parse_experience, Experience};
-use crate::actions::start_browser_new::session_cookie_is_valid;
-use crate::structs::browser::BrowserConfigNew;
 use crate::structs::entry::Url;
+use crate::structs::error::CustomError;
+use playwright::api::browser;
 use serde::{Deserialize, Serialize};
+use thirtyfour::{By, WebDriver};
 
 use crate::actions::start_browser::send_screenshot;
 use crate::actions::wait::wait;
-use crate::structs::error::CustomError;
 #[allow(deprecated)]
 use base64::encode;
-use playwright::api::Page;
 use scraper::{Html, Selector};
 use serde_json::json;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tokio::time::{timeout, Duration};
 use tracing::{error, info};
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
@@ -32,102 +31,65 @@ struct BodyJsonB64 {
 }
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
-struct Profile {
-    AI: bool,
+pub struct Profile {
+    pub AI: bool,
     #[serde(serialize_with = "serialize_option_string")]
-    linkedin: Option<String>,
+    pub linkedin: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    first: Option<String>,
+    pub first: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    last: Option<String>,
+    pub last: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    email: Option<String>,
+    pub email: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    job: Option<String>,
+    pub job: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    sourcer: Option<String>,
+    pub sourcer: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    title: Option<String>,
+    pub title: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    linkedin_unique: Option<String>,
+    pub linkedin_unique: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    linkedin_unique_number: Option<String>,
-    connectionLevel: Option<i32>,
+    pub linkedin_unique_number: Option<String>,
+    pub connectionLevel: Option<i32>,
     #[serde(serialize_with = "serialize_option_string")]
-    company: Option<String>,
+    pub company: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    company_unique: Option<String>,
+    pub company_unique: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    about: Option<String>,
+    pub about: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    profilePicture: Option<String>,
-    education: Vec<Education>,
-    experience: Vec<Experience>,
+    pub profilePicture: Option<String>,
+    pub education: Vec<Education>,
+    pub experience: Vec<Experience>,
     #[serde(serialize_with = "serialize_option_string")]
-    viewedIn: Option<String>,
+    pub viewedIn: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    location: Option<String>,
+    pub location: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    entityUrn: Option<String>,
+    pub entityUrn: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    extension_version: Option<String>,
+    pub extension_version: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    timestamp: Option<String>,
+    pub timestamp: Option<String>,
     #[serde(serialize_with = "serialize_option_string")]
-    search_url: Option<String>,
-    profile_url_id: String,
+    pub search_url: Option<String>,
+    pub profile_url_id: String,
 }
 
-pub async fn scrap_each_profile(
-    browser: Arc<RwLock<BrowserConfigNew>>,
-    url: Arc<RwLock<Url>>,
-    job: Arc<RwLock<Option<String>>>,
-    sourcer: Arc<RwLock<Option<String>>>,
-    aisearch: Arc<RwLock<Option<String>>>,
-    search_url: Arc<RwLock<Option<String>>>,
-) -> Result<(), CustomError> {
-    let search_url = search_url.read().await;
+pub async fn scrap_each_profile_main(
+    browser: &WebDriver,
+    job: Option<String>,
+    sourcer: Option<String>,
+    aisearch: Option<String>,
+    search_url: Option<String>,
+    url_id: String,
+) -> Result<Profile, CustomError> {
+    const PAGE_NOT_FOUND: &str = "header[class='not-found__header not-found__container']";
+    let page_not_found = browser.find(By::Css(PAGE_NOT_FOUND)).await;
 
-    let url_id = &url.read().await.url_id;
-    let url = &url.read().await.url;
-    let browser = &browser.clone();
-    let browser = &browser.read().await.context;
-    let page = browser.new_page().await?;
-    // go to candidate page
-    let go_to = page.goto_builder(url).goto().await;
-
-    let mut x = 0;
-    if go_to.is_err() {
-        while x <= 3 {
-            let build = page.goto_builder(url).goto().await;
-            if build.is_ok() {
-                break;
-            } else if build.is_err() && x == 3 {
-                let screenshot = page.screenshot_builder().screenshot().await?;
-                send_screenshot(
-                    screenshot,
-                    "aisearch",
-                    "Candidate page is not loading within 30 sec/scrap_profile",
-                    "scrap each profile",
-                )
-                .await?;
-                return Err(CustomError::ButtonNotFound(
-                    "Candidate page is not loading within 30 sec/scrap_profile".to_string(),
-                )); // if error means page is not loading
-            }
-            x += 1;
-        }
-    }
-
-    wait(15, 18); // random delay
-
-    let page_not_found = page
-        .query_selector("header[class='not-found__header not-found__container']")
-        .await?;
-    if page_not_found.is_some() {
-        wait(1, 5);
-
-        let screenshot = page.screenshot_builder().screenshot().await?;
+    if page_not_found.is_ok() {
+        let screenshot = browser.screenshot_as_png().await?;
         send_screenshot(
             screenshot,
             "aisearch",
@@ -139,16 +101,15 @@ pub async fn scrap_each_profile(
             "Page does not exist".to_string(),
         ));
     }
-    let cookie = session_cookie_is_valid(&page).await?;
+    let cookie = session_cookie_is_valid(&browser).await?;
     if !cookie {
-        page.reload_builder().reload().await?;
+        browser.refresh().await?;
         wait(7, 14);
-        let cookie_second_try = session_cookie_is_valid(&page).await?;
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
         if !cookie_second_try {
             wait(1, 3);
-            let screenshot = page.screenshot_builder().screenshot().await?;
-            page.close(Some(false)).await?;
-            browser.close().await?;
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.clone().quit().await?;
             send_screenshot(
                 screenshot,
                 "Scrap each profile",
@@ -161,17 +122,14 @@ pub async fn scrap_each_profile(
 
         println!("checking if cookie is valid{}", cookie_second_try);
     }
-    let html_body = page
-        .query_selector(
-            "body.render-mode-BIGPIPE.nav-v2.ember-application.icons-loaded.boot-complete",
-        )
-        .await?;
-    let html = match html_body {
-        Some(body) => body.inner_html().await?,
-        None => {
-            wait(1, 5);
+    const HTML_BODY: &str =
+        "body.render-mode-BIGPIPE.nav-v2.ember-application.icons-loaded.boot-complete";
+    let html_body = browser.find(By::Css(HTML_BODY)).await;
 
-            let screenshot = page.screenshot_builder().screenshot().await?;
+    let html = match html_body {
+        Ok(body) => body.inner_html().await?,
+        Err(_) => {
+            let screenshot = browser.screenshot_as_png().await?;
             send_screenshot(
                 screenshot,
                 "aisearch",
@@ -184,9 +142,8 @@ pub async fn scrap_each_profile(
             ));
         }
     };
-    let linkedin_url = get_linkedin_url(page.clone());
-    let redirect_url = linkedin_url.clone().unwrap();
-    let linkedin_url_update = linkedin_url.clone();
+    let linkedin_url = browser.current_url().await?;
+    let linkedin_url = linkedin_url.as_str().to_string();
     let full_name = get_name_tuple(&html);
     let first_name = match full_name {
         Some(ref full_name) => Some(full_name.clone().0),
@@ -197,7 +154,7 @@ pub async fn scrap_each_profile(
         None => None,
     };
     let current_tittle = get_title(&html);
-    let linkedin_nick = get_linkedin_nick(linkedin_url.clone());
+    let linkedin_nick = get_linkedin_nick(Some(linkedin_url.clone()));
     let linkedin_main_id = get_linkedin_main_id(&html);
     let profile_picture = get_profile_picture(&html);
     let about = get_about(&html);
@@ -206,117 +163,9 @@ pub async fn scrap_each_profile(
     let entity_urn = find_entity_urn(&html);
 
     let education = parse_education(&html);
-    wait(4, 8);
-    let mut current_company_name: Option<String> = None;
-    let mut current_company_id: Option<String> = None;
-
-    let experience_url = format!("{}details/experience", &redirect_url);
-        let build = page.goto_builder(experience_url.as_str());
-        let mut go_to: Result<
-            Option<playwright::api::Response>,
-            std::sync::Arc<playwright::Error>,
-        > = build.goto().await;
-        let mut x = 0;
-        if go_to.is_err() {
-            while x <= 3 {
-                wait(3, 6);
-                let build: Result<
-                    Option<playwright::api::Response>,
-                    std::sync::Arc<playwright::Error>,
-                > = page.goto_builder(experience_url.as_str()).goto().await;
-                if build.is_ok() {
-                    go_to = build;
-                    break;
-                } else if build.is_err() && x == 3 {
-                    wait(1, 3);
-                    //page.close(Some(false)).await?;
-                    //browser.close().await?;
-
-                    let screenshot = page.screenshot_builder().screenshot().await?;
-                    send_screenshot(
-                        screenshot,
-                        "aisearch",
-                        "Experience is not loading within 30 sec",
-                        "scrap each profile",
-                    )
-                    .await?;
-                    return Err(CustomError::ButtonNotFound(
-                        "Experience is not loading within 30 sec".to_string(),
-                    )); // if error means page is not loading
-                }
-                x += 1;
-                //println!("retrying to load page")
-            }
-            wait(1, 3);
-        } else {
-            wait(1, 3);
-        }
-       
-    wait(5, 13);
-    let cookie = session_cookie_is_valid(&page).await?;
-    if !cookie {
-        page.reload_builder().reload().await?;
-        wait(7, 14);
-        let cookie_second_try = session_cookie_is_valid(&page).await?;
-        if !cookie_second_try {
-            wait(1, 3);
-            let screenshot = page.screenshot_builder().screenshot().await?;
-            page.close(Some(false)).await?;
-            browser.close().await?;
-            send_screenshot(
-                screenshot,
-                "Scrap each profile",
-                "Session cookie expired",
-                "Scrap each profile",
-            )
-            .await?;
-            return Err(CustomError::SessionCookieExpired);
-        }
-
-        println!("checking if cookie is valid{}", cookie_second_try);
-    }
-
-    let html_body = page
-        .query_selector("div[class='authentication-outlet']")
-        .await?;
-    let html = match html_body {
-        Some(body) => body.inner_html().await?,
-        None => {
-            wait(1, 5);
-            // browser.close(Some(false)).await?;
-            //browser.browser.close().await?;
-            let screenshot = page.screenshot_builder().screenshot().await?;
-            send_screenshot(
-                screenshot,
-                "aisearch",
-                "Body experience is not found",
-                "scrap each profile",
-            )
-            .await?;
-
-            return Err(CustomError::ButtonNotFound(
-                "Body experience is not found".to_string(),
-            ));
-        }
-    };
-
-    let experience = parse_experience(&html);
-    println!("{:?}", &experience);
-
-    // Check if there is at least one item in the vector
-    if let Some(first_experience) = experience.get(0) {
-        current_company_name = first_experience.companyName.clone();
-        current_company_id = first_experience.companyId.clone();
-    }
-
-    wait(5, 7);
-
-    let job = job.read().await.clone();
-    let sourcer = sourcer.read().await.clone();
-
     let profile = Profile {
         AI: true,
-        linkedin: linkedin_url,
+        linkedin: Some(linkedin_url),
         first: first_name,
         last: last_name,
         email: None,
@@ -326,12 +175,12 @@ pub async fn scrap_each_profile(
         linkedin_unique: linkedin_nick,
         linkedin_unique_number: linkedin_main_id,
         connectionLevel: connection_level,
-        company: current_company_name.clone(),
-        company_unique: current_company_id.clone(),
+        company: None,
+        company_unique: None,
         about,
         profilePicture: profile_picture,
         education,
-        experience,
+        experience: vec![],
         viewedIn: None,
         location,
         entityUrn: entity_urn,
@@ -340,27 +189,8 @@ pub async fn scrap_each_profile(
         search_url: search_url.clone(),
         profile_url_id: url_id.to_owned(),
     };
-    send_url_chromedata_viewed(profile).await?;
-    /*
-        send_search_status(
-            format!("Profile {} sending to chromedata", url).as_str(),
-            aisearch,
-            batch_id,
-            "none",
-        )
-        .await?;
 
-        send_search_status(
-            format!("Profile {} updating url", url).as_str(),
-            aisearch,
-            batch_id,
-            "none",
-        )
-        .await?;
-    */
-    send_url_update(url_id, linkedin_url_update).await?;
-    page.close(Some(false)).await?;
-    Ok(())
+    Ok(profile)
 }
 
 pub async fn send_search_status(
@@ -392,59 +222,6 @@ pub async fn send_search_status(
     }
 
     Ok(())
-}
-
-#[allow(deprecated)]
-async fn send_url_chromedata_viewed(profile: Profile) -> Result<(), CustomError> {
-    let serialized = serde_json::to_vec(&profile).unwrap();
-    let encoded = encode(&serialized);
-    const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
-    //const WEBHOOK_URL: &str = "https://webhook.site/ccfdd061-5a7c-4537-a51b-8b070a470842";
-    let client = reqwest::Client::new();
-
-    let target_json = json!({ 
-        "b64": encoded });
-    let res = client.post(WEBHOOK_URL).json(&target_json).send().await;
-    match res {
-        Ok(_) => (),
-        Err(e) => println!("{}", e),
-    }
-    Ok(())
-}
-
-async fn send_url_update(url_id: &str, linkedin_url: Option<String>) -> Result<(), reqwest::Error> {
-    let max_retries = 5;
-    let client = reqwest::Client::new();
-    let urls_json = json!({
-        "url_id": url_id,
-    "linkedin": linkedin_url
-    });
-    let target_url = "https://overview.tribe.xyz/api/1.1/wf/tribe_scrap_search_update_url";
-
-    let mut retries = 0;
-    loop {
-        let response = client.post(target_url).json(&urls_json).send().await;
-        match response {
-            Ok(res) => {
-                info!(
-                    "Send_urls/url_update/Ok: {}, status: {}",
-                    url_id,
-                    res.status()
-                );
-                return Ok(());
-            }
-            Err(error) => {
-                if retries < max_retries {
-                    retries += 1;
-                    wait(1, 1);
-                    continue;
-                } else {
-                    error!(error = ?error, "Send_urls/url_update/Error {} returned error {}", url_id, error);
-                    return Err(error);
-                }
-            }
-        }
-    }
 }
 
 pub fn find_entity_urn(html: &str) -> Option<String> {
@@ -572,14 +349,6 @@ fn get_linkedin_main_id(html: &str) -> Option<String> {
         // Extract the 'data-member-id' attribute if it exists
         .and_then(|element| element.value().attr("data-member-id").map(String::from));
     id
-}
-
-fn get_linkedin_url(page: Page) -> Option<String> {
-    let page_url = page.url();
-    match page_url {
-        Ok(url) => return Some(url),
-        Err(_) => return None,
-    }
 }
 
 fn get_linkedin_nick(url: Option<String>) -> Option<String> {

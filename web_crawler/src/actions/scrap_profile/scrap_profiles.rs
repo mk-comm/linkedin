@@ -1,13 +1,18 @@
-use crate::actions::scrap_profile::scrap_each_profile::{scrap_each_profile, send_search_status};
-use crate::actions::start_browser_new::start_browser;
+
+use crate::actions::init_browser::init_browser;
+use crate::actions::scrap_profile::scrap_each_profile::scrap_each_profile_main;
+use crate::actions::scrap_profile::scrap_each_profile::send_search_status;
+use crate::actions::scrap_profile::scrap_each_profile::Profile;
+use crate::actions::scrap_profile::scrap_experience_new_tab::get_experience;
 use crate::actions::wait::wait;
-use crate::structs::browser::{BrowserConfigNew, BrowserInit};
+use crate::structs::browser::BrowserInit;
 use crate::structs::entry::{EntryScrapProfile, Url};
 use crate::structs::error::CustomError;
-use futures::future::join_all;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tokio::task;
+use base64::encode;
+use serde_json::json;
+use tracing::{error, info};
+
+use thirtyfour::{WebDriver, WindowHandle};
 
 pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> {
     let job = Some(entry.job.clone()).filter(|j| !j.is_empty());
@@ -31,83 +36,161 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
         fidcookie: entry.cookies.fidcookie,
         jsessionid: entry.cookies.jsessionid,
     };
+    let browser = init_browser(&browser_info).await?;
+    send_search_status("Connected to linkedin", &aisearch, batch.as_str(), "none").await?;
+    let result = start_scraping(&browser, aisearch, batch, urls, job, sourcer, search_url).await;
+    if let Err(error) = result {
+        browser.quit().await?;
+        return Err(error);
+    };
 
-    let browser = start_browser(browser_info.clone()).await?;
-    let browser = Arc::new(RwLock::new(browser));
-    let mut tasks = Vec::new();
+    Ok(())
+}
+
+async fn start_scraping(
+    browser: &WebDriver,
+    aisearch: Option<String>,
+    batch: String,
+    urls: Vec<Url>,
+    job: Option<String>,
+    sourcer: Option<String>,
+    search_url: Option<String>,
+) -> Result<(), CustomError> {
     send_search_status("Connected to linkedin", &aisearch, batch.as_str(), "none").await?;
 
-    run_loop(
-        urls,
-        browser,
-        aisearch.clone(),
-        job.clone(),
-        sourcer.clone(),
-        search_url.clone(),
-        &mut tasks,
-    )
-    .await;
+    let tabs = open_urls(&browser, urls).await?;
+    let main = scrap_main_profiles(&browser, tabs, job, sourcer, aisearch, search_url).await?;
+    let _profiles = scrap_experience_to_profile(&browser, main).await?;
+    Ok(())
+}
 
-    let results = join_all(tasks).await;
+async fn open_urls(
+    browser: &WebDriver,
+    urls: Vec<Url>,
+) -> Result<Vec<(WindowHandle, Url)>, CustomError> {
+    let mut tabs = vec![];
+    for url in urls {
+        let url_copy = url.clone();
+        let window = browser.new_tab().await?;
+        browser.switch_to_window(window.clone()).await?;
+        browser.goto(url_copy.url).await?;
+        tabs.push((window, url));
+    }
+    Ok(tabs)
+}
 
-    // Check results for any errors
-    for result in results {
-        println!("{:?}", result);
-        match result {
-            Ok(nested_result) => {
-                if nested_result.is_err() {
-                    return Err(CustomError::ButtonNotFound(format!(
-                        "Nestef Error {:?} /scrap_profile",
-                        nested_result
-                    )));
-                }
-            }
-            Err(e) => {
-                return Err(CustomError::ButtonNotFound(format!(
-                    "Error {} /scrap_profile",
-                    e
-                )));
-            }
+async fn scrap_main_profiles(
+    browser: &WebDriver,
+    tabs: Vec<(WindowHandle, Url)>,
+    job: Option<String>,
+    sourcer: Option<String>,
+    ai_search: Option<String>,
+    search_url: Option<String>,
+) -> Result<Vec<Profile>, CustomError> {
+    let mut profiles: Vec<Profile> = Vec::new();
+    for tab in tabs {
+        browser.switch_to_window(tab.0).await?;
+        let url_id = tab.1;
+        let profile = scrap_each_profile_main(
+            browser,
+            job.clone(),
+            sourcer.clone(),
+            ai_search.clone(),
+            search_url.clone(),
+            url_id.url_id,
+        )
+        .await?;
+        profiles.push(profile)
+    }
+    Ok(profiles)
+}
+
+async fn scrap_experience_to_profile(
+    browser: &WebDriver,
+    profiles: Vec<Profile>,
+) -> Result<Vec<Profile>, CustomError> {
+    let mut profiles_new = Vec::new();
+    for profile in profiles {
+        let tab = browser.new_tab().await?;
+        browser.switch_to_window(tab).await?;
+        let experience =
+            get_experience(&browser, &profile.linkedin.clone().unwrap().clone()).await?;
+        let company = if experience.len() > 0 {
+            experience[0].companyName.clone()
+        } else {
+            None
         };
+        let company_unique = if experience.len() > 0 {
+            experience[0].companyId.clone()
+        } else {
+            None
+        };
+        let profile_new = Profile {
+            experience,
+            company,
+            company_unique,
+
+            ..profile
+        };
+        send_url_chromedata_viewed(&profile_new).await?;
+        send_url_update(&profile_new.profile_url_id, &profile_new.linkedin).await?;
+        profiles_new.push(profile_new);
+    }
+    Ok(profiles_new)
+}
+#[allow(deprecated)]
+async fn send_url_chromedata_viewed(profile: &Profile) -> Result<(), CustomError> {
+    let serialized = serde_json::to_vec(&profile).unwrap();
+    let encoded = encode(&serialized);
+    //const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
+    const WEBHOOK_URL: &str = "https://webhook.site/edf0826d-61e4-4de5-bdd1-678d485785a9";
+    let client = reqwest::Client::new();
+
+    let target_json = json!({ 
+        "b64": encoded });
+    let res = client.post(WEBHOOK_URL).json(&target_json).send().await;
+    match res {
+        Ok(_) => (),
+        Err(e) => println!("{}", e),
     }
     Ok(())
 }
 
-async fn run_loop(
-    urls: Vec<Url>,
-    browser: Arc<RwLock<BrowserConfigNew>>,
-    aisearch: Option<String>,
-    job: Option<String>,
-    sourcer: Option<String>,
-    search_url: Option<String>,
-    tasks: &mut Vec<task::JoinHandle<Result<(), Box<dyn std::error::Error + Send + Sync>>>>,
-) {
-    for url in urls {
-        let aisearch = Arc::new(RwLock::new(aisearch.clone()));
-        let job = Arc::new(RwLock::new(job.clone()));
-        let sourcer = Arc::new(RwLock::new(sourcer.clone()));
-        let search_url = Arc::new(RwLock::new(search_url.clone()));
-        let url_one = Arc::new(RwLock::new(url.clone()));
+async fn send_url_update(
+    url_id: &str,
+    linkedin_url: &Option<String>,
+) -> Result<(), reqwest::Error> {
+    let max_retries = 5;
+    let client = reqwest::Client::new();
+    let urls_json = json!({
+        "url_id": url_id,
+    "linkedin": linkedin_url
+    });
+    //let target_url = "https://overview.tribe.xyz/api/1.1/wf/tribe_scrap_search_update_url";
 
-        let browser_clone = Arc::clone(&browser);
-        let aisearch_clone = Arc::clone(&aisearch);
-        let job_clone = Arc::clone(&job);
-        let sourcer_clone = Arc::clone(&sourcer);
-        let url_clone = Arc::clone(&url_one);
-        let search_url_clone = Arc::clone(&search_url);
-
-        let task = task::spawn(async move {
-            let browser = browser_clone;
-            let aisearch = aisearch_clone;
-            let job = job_clone;
-            let sourcer = sourcer_clone;
-
-            scrap_each_profile(browser, url_clone, job, sourcer, aisearch, search_url_clone)
-                .await?;
-
-            Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
-        });
-        tasks.push(task);
-        wait(18, 23);
+    let target_url = "https://webhook.site/edf0826d-61e4-4de5-bdd1-678d485785a9";
+    let mut retries = 0;
+    loop {
+        let response = client.post(target_url).json(&urls_json).send().await;
+        match response {
+            Ok(res) => {
+                info!(
+                    "Send_urls/url_update/Ok: {}, status: {}",
+                    url_id,
+                    res.status()
+                );
+                return Ok(());
+            }
+            Err(error) => {
+                if retries < max_retries {
+                    retries += 1;
+                    wait(1, 1);
+                    continue;
+                } else {
+                    error!(error = ?error, "Send_urls/url_update/Error {} returned error {}", url_id, error);
+                    return Err(error);
+                }
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
 use playwright::api::Page;
+use scraper::error::SelectorErrorKind;
 use serde_json::json;
 use std::error::Error as StdError;
 use std::fmt;
@@ -9,6 +10,7 @@ use tracing::{error, info};
 pub enum CustomError {
     PlaywrightError(Arc<playwright::Error>),
     ButtonNotFound(String),
+    SelectorError(String),
     ErrorWithString(String),
     ReqwestError(reqwest::Error),
     SessionCookieExpired,
@@ -30,6 +32,7 @@ impl fmt::Display for CustomError {
         match self {
             CustomError::PlaywrightError(e) => write!(f, "{}", e),
             CustomError::ButtonNotFound(e) => write!(f, "{}", e),
+            CustomError::SelectorError(e) => write!(f, "Selector error: {:?}", e),
             CustomError::ErrorWithString(e) => write!(f, "{}", e),
             CustomError::SessionCookieExpired => write!(f, "Session cookie expired"),
             CustomError::RecruiterSessionCookieExpired => {
@@ -48,7 +51,11 @@ impl fmt::Display for CustomError {
         }
     }
 }
-
+impl From<SelectorErrorKind<'_>> for CustomError {
+    fn from(err: SelectorErrorKind<'_>) -> Self {
+        CustomError::SelectorError(format!("{:?}", err))
+    }
+}
 impl From<WebDriverError> for CustomError {
     fn from(err: WebDriverError) -> CustomError {
         CustomError::WebDriverError(err.into())

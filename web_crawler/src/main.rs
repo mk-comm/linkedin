@@ -1,7 +1,6 @@
 use crate::structs::entry::EntryRecruiter;
 use crate::structs::entry::EntryRegular;
 use crate::structs::entry::EntryScrapConnection;
-use actions::evaluate;
 use actions::evaluate::EvaluateProfile;
 use serde_json::json;
 use structs::entry::EntryAddProfilesToProjects;
@@ -386,12 +385,12 @@ async fn connect(json: Json<EntrySendConnection>) -> impl IntoResponse {
     let user_id = json.user_id.clone();
     let result = tokio::spawn(async move {
         match connection(json.0).await {
-            Ok(_) => {
+            Ok(text) => {
                 info!("Connection sent successfully {}", message_id);
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
-                    "result": "Connection was sent",
+                    "result": text,
                     "user_id": user_id,
                     "error": "no",
                 });

@@ -169,7 +169,7 @@ fn find_education(html: &str) -> Option<String> {
     for section in document.select(&section_selector) {
         if section.select(&education_div_selector).next().is_some() {
             // Found the section containing the education div, print its HTML
-            println!("found sections {}", section.html());
+            //println!("found sections {}", section.html());
             return Some(section.html());
         }
     }

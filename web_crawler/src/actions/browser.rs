@@ -28,11 +28,13 @@ pub async fn chrome(
     caps.set_disable_dev_shm_usage().unwrap();
     caps.add_chrome_arg("--disable-blink-features=AutomationControlled")
         .unwrap();
-    caps.add_chrome_arg("window-size=1920,1080").unwrap();
+
+    caps.add_chrome_arg("--window-size=1920,1080").unwrap();
     caps.add_chrome_arg(user_agent.as_str()).unwrap();
     caps.add_chrome_arg("disable-infobars").unwrap();
     caps.add_chrome_option("excludeSwitches", ["enable-automation"])
         .unwrap();
+
     caps.set_proxy(Proxy::Manual {
         http_proxy: Some(proxy.clone()),
         ftp_proxy: Some(proxy.clone()), // Replace with your HTTP proxy address
@@ -43,7 +45,7 @@ pub async fn chrome(
         socks_password: None,           // Replace with your SOCKS proxy password
         no_proxy: None,
     })?;
-    caps.set_headless()?;
+    //caps.set_headless()?;
 
     let mut driver = None;
     let mut attempt = 0;
@@ -55,6 +57,7 @@ pub async fn chrome(
         }
     }
     let driver = driver.unwrap();
+    driver.set_window_rect(0, 0, 384, 768).await?;
     Ok(driver)
 }
 

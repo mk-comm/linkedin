@@ -1,9 +1,16 @@
 use super::misc::split_around_dot;
+use crate::actions::init_browser::session_cookie_is_valid;
 use crate::actions::scrap_profile::misc::get_date;
 use crate::actions::scrap_profile::misc::serialize_option_i64;
 use crate::actions::scrap_profile::misc::serialize_option_string;
 use scraper::ElementRef;
-//use crate::actions::scrap_profile_f::misc::split_around_dot;
+use serde::{Deserialize, Serialize};
+use thirtyfour::{By, WebDriver};
+
+use crate::actions::start_browser::send_screenshot;
+use crate::actions::wait::wait;
+use crate::structs::error::CustomError;
+#[allow(deprecated)]
 use scraper::{Html, Selector};
 
 #[allow(non_snake_case)]
@@ -52,7 +59,89 @@ pub struct Skill {
     pub skill: Option<String>,
 }
 
-use serde::{Deserialize, Serialize};
+pub async fn get_experience(
+    browser: &WebDriver,
+    linkedin: &str,
+) -> Result<Vec<Experience>, CustomError> {
+    let experience_url = format!("{}details/experience", linkedin);
+    println!("experience_url:{}", experience_url);
+
+    let mut go_to = browser.goto(experience_url.as_str()).await;
+
+    let mut x = 0;
+    if go_to.is_err() {
+        while x <= 3 {
+            wait(3, 6);
+            let build = browser.goto(experience_url.as_str()).await;
+            if build.is_ok() {
+                go_to = build;
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(1, 3);
+                let screenshot = browser.screenshot_as_png().await?;
+                send_screenshot(
+                    screenshot,
+                    "aisearch",
+                    "Experience is not loading within 30 sec",
+                    "scrap each profile",
+                )
+                .await?;
+                return Err(CustomError::ButtonNotFound(
+                    "Experience is not loading within 30 sec".to_string(),
+                )); // if error means page is not loading
+            }
+            x += 1;
+            //println!("retrying to load page")
+        }
+        wait(1, 3);
+    } else {
+    }
+
+    let cookie = session_cookie_is_valid(&browser).await?;
+    if !cookie {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
+        if !cookie_second_try {
+            wait(1, 3);
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                "Scrap each profile",
+                "Session cookie expired",
+                "Scrap each profile",
+            )
+            .await?;
+            return Err(CustomError::SessionCookieExpired);
+        }
+    }
+
+    const HTML_BODY_SECOND: &str = "div[class='authentication-outlet']";
+    let html_body = browser.find(By::Css(HTML_BODY_SECOND)).await;
+
+    let html = match html_body {
+        Ok(body) => body.inner_html().await?,
+        Err(_) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                "aisearch",
+                "Body experience is not found",
+                "scrap each profile",
+            )
+            .await?;
+
+            return Err(CustomError::ButtonNotFound(
+                "Body experience is not found".to_string(),
+            ));
+        }
+    };
+
+    let experience = parse_experience(&html);
+
+    Ok(experience)
+}
+
 pub fn parse_experience(html_content: &str) -> Vec<Experience> {
     let document = Html::parse_document(html_content);
     let mut experiences = Vec::new();

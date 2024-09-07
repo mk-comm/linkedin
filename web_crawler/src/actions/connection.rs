@@ -1,13 +1,12 @@
-use crate::actions::start_browser::{send_screenshot, start_browser};
-use crate::actions::start_browser_new::session_cookie_is_valid;
+use crate::actions::init_browser::{init_browser, send_screenshot, session_cookie_is_valid};
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::candidate::Candidate;
 use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
-use playwright::api::Page;
-use tracing::{info, instrument};
-pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
+use thirtyfour::{By, Key, WebDriver};
+use tracing::info;
+pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomError> {
     info!("Sending connection request to {}", entry.fullname);
     //path to  local browser
     let message_id = entry.message_id;
@@ -33,398 +32,383 @@ pub async fn connection(entry: EntrySendConnection) -> Result<(), CustomError> {
         fidcookie: entry.cookies.fidcookie,
         jsessionid: entry.cookies.jsessionid,
     };
+    let browser = init_browser(&browser_info).await?;
+    let mut go_to = browser.goto(&candidate.linkedin).await;
 
-    let browser = start_browser(browser_info).await?;
-    let search_input = browser
-        .page
-        .query_selector("input[class=search-global-typeahead__input]")
-        .await?;
-    wait(3, 15); // random delay
-                 //focus on search input and fill it with text
-    match search_input {
-        Some(search_input) => {
-            search_input.hover_builder(); // hover on search input
-            wait(1, 4); // random delay
-            search_input.click_builder().click().await?; // click on search input
-            wait(2, 5); // random delay
-            search_input
-                .fill_builder(&candidate.fullname)
-                .fill()
-                .await?; // fill search input with text
-            wait(1, 5); // random delay
-            search_input.press_builder("Enter").press().await?; // press Enter
-            wait(2, 6); // random delay
-        }
-        None => {
-            wait(1, 5); // random delay
-        } //
-    };
-    // go to candidate page
-    let go_to = browser
-        .page
-        .goto_builder(candidate.linkedin.as_str())
-        .goto()
-        .await;
     let mut x = 0;
     if go_to.is_err() {
         while x <= 3 {
             wait(3, 6);
-            let build = browser
-                .page
-                .goto_builder(candidate.linkedin.as_str())
-                .goto()
-                .await;
+            let build = browser.goto(&candidate.linkedin).await;
             if build.is_ok() {
+                go_to = build;
                 break;
             } else if build.is_err() && x == 3 {
                 wait(3, 6);
-                let screenshot = browser.page.screenshot_builder().screenshot().await?;
-                browser.page.close(Some(false)).await?;
-                browser.browser.close().await?; // close browser
+                let screenshot = browser.screenshot_as_png().await?;
+                browser.quit().await?;
                 send_screenshot(
                     screenshot,
-                    &user_id,
-                    "Candidate page is not loading/Connection",
-                    &message_id,
+                    &browser_info.user_id,
+                    "Candidate page is not loading/Send_connection",
+                    "Send connection",
                 )
                 .await?;
+
                 return Err(CustomError::ButtonNotFound(
-                    "Candidate page is not loading/Connection".to_string(),
-                )); // if error means page is not loading
+                    "Candidate page is not loading/Send_connection_message".to_string(),
+                ));
             }
             x += 1;
-            //println!("retrying to load page")
         }
         wait(1, 3);
     }
-    wait(7, 21); // random delay
-                 //check if connect button is present
-
-    let block_option = browser
-        .page
-        .query_selector("div.pv-top-card-v2-ctas")
-        .await?;
-
-    let page_not_found = browser
-        .page
-        .query_selector("header[class='not-found__header not-found__container']")
-        .await?;
-
-    match page_not_found {
-        Some(_) => {
-            wait(1, 5);
-            let screenshot = browser.page.screenshot_builder().screenshot().await?;
-
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            send_screenshot(screenshot, &user_id, "Page does not exist", &message_id).await?;
-            return Err(CustomError::ButtonNotFound(
-                "Page does not exist".to_string(),
-            ));
-        }
-        None => (),
-    };
-    let cookie = session_cookie_is_valid(&browser.page).await?;
+    wait(10, 15); // random delay
+    let cookie = session_cookie_is_valid(&browser).await?;
     if !cookie {
-        browser.page.reload_builder().reload().await?;
+        browser.refresh().await?;
         wait(7, 14);
-        let cookie_second_try = session_cookie_is_valid(&browser.page).await?;
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
         if !cookie_second_try {
             wait(1, 3);
-            let screenshot = browser.page.screenshot_builder().screenshot().await?;
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
             send_screenshot(
                 screenshot,
-                "Scrap each profile",
+                &browser_info.user_id,
                 "Session cookie expired",
-                "Scrap each profile",
+                "Send connection",
             )
             .await?;
             return Err(CustomError::SessionCookieExpired);
         }
-
-        println!("checking if cookie is valid{}", cookie_second_try);
     }
-    use crate::actions::start_browser_new::session_cookie_is_valid;
-    let block = match block_option {
-        Some(block) => block,
-        None => {
-            let block_option = browser.page.query_selector("div[class='ph5 pb5']").await?;
-            match block_option {
-                Some(block) => block,
-                None => {
-                    let block_option = browser.page.query_selector("div[class='ph5 ']").await?;
-                    match block_option {
-                        Some(block) => block,
-                        None => {
-                            wait(1, 5);
-                            let screenshot = browser.page.screenshot_builder().screenshot().await?;
-                            browser.page.close(Some(false)).await?;
-                            browser.browser.close().await?;
-                            send_screenshot(
-                                screenshot,
-                                &user_id,
-                                "block button not found",
-                                &message_id,
-                            )
-                            .await?;
-                            return Err(CustomError::ButtonNotFound(
-                                "block button not found".to_string(),
-                            ));
-                        }
-                    }
-                }
-            }
-        }
-    };
-
-    let mut connect_button = block.query_selector("li-icon[type=connect]").await?;
-    //let connect_button_another = block.query_selector("use[href='#connect-medium']").await?;
-
-    if connect_button.is_none() {
-        connect_button = block.query_selector("use[href='#connect-medium']").await?;
-        println!("medium connect found");
-    } else {
-        println!("connect button another not found");
-    }
-
-    if connect_button.is_none() {
-        connect_button = block.query_selector("use[href='#connect-small']").await?;
-        println!("small connect found");
-    } else {
-        println!("connect button small not found");
-    }
-
-    let more_option = block
-        .query_selector("button[aria-label='More actions']")
+    const MAIN_CONTAINER: &str = "div[class=application-outlet]";
+    let main_container = browser.find(By::Css(MAIN_CONTAINER)).await;
+    if main_container.is_err() {
+        let screenshot = browser.screenshot_as_png().await?;
+        send_screenshot(
+            screenshot,
+            &browser_info.user_id,
+            "Main container not found/Send_connection_message",
+            "Send connection",
+        )
         .await?;
-    let more_de = block
-        .query_selector("button[aria-label='Weitere Aktionen']")
-        .await?;
-    //wait(100000, 100000);
-    let more = match more_option {
-        Some(more) => more,
-        None => match more_de {
-            Some(more) => more,
-            None => {
-                wait(1, 5);
-                let screenshot = browser.page.screenshot_builder().screenshot().await?;
+        return Err(CustomError::ButtonNotFound(
+            "Main container not found/Send regular message".to_string(),
+        ));
+    }
+    const PAGE_NOT_FOUND: &str = "header[class='not-found__header not-found__container']";
+    let page_not_found = browser.find(By::Css(PAGE_NOT_FOUND)).await;
 
-                browser.page.close(Some(false)).await?;
-                browser.browser.close().await?;
-                send_screenshot(screenshot, &user_id, "More button not found", &message_id).await?;
-
-                return Err(CustomError::ButtonNotFound(
-                    "More button not found".to_string(),
-                ));
-            }
-        },
-    };
-    more.hover_builder();
-    wait(1, 4);
-    more.click_builder().click().await?;
-    wait(2, 5);
-    match connect_button {
-        Some(button) => {
-            button.hover_builder();
-            wait(1, 4);
-            button.click_builder().click().await?;
-            wait(2, 5);
-        }
-        None => {
-            wait(1, 5);
-            let screenshot = browser.page.screenshot_builder().screenshot().await?;
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+    match page_not_found {
+        Ok(_) => {
+            wait(1, 3);
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
             send_screenshot(
                 screenshot,
-                &user_id,
-                "Connect button not found/Requires investigation",
-                &message_id,
+                &browser_info.user_id,
+                "Page does not exist",
+                "Send connection",
             )
             .await?;
-
             return Err(CustomError::ButtonNotFound(
-                "Connect button not found/Requires investigation".to_string(),
+                "Page does not exist".to_string(),
             ));
         }
+        Err(_) => (),
+    };
+    let cookie = session_cookie_is_valid(&browser).await?;
+    if !cookie {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
+        if !cookie_second_try {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                "Session cookie expired",
+                "Send connection",
+            )
+            .await?;
+            return Err(CustomError::SessionCookieExpired);
+        }
+    }
+    const MORE_BUTTON: &str =
+        "div.artdeco-dropdown:has(> button[aria-label='More actions'].artdeco-dropdown__trigger):nth-of-type(2)";
+
+    let more_option = browser.find(By::Css(MORE_BUTTON)).await;
+    let more_option = match more_option {
+        Ok(option) => option,
+        Err(_s) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                "More button not found",
+                "Send connection",
+            )
+            .await?;
+            return Err(CustomError::ButtonNotFound(
+                "More button not found".to_string(),
+            ));
+        }
+    };
+    more_option.click().await?;
+    const IN_CONNECTION_POOL: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Remove your connection']";
+    let in_connection_pool = browser.find(By::Css(IN_CONNECTION_POOL)).await;
+    if in_connection_pool.is_ok() {
+        let screenshot = browser.screenshot_as_png().await?;
+        browser.quit().await?;
+        send_screenshot(
+            screenshot,
+            &browser_info.user_id,
+            "Candidate in connection pool",
+            "Send connection",
+        )
+        .await?;
+        return Ok("Candidate in connection pool".to_string());
     }
 
-    //check if popup to choose "How do you know"
-    let popup_how = browser
-        .page
-        .query_selector("button[aria-label='Other']")
+    const PENDING_ON_THE_PAGE: &str = "button.artdeco-button.artdeco-button--2.artdeco-button--secondary.ember-view.pvs-profile-actions__action[aria-label*='Pending']";
+    const PENDING_DROPDOWN: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Pending']";
+
+    let pending_on_the_page = browser.find(By::Css(PENDING_ON_THE_PAGE)).await;
+    let pending_dropdown = browser.find(By::Css(PENDING_DROPDOWN)).await;
+
+    if pending_on_the_page.is_ok() || pending_dropdown.is_ok() {
+        let screenshot = browser.screenshot_as_png().await?;
+        browser.quit().await?;
+        send_screenshot(
+            screenshot,
+            &browser_info.user_id,
+            "Connection pending",
+            "Send connection",
+        )
         .await?;
+        return Ok("Connection pending".to_string());
+    }
+
+    const CONNECT_ON_THE_PAGE:&str = "button.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.pvs-profile-actions__action[aria-label*='connect']";
+    const CONNECT_DROPDOWN:&str = "
+(//div[contains(@class, 'artdeco-dropdown__item') and contains(@class, 'artdeco-dropdown__item--is-dropdown') and contains(@class, 'ember-view') and contains(@class, 'full-width') and contains(@class, 'display-flex') and contains(@class, 'align-items-center') and contains(@aria-label, 'connect')])[2]
+";
+
+    let connect_on_the_page = browser.find(By::Css(CONNECT_ON_THE_PAGE)).await;
+    let connect_dropdown = browser.find(By::XPath(CONNECT_DROPDOWN)).await;
+    let connect_button = if let Ok(button) = connect_on_the_page {
+        button
+    } else if let Ok(button) = connect_dropdown {
+        button
+    } else {
+        let screenshot = browser.screenshot_as_png().await?;
+        browser.quit().await?;
+        send_screenshot(
+            screenshot,
+            &browser_info.user_id,
+            "Connection button missing",
+            "Send connection",
+        )
+        .await?;
+        return Err(CustomError::ButtonNotFound(
+            "Connection button missing".to_string(),
+        ));
+    };
+
+    connect_button.click().await?;
+
+    wait(2, 3);
+    //check if popup to choose "How do you know"
+    const POPUP_HOW: &str = "button[aria-label='Other']";
+    let popup_how = browser.find(By::Css(POPUP_HOW)).await;
 
     match popup_how {
-        Some(popup_how) => {
-            popup_how.click_builder().click().await?; // click on button "Other"
+        Ok(popup_how) => {
+            popup_how.click().await?;
+            wait(1, 3);
+            const POPUP_HOW_CONNECT: &str = "button[aria-label='Connect']";
+            let connect = browser.find(By::Css(POPUP_HOW_CONNECT)).await;
 
-            let connect = browser
-                .page
-                .query_selector("button[aria-label='Connect']")
-                .await?;
             match connect {
-                Some(connect) => connect.click_builder().click().await?,
-                None => {
-                    wait(1, 5);
-                    let screenshot = browser.page.screenshot_builder().screenshot().await?;
-                    browser.page.close(Some(false)).await?;
-                    browser.browser.close().await?;
+                Ok(connect) => connect.click().await?,
+                Err(_s) => {
+                    let screenshot = browser.screenshot_as_png().await?;
+                    browser.quit().await?;
                     send_screenshot(
                         screenshot,
-                        &user_id,
+                        &browser_info.user_id,
                         "Connect button in popup_how is not found",
-                        &message_id,
+                        "Send connection",
                     )
                     .await?;
-
                     return Err(CustomError::ButtonNotFound(
                         "Connect button in popup_how is not found".to_string(),
                     ));
                 }
             }
         }
-        None => (),
+        Err(_s) => (),
     };
-
-    let email_needed = browser.page.query_selector("label[for=email]").await?;
+    const EMAIL_NEEDED: &str = "label[for=email]";
+    let email_needed = browser.find(By::Css(EMAIL_NEEDED)).await;
 
     match email_needed {
-        Some(_) => {
-            wait(1, 5);
-            let screenshot = browser.page.screenshot_builder().screenshot().await?;
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            send_screenshot(screenshot, &user_id, "Email needed", &message_id).await?;
-            return Err(CustomError::EmailNeeded);
+        Ok(_) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                "Email needed",
+                "Send connection",
+            )
+            .await?;
+            return Ok("Email needed".to_string());
         }
-        None => (),
+        Err(_s) => (),
     };
 
-    message(
-        &browser.page,
-        candidate.message.as_str(),
-        &user_id,
-        &message_id,
-    )
-    .await?;
+    let adding_message = message(&browser, candidate.message.as_str(), &user_id, &message_id).await;
+
+    if let Err(error) = adding_message {
+        browser.quit().await?;
+        return Err(error);
+    }
+
     wait(4, 8);
-    let pending_button = block.query_selector("li-icon[type=clock]").await?;
 
-    match pending_button {
-        Some(_) => {
-            wait(1, 5);
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            return Ok(());
-        }
-        None => (),
-    };
+    let pending_on_the_page = browser.find(By::Css(PENDING_ON_THE_PAGE)).await;
+    let pending_dropdown = browser.find(By::Css(PENDING_DROPDOWN)).await;
 
-    wait(3, 7);
-    let connection_limit = browser
-        .page
-        .query_selector(
-            "div[class='artdeco-modal artdeco-modal--layer-default ip-fuse-limit-alert']",
+    if pending_on_the_page.is_ok() || pending_dropdown.is_ok() {
+        println!("Pending found");
+        let screenshot = browser.screenshot_as_png().await?;
+        browser.quit().await?;
+        send_screenshot(
+            screenshot,
+            &browser_info.user_id,
+            "Connection pending",
+            "Send connection",
         )
         .await?;
+        return Ok("Connection was sent".to_string());
+    }
+
+    wait(3, 7);
+    const CONNNECTION_LIMIT: &str =
+        "div[class='artdeco-modal artdeco-modal--layer-default ip-fuse-limit-alert']";
+    let connection_limit = browser.find(By::Css(CONNNECTION_LIMIT)).await;
 
     match connection_limit {
-        Some(_) => {
+        Ok(_) => {
             wait(1, 5);
-            let screenshot = browser.page.screenshot_builder().screenshot().await?;
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            send_screenshot(screenshot, &user_id, "Connection Limit", &message_id).await?;
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                "Connection limit",
+                "Send connection",
+            )
+            .await?;
             return Err(CustomError::ConnectionLimit);
         }
-        None => (),
+        Err(_s) => (),
     };
     wait(3, 15); // random delay; // add delay before closing the browser to check things
 
-    browser.page.close(Some(false)).await?;
-    browser.browser.close().await?;
-    Ok(())
+    browser.quit().await?;
+    Ok("Connection was sent".to_string())
 }
-#[instrument]
 async fn message(
-    page: &Page,
+    browser: &WebDriver,
     message: &str,
     user_id: &str,
     message_id: &str,
 ) -> Result<(), CustomError> {
     //press button add note
     wait(5, 7);
-
-    let add_note = page
-        .query_selector("button[aria-label='Add a note']")
-        .await?;
-    let add_note_de = page
-        .query_selector("button[aria-label='Nachricht hinzufügen']")
-        .await?;
-    let note = match add_note {
-        Some(add_note) => add_note, // click on button "Other"
-        None => match add_note_de {
-            Some(note) => note,
-            None => {
-                let screenshot = page.screenshot_builder().screenshot().await?;
-                send_screenshot(screenshot, user_id, "Add note button not found", message_id)
-                    .await?;
-
-                return Err(CustomError::ButtonNotFound(
-                    "Add note button not found".to_string(),
-                ));
-            }
-        },
-    };
-    note.click_builder().click().await?;
-    info!("Filling in the message field");
-    wait(5, 7); // random delay
-                //find input for note
-    let text_input = page.query_selector("textarea[id=custom-message]").await?;
-    match text_input {
-        Some(text_input) => {
-            text_input.hover_builder(); // hover on input for note
-            wait(1, 3); // random delay
-            text_input.focus().await?; // focus on input for note
-            wait(1, 2); // random delay
-            text_input.fill_builder(message).fill().await?; // fill input for note;
+    const ADD_NOTE: &str = "button.artdeco-button.artdeco-button--muted.artdeco-button--2.artdeco-button--secondary.ember-view.mr1";
+    let add_note = browser.find(By::Css(ADD_NOTE)).await;
+    let add_note = match add_note {
+        Ok(add_note) => add_note,
+        Err(_s) => {
+            wait(1, 5);
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Add note button not found",
+                "Send connection",
+            )
+            .await?;
+            return Err(CustomError::ButtonNotFound(
+                "Add note button not found".to_string(),
+            ));
         }
-        None => {
-            let screenshot = page.screenshot_builder().screenshot().await?;
-            send_screenshot(screenshot, user_id, "Text input not found", message_id).await?;
+    };
+    add_note.click().await?;
+    info!("Filling in the message field");
+    wait(12, 15);
+    const TEXT_INPUT: &str = "textarea[id=custom-message]";
+    let text_input = browser.find(By::Css(TEXT_INPUT)).await;
+    match text_input {
+        Ok(input) => {
+            input.focus().await?;
+            wait(1, 2);
+            input.click().await?;
+            wait(1, 2);
+            input.send_keys(Key::Control + "a").await?;
+            wait(1, 2);
+            input.send_keys(Key::Control + "x").await?;
+            input.focus().await?;
+            input.click().await?;
+            wait(1, 3);
+            input.send_keys(message).await?; // fill input for note;
+        }
+        Err(_) => {
+            wait(1, 5);
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Text input not found",
+                "Send connection",
+            )
+            .await?;
+
             return Err(CustomError::ButtonNotFound(
                 "Text input not found".to_string(),
             ));
         }
     };
     wait(1, 3); // random delay
-                //press button send
-                //println!("reached sending");
-                //wait(100000, 100000);
-                //wait(199999, 199999);
+    const SEND_BUTTON: &str =
+        "button.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.ml1";
+    let send_button = browser.find(By::Css(SEND_BUTTON)).await;
+    match send_button {
+        Ok(button) => {
+            button.click().await?;
+            wait(2, 3)
+        }
+        Err(_) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Send button in the connection popup is not found",
+                "Send connection",
+            )
+            .await?;
 
-    let send = page
-        .query_selector("button[aria-label='Send invitation']")
-        .await?;
-    let send_de = page
-        .query_selector("button[aria-label='Einladung senden']")
-        .await?;
-    let button = match send {
-        Some(send) => send,
-        None => match send_de {
-            Some(send) => send,
-            None => {
-                let screenshot = page.screenshot_builder().screenshot().await?;
-                send_screenshot(screenshot, user_id, "Send button not found", message_id).await?;
-                return Err(CustomError::ButtonNotFound(
-                    "Send button not found".to_string(),
-                ));
-            }
-        },
+            return Err(CustomError::ButtonNotFound(
+                "Send button in the connection popup is not found".to_string(),
+            ));
+        }
     };
-    button.click_builder().click().await?; // click on button "Send"
     return Ok(()); // return Ok
 }
