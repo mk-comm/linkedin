@@ -135,11 +135,14 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
             return Err(CustomError::SessionCookieExpired);
         }
     }
+    const MAIN_BOX: &str = "main.scaffold-layout__main";
+    let main_box = browser.find(By::Css(MAIN_BOX)).await?;
+
     const MORE_BUTTON: &str =
-        "div.artdeco-dropdown:has(> button[aria-label='More actions'].artdeco-dropdown__trigger):nth-of-type(2)";
+        "button.artdeco-dropdown__trigger.artdeco-dropdown__trigger--placement-bottom.ember-view.pvs-profile-actions__action.artdeco-button.artdeco-button--secondary.artdeco-button--muted.artdeco-button--2";
     const MORE_BUTTON_ANOTHER: &str = "div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-left.ember-view:has(>button[aria-label='More actions'].artdeco-dropdown__trigger):nth-child(3)";
-    let more_option = browser.find(By::Css(MORE_BUTTON)).await;
-    let more_option_another = browser.find(By::Css(MORE_BUTTON_ANOTHER)).await;
+    let more_option = main_box.find(By::Css(MORE_BUTTON)).await;
+    let more_option_another = main_box.find(By::Css(MORE_BUTTON_ANOTHER)).await;
     let more_option = match more_option {
         Ok(option) => option,
         Err(_s) => match more_option_another {
