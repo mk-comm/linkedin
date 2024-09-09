@@ -34,7 +34,6 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
     };
 
     let browser = init_browser(&browser_info).await?;
-
     let mut go_to = browser.goto(&candidate.linkedin).await;
 
     let mut x = 0;
@@ -159,7 +158,6 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
         let result = send_messaging_page(
             &browser,
             &browser_info.user_id,
-            entity_urn.as_str(),
             check_reply,
             &candidate.message,
         )
@@ -187,12 +185,12 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
     browser.quit().await?;
     Ok("Message was sent".to_string())
 }
-fn get_conversation_owner(html: &str) -> Result<String, CustomError> {
+fn get_conversation_owner(html: &str, selector: &str) -> Result<String, CustomError> {
     // Parse the HTML document
     let document = Html::parse_document(html);
 
     // Create a selector to find the owner of the conversation
-    let owner_selector = Selector::parse("h2.msg-overlay-bubble-header__title span")?;
+    let owner_selector = Selector::parse(selector)?;
 
     // Find the owner element
     if let Some(owner_element) = document.select(&owner_selector).next() {
@@ -208,10 +206,24 @@ fn get_conversation_owner(html: &str) -> Result<String, CustomError> {
         "get_conversation_owner".to_string(),
     ));
 }
+
+fn get_conversation_ids(html: &str) -> Result<Vec<String>, CustomError> {
+    let document = Html::parse_document(html);
+    const CONVERSATION_CLOSE_SELECTOR: &str = "button[class='msg-overlay-bubble-header__control artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view']";
+    let button_selector = Selector::parse(CONVERSATION_CLOSE_SELECTOR)?;
+    let mut elements = vec![];
+    for element in document.select(&button_selector) {
+        match element.value().id() {
+            Some(id) => elements.push(id.to_string()),
+            None => (),
+        };
+    }
+    Ok(elements)
+}
+
 async fn send_messaging_page(
     browser: &WebDriver,
     user_id: &str,
-    entity_urn: &str,
     check_reply: bool,
     message: &str,
 ) -> Result<(), CustomError> {
@@ -229,6 +241,61 @@ async fn send_messaging_page(
         .await?;
         return Err(CustomError::ButtonNotFound("Inmail needed".to_string()));
     }
+    const MAIN_CONTAINER: &str = "div[class=application-outlet]";
+    let html = browser.find(By::Css(MAIN_CONTAINER)).await?;
+    let html = html.inner_html().await?;
+    let elements = get_conversation_ids(&html)?;
+    if elements.len() > 0 {
+        for element in elements {
+            let button = browser.find(By::Id(&element)).await;
+            match button {
+                Ok(button) => button.click().await?,
+                Err(_s) => (),
+            }
+            wait(1, 2);
+        }
+    };
+    const CONVERSATION_SELECTOR: &str = "div.relative.display-flex.flex-column.flex-grow-1";
+    let conversation = match browser.find(By::Css(CONVERSATION_SELECTOR)).await {
+        Ok(conversation) => conversation,
+        Err(_s) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Inmail needed",
+                "Send regular message",
+            )
+            .await?;
+            return Err(CustomError::ButtonNotFound(
+                "Conversation not found/Messaging page".to_string(),
+            ));
+        }
+    };
+    let html = conversation.inner_html().await?;
+    let current_url = browser.current_url().await?;
+    let current_url = current_url.as_str();
+    let new_thread = current_url.contains("messaging/thread/new/");
+    let name = match new_thread {
+        true => "".to_string(),
+        false => get_conversation_owner(&html, "h2[id=thread-detail-jump-target]")?,
+    };
+    let candidate_reply = match new_thread {
+        true => false,
+        false => is_last_message_from_owner(&html, name.as_str())?,
+    };
+    println!("candidate reply {}", candidate_reply);
+    if candidate_reply && check_reply {
+        let screenshot = browser.screenshot_as_png().await?;
+        send_screenshot(
+            screenshot,
+            &user_id,
+            "Candidate replied",
+            "Send regular message",
+        )
+        .await?;
+        return Err(CustomError::ButtonNotFound("Candidate replied".to_string()));
+    };
 
     wait(2, 4);
     const REGULAR_INPUT: &str = "div.msg-form__contenteditable.t-14.t-black--light.t-normal.flex-grow-1.full-height.notranslate";
@@ -339,7 +406,8 @@ async fn send_current_page(
         .await
     {
         Ok(conversation) => {
-            let name = get_conversation_owner(html.as_str())?;
+            let name =
+                get_conversation_owner(html.as_str(), "h2.msg-overlay-bubble-header__title span")?;
             candidate_reply = is_last_message_from_owner(
                 conversation.inner_html().await?.as_str(),
                 name.as_str(),

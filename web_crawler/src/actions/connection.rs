@@ -8,8 +8,6 @@ use thirtyfour::{By, Key, WebDriver};
 use tracing::info;
 pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomError> {
     info!("Sending connection request to {}", entry.fullname);
-    //path to  local browser
-    let message_id = entry.message_id;
 
     let candidate = Candidate::new(
         entry.fullname.clone(),
@@ -139,24 +137,28 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
     }
     const MORE_BUTTON: &str =
         "div.artdeco-dropdown:has(> button[aria-label='More actions'].artdeco-dropdown__trigger):nth-of-type(2)";
-
+    const MORE_BUTTON_ANOTHER: &str = "div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-left.ember-view:has(>button[aria-label='More actions'].artdeco-dropdown__trigger):nth-child(3)";
     let more_option = browser.find(By::Css(MORE_BUTTON)).await;
+    let more_option_another = browser.find(By::Css(MORE_BUTTON_ANOTHER)).await;
     let more_option = match more_option {
         Ok(option) => option,
-        Err(_s) => {
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "More button not found",
-                "Send connection",
-            )
-            .await?;
-            return Err(CustomError::ButtonNotFound(
-                "More button not found".to_string(),
-            ));
-        }
+        Err(_s) => match more_option_another {
+            Ok(option) => option,
+            Err(_s) => {
+                let screenshot = browser.screenshot_as_png().await?;
+                browser.quit().await?;
+                send_screenshot(
+                    screenshot,
+                    &browser_info.user_id,
+                    "More button not found",
+                    "Send connection",
+                )
+                .await?;
+                return Err(CustomError::ButtonNotFound(
+                    "More button not found".to_string(),
+                ));
+            }
+        },
     };
     more_option.click().await?;
     const IN_CONNECTION_POOL: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Remove your connection']";
@@ -271,8 +273,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
         }
         Err(_s) => (),
     };
-
-    let adding_message = message(&browser, candidate.message.as_str(), &user_id, &message_id).await;
+    let adding_message = message(&browser, candidate.message.as_str(), &user_id).await;
 
     if let Err(error) = adding_message {
         browser.quit().await?;
@@ -324,12 +325,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
     browser.quit().await?;
     Ok("Connection was sent".to_string())
 }
-async fn message(
-    browser: &WebDriver,
-    message: &str,
-    user_id: &str,
-    message_id: &str,
-) -> Result<(), CustomError> {
+async fn message(browser: &WebDriver, message: &str, user_id: &str) -> Result<(), CustomError> {
     //press button add note
     wait(5, 7);
     const ADD_NOTE: &str = "button.artdeco-button.artdeco-button--muted.artdeco-button--2.artdeco-button--secondary.ember-view.mr1";
