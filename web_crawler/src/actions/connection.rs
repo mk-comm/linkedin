@@ -6,16 +6,17 @@ use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
 use thirtyfour::{By, Key, WebDriver};
 use tracing::info;
+
 pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomError> {
     info!("Sending connection request to {}", entry.fullname);
-
-    let candidate = Candidate::new(
-        entry.fullname.clone(),
-        entry.linkedin.clone(),
-        entry.message.clone(),
-    );
+    let message_text = entry
+        .message
+        .clone()
+        .chars()
+        .filter(|&c| c as u32 <= 0xFFFF)
+        .collect();
+    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
     let user_id = entry.user_id.clone();
-
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -31,6 +32,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
         jsessionid: entry.cookies.jsessionid,
     };
     let browser = init_browser(&browser_info).await?;
+
     let mut go_to = browser.goto(&candidate.linkedin).await;
 
     let mut x = 0;
@@ -370,19 +372,39 @@ async fn message(browser: &WebDriver, message: &str, user_id: &str) -> Result<()
             input.send_keys(message).await?; // fill input for note;
         }
         Err(_) => {
-            wait(1, 5);
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &user_id,
-                "Text input not found",
-                "Send connection",
-            )
-            .await?;
+            wait(10, 15);
+            let text_input = browser.find(By::Css(TEXT_INPUT)).await;
 
-            return Err(CustomError::ButtonNotFound(
-                "Text input not found".to_string(),
-            ));
+            match text_input {
+                Ok(input) => {
+                    input.focus().await?;
+                    wait(1, 2);
+                    input.click().await?;
+                    wait(1, 2);
+                    input.send_keys(Key::Control + "a").await?;
+                    wait(1, 2);
+                    input.send_keys(Key::Control + "x").await?;
+                    input.focus().await?;
+                    input.click().await?;
+                    wait(1, 3);
+                    input.send_keys(message).await?; // fill input for note;
+                }
+                Err(_) => {
+                    wait(1, 5);
+                    let screenshot = browser.screenshot_as_png().await?;
+                    send_screenshot(
+                        screenshot,
+                        &user_id,
+                        "Text input not found",
+                        "Send connection",
+                    )
+                    .await?;
+
+                    return Err(CustomError::ButtonNotFound(
+                        "Text input not found".to_string(),
+                    ));
+                }
+            }
         }
     };
     wait(1, 3); // random delay

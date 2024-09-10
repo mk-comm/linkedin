@@ -4,6 +4,7 @@ use crate::structs::browser::BrowserInit;
 use crate::structs::candidate::Candidate;
 use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
+use percent_encoding::percent_decode_str;
 use scraper::{Html, Selector};
 use thirtyfour::{By, Key, WebDriver};
 
@@ -12,11 +13,13 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
         Some(value) => value,
         None => false,
     };
-    let candidate = Candidate::new(
-        entry.fullname.clone(),
-        entry.linkedin.clone(),
-        entry.message.clone(),
-    );
+    let message_text = entry
+        .message
+        .clone()
+        .chars()
+        .filter(|&c| c as u32 <= 0xFFFF)
+        .collect();
+    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
 
     let browser_info = BrowserInit {
         ip: entry.ip,
@@ -263,7 +266,7 @@ async fn send_messaging_page(
             send_screenshot(
                 screenshot,
                 &user_id,
-                "Inmail needed",
+                "Conversation not found/Messaging page",
                 "Send regular message",
             )
             .await?;
@@ -298,6 +301,7 @@ async fn send_messaging_page(
     };
 
     wait(2, 4);
+    let message = message.replace("\n", "\\n").replace("'", "\\'");
     const REGULAR_INPUT: &str = "div.msg-form__contenteditable.t-14.t-black--light.t-normal.flex-grow-1.full-height.notranslate";
     let regular_input = browser.find(By::Css(REGULAR_INPUT)).await;
 
@@ -393,6 +397,8 @@ async fn send_current_page(
         .await?
         .as_str()
         .replace("https://www.linkedin.com", "");
+    let linkedin_url = percent_decode_str(linkedin_url.as_str()).decode_utf8_lossy();
+
     let conversation_selector = format!(
         "div.relative.display-flex.flex-column.flex-grow-1:has(a[href='{}'])",
         linkedin_url
@@ -401,6 +407,7 @@ async fn send_current_page(
     let html = pick.inner_html().await?;
     //let name = get_conversation_owner(html.as_str());
     let conversation_id = find_conversation(html.as_str(), entity_urn)?;
+    println!("id: {}", conversation_id);
     let conversation_select = match browser
         .find(By::Css(format!("div[id='{}']", conversation_id).as_str()))
         .await
@@ -423,7 +430,7 @@ async fn send_current_page(
                     send_screenshot(
                         screenshot,
                         &user_id,
-                        "Inmail needed",
+                        "Conversation not found/ new or existing",
                         "Send regular message",
                     )
                     .await?;

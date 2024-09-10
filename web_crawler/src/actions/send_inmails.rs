@@ -17,12 +17,13 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     let span = span!(Level::DEBUG, "sub_span_name {}", entry.message_id);
 
     let _enter = span.enter();
-    let candidate = Candidate::new(
-        entry.fullname.clone(),
-        entry.linkedin.clone(),
-        entry.message.clone(),
-    );
-
+    let message_text = entry
+        .message
+        .clone()
+        .chars()
+        .filter(|&c| c as u32 <= 0xFFFF)
+        .collect();
+    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
     let subject = entry.subject.clone();
 
     let browser_info = BrowserInit {
@@ -41,7 +42,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     };
 
     let browser = init_browser(&browser_info).await?;
-
     // go to candidate page
     let mut go_to = browser.goto(&candidate.linkedin).await;
 
@@ -215,7 +215,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         ));
     }
     const REMOVE_AI_TEXT: &str =
-        "button[class='compose-textarea-ghost-cta__button t-14 t-black--light']";
+        "button.compose-textarea-ghost-cta__button.t-14.t-black--light:not([aria-label])";
 
     let remove_ai_text = browser.find(By::Css(REMOVE_AI_TEXT)).await;
 
