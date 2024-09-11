@@ -30,7 +30,9 @@ pub async fn chrome(
         .unwrap();
 
     caps.add_chrome_arg("--window-size=1920,1080").unwrap();
-    caps.add_chrome_arg(user_agent.as_str()).unwrap();
+    //caps.add_chrome_arg(user_agent.as_str()).unwrap();
+    let user_agent = format!("--user-agent={}", user_agent);
+    caps.add_chrome_arg(user_agent.as_str())?;
     caps.add_chrome_arg("disable-infobars").unwrap();
     caps.add_chrome_option("excludeSwitches", ["enable-automation"])
         .unwrap();
@@ -45,7 +47,7 @@ pub async fn chrome(
         socks_password: None,           // Replace with your SOCKS proxy password
         no_proxy: None,
     })?;
-    caps.set_headless()?;
+    //caps.set_headless()?;
 
     let mut driver = None;
     let mut attempt = 0;
@@ -57,6 +59,7 @@ pub async fn chrome(
         }
     }
     let driver = driver.unwrap();
+
     Ok(driver)
 }
 

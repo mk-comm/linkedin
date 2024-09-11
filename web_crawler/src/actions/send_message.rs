@@ -2,6 +2,7 @@ use crate::actions::init_browser::{init_browser, send_screenshot, session_cookie
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::candidate::Candidate;
+use crate::structs::conversation;
 use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
 use percent_encoding::percent_decode_str;
@@ -406,7 +407,21 @@ async fn send_current_page(
     let mut candidate_reply = false;
     let html = pick.inner_html().await?;
     //let name = get_conversation_owner(html.as_str());
-    let conversation_id = find_conversation(html.as_str(), entity_urn)?;
+    let conversation_id = find_conversation(html.as_str(), entity_urn);
+    let conversation_id = match conversation_id {
+        Ok(id) => id,
+        Err(e) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                e.to_string().as_str(),
+                "Send regular message",
+            )
+            .await?;
+            return Err(CustomError::ButtonNotFound(e.to_string()));
+        }
+    };
     println!("id: {}", conversation_id);
     let conversation_select = match browser
         .find(By::Css(format!("div[id='{}']", conversation_id).as_str()))

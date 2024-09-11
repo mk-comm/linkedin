@@ -95,7 +95,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
         )
         .await?;
         return Err(CustomError::ButtonNotFound(
-            "Main container not found/Send regular message".to_string(),
+            "Main container not found/Send_connection_message".to_string(),
         ));
     }
     const PAGE_NOT_FOUND: &str = "header[class='not-found__header not-found__container']";
