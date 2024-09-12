@@ -25,12 +25,12 @@ pub async fn chrome(
     let mut caps = DesiredCapabilities::chrome();
 
     caps.set_no_sandbox().unwrap();
+    caps.set_disable_gpu().unwrap();
     caps.set_disable_dev_shm_usage().unwrap();
     caps.add_chrome_arg("--disable-blink-features=AutomationControlled")
         .unwrap();
 
     caps.add_chrome_arg("--window-size=1920,1080").unwrap();
-    //caps.add_chrome_arg(user_agent.as_str()).unwrap();
     let user_agent = format!("--user-agent={}", user_agent);
     caps.add_chrome_arg(user_agent.as_str())?;
     caps.add_chrome_arg("disable-infobars").unwrap();
