@@ -38,6 +38,7 @@ pub async fn init_browser(browser_info: &BrowserInit) -> Result<WebDriver, Custo
                 &user_id,
                 "Session cookie expired",
                 "Start Browser",
+                "init_browser",
             )
             .await?;
             return Err(CustomError::SessionCookieExpired);
@@ -127,6 +128,7 @@ pub async fn send_screenshot(
     api_key: &str,
     variant: &str,
     message_id: &str,
+    function: &str,
 ) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
 
@@ -136,6 +138,7 @@ pub async fn send_screenshot(
         "api_key":  api_key,
         "variant": variant,
         "message_id": message_id,
+        "function": function
     });
     const TARGET_URL: &str = "
        https://tribexyz.bubbleapps.io/version-test/api/1.1/wf/sequence_status_screenshot/";

@@ -6,16 +6,16 @@ use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
 use thirtyfour::{By, Key, WebDriver};
 use tracing::info;
-
 pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomError> {
     info!("Sending connection request to {}", entry.fullname);
+    let message_text = entry
+        .message
+        .clone()
+        .chars()
+        .filter(|&c| c as u32 <= 0xFFFF)
+        .collect();
+    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
 
-    let candidate = Candidate::new(
-        entry.fullname.clone(),
-        entry.linkedin.clone(),
-        entry.message.clone(),
-    );
-    let user_id = entry.user_id.clone();
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -31,7 +31,32 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
         jsessionid: entry.cookies.jsessionid,
     };
     let browser = init_browser(&browser_info).await?;
+    let result = send_connection(&browser, &candidate).await;
+    match result {
+        Ok(text) => {
+            browser.quit().await?;
+            return Ok(text);
+        }
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                error.to_string().as_str(),
+                &entry.message_id,
+                "Send connection",
+            )
+            .await?;
+            return Err(error);
+        }
+    }
+}
 
+pub async fn send_connection(
+    browser: &WebDriver,
+    candidate: &Candidate,
+) -> Result<String, CustomError> {
     let go_to = browser.goto(&candidate.linkedin).await;
 
     let mut x = 0;
@@ -43,16 +68,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
                 break;
             } else if build.is_err() && x == 3 {
                 wait(3, 6);
-                let screenshot = browser.screenshot_as_png().await?;
-                browser.quit().await?;
-                send_screenshot(
-                    screenshot,
-                    &browser_info.user_id,
-                    "Candidate page is not loading/Send_connection",
-                    "Send connection",
-                )
-                .await?;
-
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/Send_connection_message".to_string(),
                 ));
@@ -69,29 +84,12 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
         let cookie_second_try = session_cookie_is_valid(&browser).await?;
         if !cookie_second_try {
             wait(1, 3);
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Session cookie expired",
-                "Send connection",
-            )
-            .await?;
             return Err(CustomError::SessionCookieExpired);
         }
     }
     const MAIN_CONTAINER: &str = "div[class=application-outlet]";
     let main_container = browser.find(By::Css(MAIN_CONTAINER)).await;
     if main_container.is_err() {
-        let screenshot = browser.screenshot_as_png().await?;
-        send_screenshot(
-            screenshot,
-            &browser_info.user_id,
-            "Main container not found/Send_connection_message",
-            "Send connection",
-        )
-        .await?;
         return Err(CustomError::ButtonNotFound(
             "Main container not found/Send_connection_message".to_string(),
         ));
@@ -101,16 +99,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
 
     match page_not_found {
         Ok(_) => {
-            wait(1, 3);
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Page does not exist",
-                "Send connection",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Page does not exist".to_string(),
             ));
@@ -123,15 +111,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
         wait(7, 14);
         let cookie_second_try = session_cookie_is_valid(&browser).await?;
         if !cookie_second_try {
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Session cookie expired",
-                "Send connection",
-            )
-            .await?;
             return Err(CustomError::SessionCookieExpired);
         }
     }
@@ -148,15 +127,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
         Err(_s) => match more_option_another {
             Ok(option) => option,
             Err(_s) => {
-                let screenshot = browser.screenshot_as_png().await?;
-                browser.quit().await?;
-                send_screenshot(
-                    screenshot,
-                    &browser_info.user_id,
-                    "More button not found",
-                    "Send connection",
-                )
-                .await?;
                 return Err(CustomError::ButtonNotFound(
                     "More button not found".to_string(),
                 ));
@@ -167,15 +137,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
     const IN_CONNECTION_POOL: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Remove your connection']";
     let in_connection_pool = browser.find(By::Css(IN_CONNECTION_POOL)).await;
     if in_connection_pool.is_ok() {
-        let screenshot = browser.screenshot_as_png().await?;
-        browser.quit().await?;
-        send_screenshot(
-            screenshot,
-            &browser_info.user_id,
-            "Candidate in connection pool",
-            "Send connection",
-        )
-        .await?;
         return Ok("Candidate in connection pool".to_string());
     }
 
@@ -186,15 +147,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
     let pending_dropdown = browser.find(By::Css(PENDING_DROPDOWN)).await;
 
     if pending_on_the_page.is_ok() || pending_dropdown.is_ok() {
-        let screenshot = browser.screenshot_as_png().await?;
-        browser.quit().await?;
-        send_screenshot(
-            screenshot,
-            &browser_info.user_id,
-            "Connection pending",
-            "Send connection",
-        )
-        .await?;
         return Ok("Connection pending".to_string());
     }
 
@@ -210,15 +162,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
     } else if let Ok(button) = connect_dropdown {
         button
     } else {
-        let screenshot = browser.screenshot_as_png().await?;
-        browser.quit().await?;
-        send_screenshot(
-            screenshot,
-            &browser_info.user_id,
-            "Connection button missing",
-            "Send connection",
-        )
-        .await?;
         return Err(CustomError::ButtonNotFound(
             "Connection button missing".to_string(),
         ));
@@ -241,15 +184,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
             match connect {
                 Ok(connect) => connect.click().await?,
                 Err(_s) => {
-                    let screenshot = browser.screenshot_as_png().await?;
-                    browser.quit().await?;
-                    send_screenshot(
-                        screenshot,
-                        &browser_info.user_id,
-                        "Connect button in popup_how is not found",
-                        "Send connection",
-                    )
-                    .await?;
                     return Err(CustomError::ButtonNotFound(
                         "Connect button in popup_how is not found".to_string(),
                     ));
@@ -263,23 +197,13 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
 
     match email_needed {
         Ok(_) => {
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Email needed",
-                "Send connection",
-            )
-            .await?;
             return Ok("Email needed".to_string());
         }
         Err(_s) => (),
     };
-    let adding_message = message(&browser, candidate.message.as_str(), &user_id).await;
+    let adding_message = message(&browser, candidate.message.as_str()).await;
 
     if let Err(error) = adding_message {
-        browser.quit().await?;
         return Err(error);
     }
 
@@ -289,16 +213,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
     let pending_dropdown = browser.find(By::Css(PENDING_DROPDOWN)).await;
 
     if pending_on_the_page.is_ok() || pending_dropdown.is_ok() {
-        println!("Pending found");
-        let screenshot = browser.screenshot_as_png().await?;
-        browser.quit().await?;
-        send_screenshot(
-            screenshot,
-            &browser_info.user_id,
-            "Connection pending",
-            "Send connection",
-        )
-        .await?;
         return Ok("Connection was sent".to_string());
     }
 
@@ -309,26 +223,15 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
 
     match connection_limit {
         Ok(_) => {
-            wait(1, 5);
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Connection limit",
-                "Send connection",
-            )
-            .await?;
             return Err(CustomError::ConnectionLimit);
         }
         Err(_s) => (),
     };
     wait(3, 15); // random delay; // add delay before closing the browser to check things
 
-    browser.quit().await?;
     Ok("Connection was sent".to_string())
 }
-async fn message(browser: &WebDriver, message: &str, user_id: &str) -> Result<(), CustomError> {
+async fn message(browser: &WebDriver, message: &str) -> Result<(), CustomError> {
     //press button add note
     wait(5, 7);
     const ADD_NOTE: &str = "button.artdeco-button.artdeco-button--muted.artdeco-button--2.artdeco-button--secondary.ember-view.mr1";
@@ -336,15 +239,6 @@ async fn message(browser: &WebDriver, message: &str, user_id: &str) -> Result<()
     let add_note = match add_note {
         Ok(add_note) => add_note,
         Err(_s) => {
-            wait(1, 5);
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &user_id,
-                "Add note button not found",
-                "Send connection",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Add note button not found".to_string(),
             ));
@@ -388,16 +282,6 @@ async fn message(browser: &WebDriver, message: &str, user_id: &str) -> Result<()
                     input.send_keys(message).await?; // fill input for note;
                 }
                 Err(_) => {
-                    wait(1, 5);
-                    let screenshot = browser.screenshot_as_png().await?;
-                    send_screenshot(
-                        screenshot,
-                        &user_id,
-                        "Text input not found",
-                        "Send connection",
-                    )
-                    .await?;
-
                     return Err(CustomError::ButtonNotFound(
                         "Text input not found".to_string(),
                     ));
@@ -415,15 +299,6 @@ async fn message(browser: &WebDriver, message: &str, user_id: &str) -> Result<()
             wait(2, 3)
         }
         Err(_) => {
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &user_id,
-                "Send button in the connection popup is not found",
-                "Send connection",
-            )
-            .await?;
-
             return Err(CustomError::ButtonNotFound(
                 "Send button in the connection popup is not found".to_string(),
             ));

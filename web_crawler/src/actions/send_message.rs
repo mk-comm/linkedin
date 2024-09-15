@@ -6,27 +6,15 @@ use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
 use percent_encoding::percent_decode_str;
 use scraper::{Html, Selector};
-use thirtyfour::{By, Key, WebDriver};
-
+use thirtyfour::{By, Key, WebDriver, WebElement};
 pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomError> {
-    let check_reply = match entry.check_reply {
-        Some(value) => value,
-        None => false,
-    };
-    /*
     let message_text = entry
         .message
         .clone()
         .chars()
         .filter(|&c| c as u32 <= 0xFFFF)
         .collect();
-    */
-    let candidate = Candidate::new(
-        entry.fullname.clone(),
-        entry.linkedin.clone(),
-        entry.message.clone(),
-    );
-
+    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -41,9 +29,39 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
         fidcookie: entry.cookies.fidcookie,
         jsessionid: entry.cookies.jsessionid,
     };
-
     let browser = init_browser(&browser_info).await?;
-    let mut go_to = browser.goto(&candidate.linkedin).await;
+    let result = message(&browser, &candidate, entry.check_reply).await;
+    match result {
+        Ok(text) => {
+            browser.quit().await?;
+            return Ok(text);
+        }
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                error.to_string().as_str(),
+                &entry.message_id,
+                "Send regular message",
+            )
+            .await?;
+            return Err(error);
+        }
+    }
+}
+
+pub async fn message(
+    browser: &WebDriver,
+    candidate: &Candidate,
+    check_reply: Option<bool>,
+) -> Result<String, CustomError> {
+    let check_reply = match check_reply {
+        Some(value) => value,
+        None => false,
+    };
+    let go_to = browser.goto(&candidate.linkedin).await;
 
     let mut x = 0;
     if go_to.is_err() {
@@ -51,20 +69,8 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
             wait(3, 6);
             let build = browser.goto(&candidate.linkedin).await;
             if build.is_ok() {
-                go_to = build;
                 break;
             } else if build.is_err() && x == 3 {
-                wait(3, 6);
-                let screenshot = browser.screenshot_as_png().await?;
-                browser.quit().await?;
-                send_screenshot(
-                    screenshot,
-                    &browser_info.user_id,
-                    "Candidate page is not loading/Send_regular_message",
-                    "Send regular message",
-                )
-                .await?;
-
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/Send_regular_message".to_string(),
                 )); // if error means page is not loading
@@ -80,16 +86,6 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
         wait(7, 14);
         let cookie_second_try = session_cookie_is_valid(&browser).await?;
         if !cookie_second_try {
-            wait(1, 3);
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Session cookie expired",
-                "Send regular message",
-            )
-            .await?;
             return Err(CustomError::SessionCookieExpired);
         }
     }
@@ -99,43 +95,39 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
     let main_container = match main_container {
         Ok(container) => container,
         Err(_s) => {
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Main container not found/Send_regular_message",
-                "Send regular message",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Main container not found/Send regular message".to_string(),
             ));
         }
     };
-    let entity_urn = find_entity_urn(&main_container.inner_html().await?);
-    let entity_urn = match entity_urn {
-        Ok(urn) => urn,
-        Err(_s) => {
-            browser.quit().await?;
-            return Err(CustomError::ButtonNotFound(
-                "Entity urn not found".to_string(),
-            ));
-        }
-    };
 
+    const ENTITY_URN_CONTAINER:&str ="a.optional-action-target-wrapper.artdeco-button.artdeco-button--tertiary.artdeco-button--standard.artdeco-button--2.artdeco-button--muted.inline-flex.justify-center.full-width.align-items-center.artdeco-button--fluid";
+
+    let entity_urn_container = browser.find(By::Css(ENTITY_URN_CONTAINER)).await;
+    let entity_urn = match entity_urn_container {
+        Ok(element) => match find_entity_urn_sidebar(&element).await {
+            Ok(urn) => urn,
+            Err(_s) => match find_entity_urn(&main_container.inner_html().await?) {
+                Ok(urn) => urn,
+                Err(_s) => {
+                    return Err(CustomError::ButtonNotFound(
+                        "Entity urn not found".to_string(),
+                    ));
+                }
+            },
+        },
+        Err(_) => match find_entity_urn(&main_container.inner_html().await?) {
+            Ok(urn) => urn,
+            Err(_s) => {
+                return Err(CustomError::ButtonNotFound(
+                    "Entity urn not found".to_string(),
+                ));
+            }
+        },
+    };
     const IN_CONNECTION_POOL: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Remove your connection']";
     let in_connection_pool = browser.find(By::Css(IN_CONNECTION_POOL)).await;
     if in_connection_pool.is_err() {
-        let screenshot = browser.screenshot_as_png().await?;
-        browser.quit().await?;
-        send_screenshot(
-            screenshot,
-            &browser_info.user_id,
-            "Candidate is not in connection pool to send messages",
-            "Send regular message",
-        )
-        .await?;
         return Ok("Candidate is not in connection pool to send messages".to_string());
     }
     const MESSAGE_BUTTON: &str = "button.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.pvs-profile-actions__action[aria-label*='Message']";
@@ -144,15 +136,6 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
     let message_button = match message_button {
         Ok(button) => button,
         Err(_e) => {
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Message button not found",
-                "Send regular message",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Message button not found".to_string(),
             ));
@@ -164,34 +147,24 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
     let current_url = browser.current_url().await?;
     let result_url = current_url.as_str();
     if result_url.contains("messaging") {
-        let result = send_messaging_page(
-            &browser,
-            &browser_info.user_id,
-            check_reply,
-            &candidate.message,
-        )
-        .await;
+        let result = send_messaging_page(&browser, check_reply, &candidate.message).await;
         if let Err(error) = result {
-            browser.quit().await?;
             return Err(error);
         }
     } else {
         let result = send_current_page(
             &browser,
-            &browser_info.user_id,
             entity_urn.as_str(),
             check_reply,
             &candidate.message,
         )
         .await;
         if let Err(error) = result {
-            browser.quit().await?;
             return Err(error);
         }
     }
 
     wait(5, 7);
-    browser.quit().await?;
     Ok("Message was sent".to_string())
 }
 fn get_conversation_owner(html: &str, selector: &str) -> Result<String, CustomError> {
@@ -232,7 +205,6 @@ fn get_conversation_ids(html: &str) -> Result<Vec<String>, CustomError> {
 
 async fn send_messaging_page(
     browser: &WebDriver,
-    user_id: &str,
     check_reply: bool,
     message: &str,
 ) -> Result<(), CustomError> {
@@ -240,14 +212,6 @@ async fn send_messaging_page(
     let inmail_popup = browser.find(By::Css(INMAIL_POPUP)).await;
 
     if inmail_popup.is_ok() {
-        let screenshot = browser.screenshot_as_png().await?;
-        send_screenshot(
-            screenshot,
-            &user_id,
-            "Inmail needed",
-            "Send regular message",
-        )
-        .await?;
         return Err(CustomError::ButtonNotFound("Inmail needed".to_string()));
     }
     const MAIN_CONTAINER: &str = "div[class=application-outlet]";
@@ -268,14 +232,6 @@ async fn send_messaging_page(
     let conversation = match browser.find(By::Css(CONVERSATION_SELECTOR)).await {
         Ok(conversation) => conversation,
         Err(_s) => {
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &user_id,
-                "Conversation not found/Messaging page",
-                "Send regular message",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Conversation not found/Messaging page".to_string(),
             ));
@@ -295,19 +251,10 @@ async fn send_messaging_page(
     };
     println!("candidate reply {}", candidate_reply);
     if candidate_reply && check_reply {
-        let screenshot = browser.screenshot_as_png().await?;
-        send_screenshot(
-            screenshot,
-            &user_id,
-            "Candidate replied",
-            "Send regular message",
-        )
-        .await?;
         return Err(CustomError::ButtonNotFound("Candidate replied".to_string()));
     };
 
     wait(2, 4);
-    let message = message.replace("\n", "\\n").replace("'", "\\'");
     const REGULAR_INPUT: &str = "div.msg-form__contenteditable.t-14.t-black--light.t-normal.flex-grow-1.full-height.notranslate";
     let regular_input = browser.find(By::Css(REGULAR_INPUT)).await;
 
@@ -326,15 +273,6 @@ async fn send_messaging_page(
             input.send_keys(&message).await?; // fill input for note;
         }
         Err(_s) => {
-            wait(1, 5); // random delay
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &user_id,
-                "Input not found",
-                "Send regular message",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound("Input not found".to_string()));
         } // means you can't send message to this profile
     }
@@ -356,15 +294,6 @@ async fn send_messaging_page(
                     wait(2, 5); // random delay
                 }
                 Err(_s) => {
-                    let screenshot = browser.screenshot_as_png().await?;
-                    send_screenshot(
-                        screenshot,
-                        &user_id,
-                        "Send button not found",
-                        "Send regular message",
-                    )
-                    .await?;
-
                     return Err(CustomError::ButtonNotFound(
                         "Send button not found".to_string(),
                     ));
@@ -376,7 +305,6 @@ async fn send_messaging_page(
 }
 async fn send_current_page(
     browser: &WebDriver,
-    user_id: &str,
     entity_urn: &str,
     check_reply: bool,
     message: &str,
@@ -385,14 +313,6 @@ async fn send_current_page(
     let inmail_popup = browser.find(By::Css(INMAIL_POPUP)).await;
 
     if inmail_popup.is_ok() {
-        let screenshot = browser.screenshot_as_png().await?;
-        send_screenshot(
-            screenshot,
-            &user_id,
-            "Inmail needed",
-            "Send regular message",
-        )
-        .await?;
         return Err(CustomError::ButtonNotFound("Inmail needed".to_string()));
     }
 
@@ -416,14 +336,6 @@ async fn send_current_page(
     let conversation_id = match conversation_id {
         Ok(id) => id,
         Err(e) => {
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &user_id,
-                e.to_string().as_str(),
-                "Send regular message",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound(e.to_string()));
         }
     };
@@ -446,14 +358,6 @@ async fn send_current_page(
             match convesation_linkedin_nick {
                 Ok(conversation) => Some(conversation),
                 Err(_s) => {
-                    let screenshot = browser.screenshot_as_png().await?;
-                    send_screenshot(
-                        screenshot,
-                        &user_id,
-                        "Conversation not found/ new or existing",
-                        "Send regular message",
-                    )
-                    .await?;
                     return Err(CustomError::ButtonNotFound(
                         "Conversation not found/ new or existing".to_string(),
                     ));
@@ -462,14 +366,6 @@ async fn send_current_page(
         }
     };
     if candidate_reply && check_reply {
-        let screenshot = browser.screenshot_as_png().await?;
-        send_screenshot(
-            screenshot,
-            &user_id,
-            "Candidate replied",
-            "Send regular message",
-        )
-        .await?;
         return Err(CustomError::ButtonNotFound("Candidate replied".to_string()));
     };
     let conversation_select = match conversation_select {
@@ -484,7 +380,7 @@ async fn send_current_page(
     const REGULAR_INPUT: &str = "div.msg-form__contenteditable.t-14.t-black--light.t-normal.flex-grow-1.full-height.notranslate";
     let regular_input = conversation_select.find(By::Css(REGULAR_INPUT)).await;
 
-    match regular_input {
+    let regular_input = match regular_input {
         Ok(input) => {
             input.focus().await?;
             wait(1, 2);
@@ -496,21 +392,16 @@ async fn send_current_page(
             input.focus().await?;
             input.click().await?;
             wait(1, 3);
-            input.send_keys(&message).await?; // fill input for note;
+            input.send_keys(&message).await?;
+            input
         }
         Err(_s) => {
-            wait(1, 5); // random delay
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &user_id,
-                "Input not found",
-                "Send regular message",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound("Input not found".to_string()));
-        } // means you can't send message to this profile
-    }
+        }
+    };
+    const PRESS_ENTER_TO_SEND: &str = "div.msg-form__hint-text.t-12.t-black--light.t-normal";
+    let press_enter_to_send = conversation_select.find(By::Css(PRESS_ENTER_TO_SEND)).await;
+
     const SEND: &str = "button.msg-form__send-button.artdeco-button.artdeco-button--1";
     let send = conversation_select.find(By::Css(SEND)).await;
 
@@ -522,26 +413,22 @@ async fn send_current_page(
             send.click().await?;
             wait(2, 5);
         }
-        Err(_s) => {
+        Err(_) => {
             match send_new {
                 Ok(send) => {
                     send.click().await?; // click on search input
                     wait(2, 5); // random delay
                 }
-                Err(_s) => {
-                    let screenshot = browser.screenshot_as_png().await?;
-                    send_screenshot(
-                        screenshot,
-                        &user_id,
-                        "Send button not found",
-                        "Send regular message",
-                    )
-                    .await?;
-
-                    return Err(CustomError::ButtonNotFound(
-                        "Send button not found".to_string(),
-                    ));
-                }
+                Err(_s) => match press_enter_to_send {
+                    Ok(_) => {
+                        regular_input.send_keys(Key::Enter + "").await?;
+                    }
+                    Err(_) => {
+                        return Err(CustomError::ButtonNotFound(
+                            "Send button not found".to_string(),
+                        ));
+                    }
+                },
             }
         }
     }
@@ -665,6 +552,38 @@ fn find_entity_urn(html: &str) -> Result<String, CustomError> {
         };
     }
     Ok(entity_urn)
+}
+
+async fn find_entity_urn_sidebar(entity_urn: &WebElement) -> Result<String, CustomError> {
+    let href = entity_urn.attr("href").await?;
+    println!("href{:#?}", href);
+    match href {
+        Some(link) => {
+            let result = link.split("profileUrn=urn%3Ali%3Afsd_profile%3A").nth(1);
+            println!("result {:#?}", result);
+
+            match result {
+                Some(result) => match result.split('&').next() {
+                    Some(result) => return Ok(result.to_string()),
+                    None => {
+                        return Err(CustomError::ButtonNotFound(
+                            "find_entity_urn_sidebar result not found".to_string(),
+                        ))
+                    }
+                },
+                None => {
+                    return Err(CustomError::ButtonNotFound(
+                        "find_entity_urn_sidebar result not found".to_string(),
+                    ))
+                }
+            }
+        }
+        None => {
+            return Err(CustomError::ButtonNotFound(
+                "find_entity_urn_sidebar result not found".to_string(),
+            ))
+        }
+    };
 }
 
 fn print_elements_with_datalet_in_id(html: &str) -> Option<String> {

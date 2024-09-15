@@ -36,7 +36,6 @@ pub async fn chrome(
     caps.add_chrome_arg("disable-infobars").unwrap();
     caps.add_chrome_option("excludeSwitches", ["enable-automation"])
         .unwrap();
-
     caps.set_proxy(Proxy::Manual {
         http_proxy: Some(proxy.clone()),
         ftp_proxy: Some(proxy.clone()), // Replace with your HTTP proxy address
@@ -47,8 +46,6 @@ pub async fn chrome(
         socks_password: None,           // Replace with your SOCKS proxy password
         no_proxy: None,
     })?;
-    //caps.set_headless()?;
-
     let mut driver = None;
     let mut attempt = 0;
     while driver.is_none() && attempt < 20 {

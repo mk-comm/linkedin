@@ -1,29 +1,23 @@
 use scraper::{Html, Selector};
 
-use crate::actions::init_browser::{init_browser, session_cookie_is_valid};
+use crate::actions::init_browser::{init_browser, send_screenshot, session_cookie_is_valid};
 use crate::actions::scrap_recruiter_search::check_recruiter_cookie;
-use crate::actions::start_browser::send_screenshot;
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::candidate::Candidate;
 use crate::structs::entry::EntrySendInmail;
 use crate::structs::error::CustomError;
-use thirtyfour::By;
+use thirtyfour::{By, WebDriver};
 use tracing::instrument;
-use tracing::{span, Level};
-
 #[instrument]
 pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
-    let span = span!(Level::DEBUG, "sub_span_name {}", entry.message_id);
-
-    let _enter = span.enter();
-    let candidate = Candidate::new(
-        entry.fullname.clone(),
-        entry.linkedin.clone(),
-        entry.message.clone(),
-    );
-    let subject = entry.subject.clone();
-
+    let message_text = entry
+        .message
+        .clone()
+        .chars()
+        .filter(|&c| c as u32 <= 0xFFFF)
+        .collect();
+    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -38,9 +32,35 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         fidcookie: entry.cookies.fidcookie,
         jsessionid: entry.cookies.jsessionid,
     };
-
     let browser = init_browser(&browser_info).await?;
-    // go to candidate page
+    let result = inmail(&browser, &candidate, &entry.subject).await;
+    match result {
+        Ok(text) => {
+            browser.quit().await?;
+            return Ok(text);
+        }
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                error.to_string().as_str(),
+                &entry.message_id,
+                "Send Inmails",
+            )
+            .await?;
+            return Err(error);
+        }
+    }
+}
+
+pub async fn inmail(
+    browser: &WebDriver,
+    candidate: &Candidate,
+    subject: &str,
+) -> Result<(), CustomError> {
+    let file_name = "null";
     let mut go_to = browser.goto(&candidate.linkedin).await;
 
     let mut x = 0;
@@ -53,13 +73,11 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                 break;
             } else if build.is_err() && x == 3 {
                 wait(3, 6);
-                browser.quit().await?;
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/Inmail_regular".to_string(),
-                )); // if error means page is not loading
+                ));
             }
             x += 1;
-            //// ("retrying to load page")
         }
         wait(1, 3);
     }
@@ -70,33 +88,12 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         wait(7, 14);
         let cookie_second_try = session_cookie_is_valid(&browser).await?;
         if !cookie_second_try {
-            wait(1, 3);
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Session cookie expired",
-                "Send Inmails",
-            )
-            .await?;
             return Err(CustomError::SessionCookieExpired);
         }
-
-        println!("checking if cookie is valid{}", cookie_second_try);
     }
     const MAIN_CONTAINER: &str = "div[class=application-outlet]";
     let main_container = browser.find(By::Css(MAIN_CONTAINER)).await;
     if main_container.is_err() {
-        let screenshot = browser.screenshot_as_png().await?;
-        send_screenshot(
-            screenshot,
-            &browser_info.user_id,
-            "Main container not found/Send Inmails",
-            "Send Inmails",
-        )
-        .await?;
-        browser.quit().await?;
         return Err(CustomError::ButtonNotFound(
             "Main container not found/Send Inmails".to_string(),
         ));
@@ -122,7 +119,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
                     break;
                 } else if build.is_err() && x == 3 {
                     wait(3, 6);
-                    browser.quit().await?; // close browser
                     return Err(CustomError::ButtonNotFound(
                         "Candidate Recruiter page is not loading/Inmail".to_string(),
                     )); // if error means page is not loading
@@ -137,15 +133,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             Err(_) => match browser.find(By::Css(VIEW_IN_RECRUITER_DROPDOWN)).await {
                 Ok(button) => button.click().await?,
                 Err(_e) => {
-                    let screenshot = browser.screenshot_as_png().await?;
-                    send_screenshot(
-                        screenshot,
-                        &browser_info.user_id,
-                        "View in recruiter button is not found",
-                        "Send Inmails",
-                    )
-                    .await?;
-                    browser.quit().await?;
                     return Err(CustomError::ButtonNotFound(
                         "View in recruiter button is not found".to_string(),
                     ));
@@ -162,17 +149,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         wait(7, 14);
         let cookie_second_try = check_recruiter_cookie(&browser).await?;
         if !cookie_second_try {
-            wait(1, 3);
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Recruiter Session cookie expired",
-                "Send Inmails",
-            )
-            .await?;
             return Err(CustomError::RecruiterSessionCookieExpired);
         }
     }
@@ -188,26 +164,13 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             wait(5, 7); // random delay
         }
         Err(_) => {
-            wait(1, 5); // random delaylet screenshot = browser.screenshot_as_png().await?;
-
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Recruiter Session cookie expired",
-                "Send Inmails",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Send button in recruiter is not visible/Send Inmails".to_string(),
             ));
         }
     };
 
-    if entry.file_name != "null" {
-        browser.quit().await?;
+    if file_name != "null" {
         return Err(CustomError::ButtonNotFound(
             "Inmail file not send".to_string(),
         ));
@@ -233,17 +196,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             input.send_keys(subject).await?;
         }
         Err(_) => {
-            wait(1, 5);
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Subject input in recruiter is not visible",
-                "Send Inmails",
-            )
-            .await?;
-
-            browser.quit().await?;
             return Err(CustomError::ButtonNotFound(
                 "Subject input in recruiter is not visible".to_string(),
             ));
@@ -258,20 +210,9 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
         Ok(input) => {
             input.click().await?; // click on search input
             wait(2, 5);
-            input.send_keys(candidate.message).await?;
+            input.send_keys(&candidate.message).await?;
         }
         Err(_) => {
-            wait(1, 5); // random delay
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Text input in recruiter is not visible",
-                "Send Inmails",
-            )
-            .await?;
-
-            browser.quit().await?;
             return Err(CustomError::ButtonNotFound(
                 "Text input in recruiter is not visible".to_string(),
             ));
@@ -299,17 +240,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
             button.click().await?;
             wait(2, 5);
         } else {
-            wait(1, 5); // random delay
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Send button in recruiter is not visible/Text",
-                "Send Inmails",
-            )
-            .await?;
-
-            browser.quit().await?;
             return Err(CustomError::ButtonNotFound(
                 "Send button in recruiter is not visible/Text".to_string(),
             ));
@@ -317,8 +247,6 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     }
 
     wait(2, 4);
-    browser.quit().await?;
-    drop(_enter);
     Ok(())
 }
 

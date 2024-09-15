@@ -4,15 +4,15 @@ use crate::{
     actions::wait::wait, structs::candidate::Candidate, structs::entry::EntrySendConnection,
     structs::error::CustomError,
 };
-use thirtyfour::By;
-
+use thirtyfour::{By, WebDriver};
 pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, CustomError> {
-    let candidate = Candidate::new(
-        entry.fullname.clone(),
-        entry.linkedin.clone(),
-        entry.message.clone(),
-    );
-
+    let message_text = entry
+        .message
+        .clone()
+        .chars()
+        .filter(|&c| c as u32 <= 0xFFFF)
+        .collect();
+    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -27,9 +27,30 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
         fidcookie: entry.cookies.fidcookie,
         jsessionid: entry.cookies.jsessionid,
     };
-
     let browser = init_browser(&browser_info).await?;
+    let result = withdraw(&browser, &candidate).await;
+    match result {
+        Ok(text) => {
+            browser.quit().await?;
+            return Ok(text);
+        }
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                error.to_string().as_str(),
+                &entry.message_id,
+                "Send regular message",
+            )
+            .await?;
+            return Err(error);
+        }
+    }
+}
 
+pub async fn withdraw(browser: &WebDriver, candidate: &Candidate) -> Result<String, CustomError> {
     let go_to = browser.goto(&candidate.linkedin).await;
 
     let mut x = 0;
@@ -40,17 +61,6 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
             if build.is_ok() {
                 break;
             } else if build.is_err() && x == 3 {
-                wait(3, 6);
-                let screenshot = browser.screenshot_as_png().await?;
-                browser.quit().await?;
-                send_screenshot(
-                    screenshot,
-                    &browser_info.user_id,
-                    "Candidate page is not loading/Withdraw connection",
-                    "Withdraw connection",
-                )
-                .await?;
-
                 return Err(CustomError::ButtonNotFound(
                     "Candidate page is not loading/Withdraw connection".to_string(),
                 ));
@@ -67,30 +77,12 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
         wait(7, 14);
         let cookie_second_try = session_cookie_is_valid(&browser).await?;
         if !cookie_second_try {
-            wait(1, 3);
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Session cookie expired",
-                "Withdraw connection",
-            )
-            .await?;
             return Err(CustomError::SessionCookieExpired);
         }
     }
     const MAIN_CONTAINER: &str = "div[class=application-outlet]";
     let main_container = browser.find(By::Css(MAIN_CONTAINER)).await;
     if main_container.is_err() {
-        let screenshot = browser.screenshot_as_png().await?;
-        send_screenshot(
-            screenshot,
-            &browser_info.user_id,
-            "Main container not found/Send_connection_message",
-            "Withdraw connection",
-        )
-        .await?;
         return Err(CustomError::ButtonNotFound(
             "Main container not found/Withdraw connection".to_string(),
         ));
@@ -100,16 +92,6 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
 
     match page_not_found {
         Ok(_) => {
-            wait(1, 3);
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Page does not exist",
-                "Withdraw connection",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Page does not exist".to_string(),
             ));
@@ -122,15 +104,6 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
         wait(7, 14);
         let cookie_second_try = session_cookie_is_valid(&browser).await?;
         if !cookie_second_try {
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Session cookie expired",
-                "Withdraw connection",
-            )
-            .await?;
             return Err(CustomError::SessionCookieExpired);
         }
     }
@@ -146,15 +119,6 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
         Err(_s) => match more_option_another {
             Ok(option) => option,
             Err(_s) => {
-                let screenshot = browser.screenshot_as_png().await?;
-                browser.quit().await?;
-                send_screenshot(
-                    screenshot,
-                    &browser_info.user_id,
-                    "More button not found",
-                    "Withdraw connection",
-                )
-                .await?;
                 return Err(CustomError::ButtonNotFound(
                     "More button not found".to_string(),
                 ));
@@ -166,15 +130,6 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
     const IN_CONNECTION_POOL: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Remove your connection']";
     let in_connection_pool = browser.find(By::Css(IN_CONNECTION_POOL)).await;
     if in_connection_pool.is_ok() {
-        let screenshot = browser.screenshot_as_png().await?;
-        browser.quit().await?;
-        send_screenshot(
-            screenshot,
-            &browser_info.user_id,
-            "Connection accepted; withdrawal not possible",
-            "Withdraw connection",
-        )
-        .await?;
         return Ok("Connection accepted; withdrawal not possible".to_string());
     }
 
@@ -192,15 +147,6 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
                 button.click().await?;
             }
             Err(_) => {
-                let screenshot = browser.screenshot_as_png().await?;
-                browser.quit().await?;
-                send_screenshot(
-                    screenshot,
-                    &browser_info.user_id,
-                    "Pending button is missing",
-                    "Withdraw connection",
-                )
-                .await?;
                 return Err(CustomError::ButtonNotFound(
                     "Pending button is missing".to_string(),
                 ));
@@ -217,15 +163,6 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
             button.click().await?;
         }
         Err(_) => {
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-            send_screenshot(
-                screenshot,
-                &browser_info.user_id,
-                "Withdraw popup button is missing",
-                "Withdraw connection",
-            )
-            .await?;
             return Err(CustomError::ButtonNotFound(
                 "Withdraw popup button is missing".to_string(),
             ));
@@ -248,15 +185,6 @@ pub async fn withdraw_pending(entry: EntrySendConnection) -> Result<String, Cust
                 button.click().await?;
             }
             Err(_) => {
-                let screenshot = browser.screenshot_as_png().await?;
-                browser.quit().await?;
-                send_screenshot(
-                    screenshot,
-                    &browser_info.user_id,
-                    "Not now button is missing",
-                    "Withdraw connection",
-                )
-                .await?;
                 return Err(CustomError::ButtonNotFound(
                     "Not now button is missing".to_string(),
                 ));
