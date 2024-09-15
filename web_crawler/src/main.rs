@@ -241,11 +241,11 @@ async fn withdraw_connection(json: Json<EntrySendConnection>) -> impl IntoRespon
     tokio::spawn(async move {
         let api = withdraw_pending(json.0);
         match api.await {
-            Ok(_) => {
+            Ok(text) => {
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
-                    "result": "Connection was withdrawn",
+                    "result": text,
                     "user_id": user_id,
                     "error": "no",
                 });

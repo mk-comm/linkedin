@@ -1,4 +1,4 @@
-use crate::actions::start_browser::start_browser;
+use crate::actions::init_browser::{init_browser, send_screenshot, session_cookie_is_valid};
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::entry::EntryScrapSearchRegular;
@@ -6,6 +6,7 @@ use crate::structs::error::CustomError;
 use reqwest;
 use scraper::{Html, Selector};
 use serde_json::json;
+use thirtyfour::By;
 use tracing::{error, info};
 
 pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), CustomError> {
@@ -25,42 +26,85 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         jsessionid: entry.cookies.jsessionid,
     };
 
-    let browser = start_browser(browser_info).await?;
-    browser.page.goto_builder(&entry.url).goto().await?;
-    wait(7, 10);
+    let browser = init_browser(&browser_info).await?;
+    let go_to = browser.goto(&entry.url).await;
 
+    let mut x = 0;
+    if go_to.is_err() {
+        while x <= 3 {
+            wait(3, 6);
+            let build = browser.goto(&entry.url).await;
+            if build.is_ok() {
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(3, 6);
+                let screenshot = browser.screenshot_as_png().await?;
+                browser.quit().await?;
+                send_screenshot(
+                    screenshot,
+                    &browser_info.user_id,
+                    "Scrap regular search page is not loading",
+                    "Scrap regular search",
+                )
+                .await?;
+
+                return Err(CustomError::ButtonNotFound(
+                    "Scrap regular search page is not loading".to_string(),
+                ));
+            }
+            x += 1;
+        }
+        wait(1, 3);
+    }
+    wait(7, 10);
+ let cookie = session_cookie_is_valid(&browser).await?;
+    if !cookie {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
+        if !cookie_second_try {
+            wait(1, 3);
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                "Session cookie expired",
+                "Scrap regular search",
+            )
+            .await?;
+            return Err(CustomError::SessionCookieExpired);
+        }
+    }
     const CANDIDATE_NUMBER: &str = "h2.pb2.t-black--light.t-14";
-    let number_candidates = browser.page.query_selector(CANDIDATE_NUMBER).await?;
+    let number_candidates = browser.find(By::Css(CANDIDATE_NUMBER)).await;
+
     match number_candidates {
-        Some(number) => {
-            let text = number.text_content().await?;
+        Ok(number) => {
+            let text = number.text().await;
             let text = match text {
-                Some(text) => text,
-                None => String::from("1001"),
+                Ok(text) => 
+                { println!("Number of candidates in the search {}", text);
+                    text},
+                Err(_) => String::from("1001"),
             };
-            println!("{:?}", text);
             let result = if text.contains(',') || text.contains('K') {
-                println!("more than 1k");
                 1000
             } else {
                 let numeric_text: String = text.chars().filter(|c| c.is_digit(10)).collect();
                 println!("numeric {}", numeric_text);
                 numeric_text.trim().parse::<i32>().unwrap_or(1002)
             };
-            println!("{}", result);
             send_search_number(result, &entry.aisearch).await?
         }
-        None => {
-            println!("none");
+        Err(_) => {
             send_search_number(1003, &entry.aisearch).await?
         }
     };
     let url_list_id = entry.url_list_id.to_string();
-    let search_container = browser
-        .page
-        .query_selector("div.search-results-container")
-        .await?
-        .unwrap();
+    const SEARCH_CONTAINER:&str = "div.search-results-container";
+
+    let search_container = browser.find(By::Css(SEARCH_CONTAINER)).await?;
 
     let pages_count = count_pages(search_container.inner_html().await?);
     println!("pages count: {}", pages_count);
@@ -68,21 +112,31 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
     for i in 1..=pages_count {
         let mut url_list: Vec<String> = Vec::new();
         let page_number = format!("button[aria-label='Page {}']", i);
-        let next_page = browser
-            .page
-            .query_selector(page_number.as_str())
-            .await?
-            .unwrap();
-
-        next_page.click_builder().click().await?;
-
+        let next_page = browser.find(By::Css(page_number.as_str())).await?;
+        next_page.click().await?;
         wait(7, 10);
-
-        let container = browser
-            .page
-            .query_selector("div.search-results-container")
-            .await?
-            .unwrap();
+        let cookie = session_cookie_is_valid(&browser).await?;
+        if !cookie {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
+        if !cookie_second_try {
+            wait(1, 3);
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                "Session cookie expired",
+                "Scrap regular search",
+            )
+            .await?;
+            return Err(CustomError::SessionCookieExpired);
+        }
+    }
+        const CONTAINER: &str = "div.search-results-container";
+        let container = browser.find(By::Css(CONTAINER)).await?;
+        
         scrap(container.inner_html().await?.as_str(), &mut url_list);
         wait(1, 2);
         send_urls(
@@ -96,12 +150,9 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         wait(3, 5);
     }
 
-    //println!("url list: {:?}", url_list);
-
     wait(5, 12);
 
-    browser.page.close(Some(false)).await?;
-    browser.browser.close().await?;
+    browser.quit().await?;
     let _ = send_search_status("Search scraped successfully", &ai_search).await;
 
     Ok(())

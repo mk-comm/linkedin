@@ -67,7 +67,7 @@ pub async fn get_experience(
     println!("experience_url:{}", experience_url);
 
     let mut go_to = browser.goto(experience_url.as_str()).await;
-
+    wait(3, 5);
     let mut x = 0;
     if go_to.is_err() {
         while x <= 3 {
@@ -146,7 +146,8 @@ pub fn parse_experience(html_content: &str) -> Vec<Experience> {
     let document = Html::parse_document(html_content);
     let mut experiences = Vec::new();
 
-    let outer = Selector::parse("#profile-content > div > div.scaffold-layout > div.scaffold-layout__inner > div > main > section > div.pvs-list__container > div > div  > ul");
+    let outer = Selector::parse(
+        "#profile-content > div > div.scaffold-layout > div.scaffold-layout__inner > div > main > section > div.pvs-list__container > div > div  > ul");
 
     let mut li_elements: Vec<ElementRef> = Vec::new();
 

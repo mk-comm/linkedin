@@ -9,13 +9,12 @@ use tracing::info;
 
 pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomError> {
     info!("Sending connection request to {}", entry.fullname);
-    let message_text = entry
-        .message
-        .clone()
-        .chars()
-        .filter(|&c| c as u32 <= 0xFFFF)
-        .collect();
-    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
+
+    let candidate = Candidate::new(
+        entry.fullname.clone(),
+        entry.linkedin.clone(),
+        entry.message.clone(),
+    );
     let user_id = entry.user_id.clone();
     let browser_info = BrowserInit {
         ip: entry.ip,
@@ -33,7 +32,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
     };
     let browser = init_browser(&browser_info).await?;
 
-    let mut go_to = browser.goto(&candidate.linkedin).await;
+    let go_to = browser.goto(&candidate.linkedin).await;
 
     let mut x = 0;
     if go_to.is_err() {
@@ -41,7 +40,6 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
             wait(3, 6);
             let build = browser.goto(&candidate.linkedin).await;
             if build.is_ok() {
-                go_to = build;
                 break;
             } else if build.is_err() && x == 3 {
                 wait(3, 6);

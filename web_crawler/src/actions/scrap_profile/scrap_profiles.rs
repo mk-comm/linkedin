@@ -141,7 +141,7 @@ async fn scrap_experience_to_profile(
             ..profile
         };
         send_url_chromedata_viewed(&profile_new).await?;
-        send_url_update(&profile_new.profile_url_id, &profile_new.linkedin).await?;
+        send_url_update(&profile_new.profile_url_id, &profile_new.linkedin, &profile_new).await?;
         profiles_new.push(profile_new);
     }
     Ok(profiles_new)
@@ -151,7 +151,7 @@ async fn send_url_chromedata_viewed(profile: &Profile) -> Result<(), CustomError
     let serialized = serde_json::to_vec(&profile).unwrap();
     let encoded = encode(&serialized);
     const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
-    //const WEBHOOK_URL: &str = "https://webhook.site/edf0826d-61e4-4de5-bdd1-678d485785a9";
+    //const WEBHOOK_URL: &str = "https://webhook.site/dd84fc5e-02a4-4fbe-a76b-92c63d5d791a";
     let client = reqwest::Client::new();
 
     let target_json = json!({ 
@@ -166,13 +166,17 @@ async fn send_url_chromedata_viewed(profile: &Profile) -> Result<(), CustomError
 
 async fn send_url_update(
     url_id: &str,
-    linkedin_url: &Option<String>,
+    linkedin_url: &Option<String>, profile: &Profile
 ) -> Result<(), reqwest::Error> {
+    let serialized = serde_json::to_vec(&profile).unwrap();
+    let encoded = encode(&serialized);
+
     let max_retries = 5;
     let client = reqwest::Client::new();
     let urls_json = json!({
         "url_id": url_id,
-    "linkedin": linkedin_url
+        "linkedin": linkedin_url,
+        "b64": encoded
     });
     let target_url = "https://overview.tribe.xyz/api/1.1/wf/tribe_scrap_search_update_url";
 

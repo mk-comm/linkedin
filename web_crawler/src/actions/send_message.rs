@@ -2,7 +2,6 @@ use crate::actions::init_browser::{init_browser, send_screenshot, session_cookie
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::candidate::Candidate;
-use crate::structs::conversation;
 use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
 use percent_encoding::percent_decode_str;
@@ -14,13 +13,19 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
         Some(value) => value,
         None => false,
     };
+    /*
     let message_text = entry
         .message
         .clone()
         .chars()
         .filter(|&c| c as u32 <= 0xFFFF)
         .collect();
-    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
+    */
+    let candidate = Candidate::new(
+        entry.fullname.clone(),
+        entry.linkedin.clone(),
+        entry.message.clone(),
+    );
 
     let browser_info = BrowserInit {
         ip: entry.ip,

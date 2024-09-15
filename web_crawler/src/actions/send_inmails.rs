@@ -17,13 +17,11 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     let span = span!(Level::DEBUG, "sub_span_name {}", entry.message_id);
 
     let _enter = span.enter();
-    let message_text = entry
-        .message
-        .clone()
-        .chars()
-        .filter(|&c| c as u32 <= 0xFFFF)
-        .collect();
-    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
+    let candidate = Candidate::new(
+        entry.fullname.clone(),
+        entry.linkedin.clone(),
+        entry.message.clone(),
+    );
     let subject = entry.subject.clone();
 
     let browser_info = BrowserInit {
