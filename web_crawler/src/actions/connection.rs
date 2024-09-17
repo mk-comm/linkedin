@@ -134,6 +134,7 @@ pub async fn send_connection(
         },
     };
     more_option.click().await?;
+    wait(2, 3);
     const IN_CONNECTION_POOL: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Remove your connection']";
     let in_connection_pool = browser.find(By::Css(IN_CONNECTION_POOL)).await;
     if in_connection_pool.is_ok() {
@@ -169,7 +170,7 @@ pub async fn send_connection(
 
     connect_button.click().await?;
 
-    wait(2, 3);
+    wait(3, 4);
     //check if popup to choose "How do you know"
     const POPUP_HOW: &str = "button[aria-label='Other']";
     let popup_how = browser.find(By::Css(POPUP_HOW)).await;

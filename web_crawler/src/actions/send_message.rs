@@ -258,7 +258,7 @@ async fn send_messaging_page(
     const REGULAR_INPUT: &str = "div.msg-form__contenteditable.t-14.t-black--light.t-normal.flex-grow-1.full-height.notranslate";
     let regular_input = browser.find(By::Css(REGULAR_INPUT)).await;
 
-    match regular_input {
+    let regular_input = match regular_input {
         Ok(input) => {
             input.focus().await?;
             wait(1, 2);
@@ -270,12 +270,19 @@ async fn send_messaging_page(
             input.focus().await?;
             input.click().await?;
             wait(1, 3);
-            input.send_keys(&message).await?; // fill input for note;
+            for line in message.split('\n') {
+                input.send_keys(line).await?;
+                input.send_keys("" + Key::Shift + Key::Enter).await?;
+            }
+            input
         }
         Err(_s) => {
             return Err(CustomError::ButtonNotFound("Input not found".to_string()));
         } // means you can't send message to this profile
-    }
+    };
+    const PRESS_ENTER_TO_SEND: &str = "div.msg-form__hint-text.t-12.t-black--light.t-normal";
+    let press_enter_to_send = browser.find(By::Css(PRESS_ENTER_TO_SEND)).await;
+
     const SEND: &str = "button.msg-form__send-button.artdeco-button.artdeco-button--1";
     let send = browser.find(By::Css(SEND)).await;
 
@@ -287,17 +294,22 @@ async fn send_messaging_page(
             send.click().await?;
             wait(2, 5);
         }
-        Err(_s) => {
+        Err(_) => {
             match send_new {
                 Ok(send) => {
                     send.click().await?; // click on search input
                     wait(2, 5); // random delay
                 }
-                Err(_s) => {
-                    return Err(CustomError::ButtonNotFound(
-                        "Send button not found".to_string(),
-                    ));
-                }
+                Err(_s) => match press_enter_to_send {
+                    Ok(_) => {
+                        regular_input.send_keys(Key::Enter + "").await?;
+                    }
+                    Err(_) => {
+                        return Err(CustomError::ButtonNotFound(
+                            "Send button not found".to_string(),
+                        ));
+                    }
+                },
             }
         }
     }
@@ -392,7 +404,11 @@ async fn send_current_page(
             input.focus().await?;
             input.click().await?;
             wait(1, 3);
-            input.send_keys(&message).await?;
+            for line in message.split('\n') {
+                input.send_keys(line).await?;
+                input.send_keys("" + Key::Shift + Key::Enter).await?;
+            }
+            //input.send_keys(&message).await?;
             input
         }
         Err(_s) => {
