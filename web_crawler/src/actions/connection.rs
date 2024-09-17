@@ -34,7 +34,17 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
     let result = send_connection(&browser, &candidate).await;
     match result {
         Ok(text) => {
+            let screenshot = browser.screenshot_as_png().await?;
             browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                "Connection was sent",
+                &entry.message_id,
+                "Send connection",
+            )
+            .await?;
+
             return Ok(text);
         }
         Err(error) => {
@@ -133,7 +143,14 @@ pub async fn send_connection(
             }
         },
     };
-    more_option.click().await?;
+    match more_option.click().await {
+        Ok(_) => (),
+        Err(_) => {
+            return Err(CustomError::ButtonNotFound(
+                "More button is not clickable".to_string(),
+            ));
+        }
+    };
     wait(2, 3);
     const IN_CONNECTION_POOL: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Remove your connection']";
     let in_connection_pool = browser.find(By::Css(IN_CONNECTION_POOL)).await;

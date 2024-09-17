@@ -6,15 +6,14 @@ use crate::structs::entry::EntrySendConnection;
 use crate::structs::error::CustomError;
 use percent_encoding::percent_decode_str;
 use scraper::{Html, Selector};
+use serde_json::json;
 use thirtyfour::{By, Key, WebDriver, WebElement};
 pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomError> {
-    let message_text = entry
-        .message
-        .clone()
-        .chars()
-        .filter(|&c| c as u32 <= 0xFFFF)
-        .collect();
-    let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
+    let candidate = Candidate::new(
+        entry.fullname.clone(),
+        entry.linkedin.clone(),
+        entry.message.clone(),
+    );
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -33,7 +32,17 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
     let result = message(&browser, &candidate, entry.check_reply).await;
     match result {
         Ok(text) => {
+            let screenshot = browser.screenshot_as_png().await?;
             browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                "Message was sent",
+                &entry.message_id,
+                "Send regular message",
+            )
+            .await?;
+
             return Ok(text);
         }
         Err(error) => {
@@ -270,16 +279,32 @@ async fn send_messaging_page(
             input.focus().await?;
             input.click().await?;
             wait(1, 3);
-            for line in message.split('\n') {
-                input.send_keys(line).await?;
-                input.send_keys("" + Key::Shift + Key::Enter).await?;
-            }
+            let script = r#"
+        const input = arguments[0];
+        const text = arguments[1];
+        if (input) {
+            input.focus(); // Focus on the input field
+            input.click(); // Click on the input field to ensure it is active
+            document.execCommand('insertText', false, text); // Insert text at the cursor position
+        }
+    "#;
+            // The message to add to the input
+            let regular_input_value = serde_json::to_value(input.clone()).unwrap();
+            let message_value = json!(message);
+
+            // Execute the JavaScript with the input element and the text to add
+            browser
+                .execute(script, vec![regular_input_value, message_value])
+                .await?;
+            // Execute the JavaScript with the input element and the text to add
+            //input.send_keys(&message).await?;
             input
         }
         Err(_s) => {
             return Err(CustomError::ButtonNotFound("Input not found".to_string()));
         } // means you can't send message to this profile
     };
+    wait(1, 2);
     const PRESS_ENTER_TO_SEND: &str = "div.msg-form__hint-text.t-12.t-black--light.t-normal";
     let press_enter_to_send = browser.find(By::Css(PRESS_ENTER_TO_SEND)).await;
 
@@ -404,10 +429,32 @@ async fn send_current_page(
             input.focus().await?;
             input.click().await?;
             wait(1, 3);
-            for line in message.split('\n') {
-                input.send_keys(line).await?;
-                input.send_keys("" + Key::Shift + Key::Enter).await?;
-            }
+            /*
+                for line in message.split('\n') {
+                    input.send_keys(line).await?;
+                    input.send_keys("" + Key::PageDown).await?;
+                    wait(1, 2);
+                    input.send_keys("" + Key::Shift + Key::Enter).await?;
+                }
+            */
+            let script = r#"
+        const input = arguments[0];
+        const text = arguments[1];
+        if (input) {
+            input.focus(); // Focus on the input field
+            input.click(); // Click on the input field to ensure it is active
+            document.execCommand('insertText', false, text); // Insert text at the cursor position
+        }
+    "#;
+            // The message to add to the input
+            let regular_input_value = serde_json::to_value(input.clone()).unwrap();
+            let message_value = json!(message);
+
+            // Execute the JavaScript with the input element and the text to add
+            browser
+                .execute(script, vec![regular_input_value, message_value])
+                .await?;
+            // Execute the JavaScript with the input element and the text to add
             //input.send_keys(&message).await?;
             input
         }
@@ -415,6 +462,7 @@ async fn send_current_page(
             return Err(CustomError::ButtonNotFound("Input not found".to_string()));
         }
     };
+    wait(1, 2);
     const PRESS_ENTER_TO_SEND: &str = "div.msg-form__hint-text.t-12.t-black--light.t-normal";
     let press_enter_to_send = conversation_select.find(By::Css(PRESS_ENTER_TO_SEND)).await;
 
