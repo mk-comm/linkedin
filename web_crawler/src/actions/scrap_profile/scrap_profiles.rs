@@ -150,8 +150,8 @@ async fn scrap_experience_to_profile(
 async fn send_url_chromedata_viewed(profile: &Profile) -> Result<(), CustomError> {
     let serialized = serde_json::to_vec(&profile).unwrap();
     let encoded = encode(&serialized);
-    //const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
-    const WEBHOOK_URL: &str = "https://webhook.site/c58568dc-6357-4aa4-96c2-79d6f22c1ede";
+    const WEBHOOK_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/chromedata_view";
+    //const WEBHOOK_URL: &str = "https://webhook.site/c58568dc-6357-4aa4-96c2-79d6f22c1ede";
     let client = reqwest::Client::new();
 
     let target_json = json!({ 
