@@ -245,7 +245,7 @@ pub async fn send_connection(
         }
         Err(_s) => (),
     };
-    wait(3, 15); // random delay; // add delay before closing the browser to check things
+    wait(10, 15); // random delay; // add delay before closing the browser to check things
 
     Ok("Connection was sent".to_string())
 }

@@ -272,19 +272,29 @@ fn parse_each_experience_type_one(element: ElementRef) -> Experience {
         .select(&Selector::parse(".display-flex.full-width").unwrap())
         .next()
     {
-        description_div
-            .select(
-                &Selector::parse(
-                    ".display-flex.align-items-center.t-14.t-normal.t-black > span:nth-of-type(1)",
-                )
-                .unwrap(),
+        let mut description_text = None;
+
+        // Iterate over all matching span elements
+        for span in description_div.select(
+            &Selector::parse(
+                ".display-flex.align-items-center.t-14.t-normal.t-black > span:nth-of-type(1)",
             )
-            .next()
-            .map(|e| e.text().collect::<Vec<_>>().join("").trim().to_owned())
+            .unwrap(),
+        ) {
+            let text_content = span.text().collect::<Vec<_>>().join("").trim().to_owned();
+
+            // Check if the text contains "helped me get this job"
+            if !text_content.contains("helped me get this job") {
+                // If it does not contain the unwanted phrase, store the text and break the loop
+                description_text = Some(text_content);
+                break;
+            }
+        }
+
+        description_text
     } else {
         None
     };
-
     // Extract Company Url
     let company_url = if let Some(a_tag) = element
         .select(&Selector::parse("a.optional-action-target-wrapper").unwrap())
