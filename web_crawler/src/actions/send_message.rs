@@ -37,7 +37,7 @@ pub async fn send_message(entry: EntrySendConnection) -> Result<String, CustomEr
             send_screenshot(
                 screenshot,
                 &browser_info.user_id,
-                "Message was sent",
+                text.as_str(),
                 &entry.message_id,
                 "Send regular message",
             )
@@ -155,10 +155,12 @@ pub async fn message(
     wait(15, 20);
     let current_url = browser.current_url().await?;
     let result_url = current_url.as_str();
-    if result_url.contains("messaging") {
+    let result = if result_url.contains("messaging") {
         let result = send_messaging_page(&browser, check_reply, &candidate.message).await;
         if let Err(error) = result {
             return Err(error);
+        } else {
+            result
         }
     } else {
         let result = send_current_page(
@@ -170,11 +172,17 @@ pub async fn message(
         .await;
         if let Err(error) = result {
             return Err(error);
+        } else {
+            result
         }
-    }
+    };
 
     wait(5, 7);
-    Ok("Message was sent".to_string())
+
+    match result {
+        Ok(result) => return Ok(result),
+        Err(error) => return Err(error),
+    }
 }
 fn get_conversation_owner(html: &str, selector: &str) -> Result<String, CustomError> {
     // Parse the HTML document
@@ -216,12 +224,12 @@ async fn send_messaging_page(
     browser: &WebDriver,
     check_reply: bool,
     message: &str,
-) -> Result<(), CustomError> {
+) -> Result<String, CustomError> {
     const INMAIL_POPUP: &str = "a.app-aware-link.artdeco-button.artdeco-button--premium";
     let inmail_popup = browser.find(By::Css(INMAIL_POPUP)).await;
 
     if inmail_popup.is_ok() {
-        return Err(CustomError::ButtonNotFound("Inmail needed".to_string()));
+        return Ok("Inmail needed".to_string());
     }
     const MAIN_CONTAINER: &str = "div[class=application-outlet]";
     let html = browser.find(By::Css(MAIN_CONTAINER)).await?;
@@ -260,7 +268,7 @@ async fn send_messaging_page(
     };
     println!("candidate reply {}", candidate_reply);
     if candidate_reply && check_reply {
-        return Err(CustomError::ButtonNotFound("Candidate replied".to_string()));
+        return Ok("Candidate replied".to_string());
     };
 
     wait(2, 4);
@@ -338,19 +346,19 @@ async fn send_messaging_page(
             }
         }
     }
-    Ok(())
+    Ok("Message was sent".to_string())
 }
 async fn send_current_page(
     browser: &WebDriver,
     entity_urn: &str,
     check_reply: bool,
     message: &str,
-) -> Result<(), CustomError> {
+) -> Result<String, CustomError> {
     const INMAIL_POPUP: &str = "a.app-aware-link.artdeco-button.artdeco-button--premium";
     let inmail_popup = browser.find(By::Css(INMAIL_POPUP)).await;
 
     if inmail_popup.is_ok() {
-        return Err(CustomError::ButtonNotFound("Inmail needed".to_string()));
+        return Ok("Inmail needed".to_string());
     }
 
     const PICK: &str = "aside.msg-overlay-container";
@@ -403,7 +411,7 @@ async fn send_current_page(
         }
     };
     if candidate_reply && check_reply {
-        return Err(CustomError::ButtonNotFound("Candidate replied".to_string()));
+        return Ok("Candidate replied".to_string());
     };
     let conversation_select = match conversation_select {
         Some(conversation) => conversation,
@@ -496,7 +504,7 @@ async fn send_current_page(
             }
         }
     }
-    Ok(())
+    Ok("Message was sent".to_string())
 }
 
 fn is_last_message_from_owner(html: &str, owner: &str) -> Result<bool, CustomError> {

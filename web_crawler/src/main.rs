@@ -435,12 +435,12 @@ async fn send_inmail(json: Json<EntrySendInmail>) -> impl IntoResponse {
         let api = send_inmails(json.0);
 
         match api.await {
-            Ok(_) => {
+            Ok(text) => {
                 info!("Send Inmail finished successfully {}", message_id);
                 let client = reqwest::Client::new();
                 let payload = json!({
                     "message": message_id,
-                    "result": "Inmail was sent",
+                    "result": text,
                     "user_id": user_id,
                     "error": "no",
                 });

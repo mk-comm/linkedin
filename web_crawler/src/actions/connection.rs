@@ -39,7 +39,7 @@ pub async fn connection(entry: EntrySendConnection) -> Result<String, CustomErro
             send_screenshot(
                 screenshot,
                 &browser_info.user_id,
-                "Connection was sent",
+                text.as_str(),
                 &entry.message_id,
                 "Send connection",
             )

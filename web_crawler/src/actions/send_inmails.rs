@@ -10,7 +10,7 @@ use crate::structs::error::CustomError;
 use thirtyfour::{By, WebDriver};
 use tracing::instrument;
 #[instrument]
-pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
+pub async fn send_inmails(entry: EntrySendInmail) -> Result<String, CustomError> {
     let message_text = entry
         .message
         .clone()
@@ -36,6 +36,15 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<(), CustomError> {
     let result = inmail(&browser, &candidate, &entry.subject).await;
     match result {
         Ok(text) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                text.as_str(),
+                &entry.message_id,
+                "Send Inmails",
+            )
+            .await?;
             browser.quit().await?;
             return Ok(text);
         }
@@ -59,7 +68,7 @@ pub async fn inmail(
     browser: &WebDriver,
     candidate: &Candidate,
     subject: &str,
-) -> Result<(), CustomError> {
+) -> Result<String, CustomError> {
     let file_name = "null";
     let mut go_to = browser.goto(&candidate.linkedin).await;
 
@@ -247,7 +256,7 @@ pub async fn inmail(
     }
 
     wait(2, 4);
-    Ok(())
+    Ok("Inmail was sent".to_string())
 }
 
 fn find_entity_urn(html: &str) -> Option<String> {
