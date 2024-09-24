@@ -1,23 +1,45 @@
 use crate::actions::scrap_profile::scrap_each_profile::find_entity_urn;
+use crate::actions::scrap_recruiter_search::check_recruiter_cookie;
+
+use crate::actions::init_browser::session_cookie_is_valid;
 use crate::actions::wait::wait;
-use crate::structs::browser::{BrowserConfig, BrowserInit};
 use crate::structs::error::CustomError;
 use scraper::{Html, Selector};
+use thirtyfour::{By, WebDriver};
 
 pub async fn save_each(
-    browser: &BrowserConfig,
+    browser: &WebDriver,
     candidate_linkedin: &str,
     project_name: &str,
 ) -> Result<(), CustomError> {
-    browser.page.goto_builder(candidate_linkedin).goto().await?;
+    browser.goto(candidate_linkedin).await?;
     wait(7, 10);
+    let cookie = session_cookie_is_valid(&browser).await?;
+    if !cookie {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
+        if !cookie_second_try {
+            return Err(CustomError::SessionCookieExpired);
+        }
+    }
+
     let entity_urn = get_urn(&browser).await?;
     let recruiter_url = format!(
         "https://www.linkedin.com/talent/profile/{}?trk=FLAGSHIP_VIEW_IN_RECRUITER",
         entity_urn
     );
-    browser.page.goto_builder(&recruiter_url).goto().await?;
-    wait(7, 10);
+    browser.goto(&recruiter_url).await?;
+    wait(20, 23);
+    let recruiter_session_cookie_check = check_recruiter_cookie(&browser).await?;
+    if !recruiter_session_cookie_check {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = check_recruiter_cookie(&browser).await?;
+        if !cookie_second_try {
+            return Err(CustomError::RecruiterSessionCookieExpired);
+        }
+    }
 
     save_project_button(&browser).await?;
     existing_project_boolean(&browser).await?;
@@ -28,15 +50,13 @@ pub async fn save_each(
     final_save(browser).await?;
     Ok(())
 }
-async fn final_save(browser: &BrowserConfig) -> Result<(), CustomError> {
+async fn final_save(browser: &WebDriver) -> Result<(), CustomError> {
     const SAVE_BUTTON: &str = "button.artdeco-button.artdeco-button--2.artdeco-button--pro.artdeco-button--primary.ember-view.hp-core-save-to-project__action";
-    let save_button = browser.page.query_selector(SAVE_BUTTON).await?;
+    let save_button = browser.find(By::Css(SAVE_BUTTON)).await;
+
     let button = match save_button {
-        Some(button) => button,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(button) => button,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Final Save to project button not found".to_string(),
             ));
@@ -44,34 +64,27 @@ async fn final_save(browser: &BrowserConfig) -> Result<(), CustomError> {
     };
 
     const ALERT: &str = "div[class='hp-core-save-to-project__warning-text t-14 t-bold']";
-    let alert = browser.page.query_selector(ALERT).await?;
+    let alert = browser.find(By::Css(ALERT)).await;
 
     let _ = match alert {
-        Some(_) => {
+        Ok(_) => {
             println!("Already exist");
             return Ok(());
         }
-        None => (),
+        Err(_) => (),
     };
     //wait(100000, 500000); // random delay
-    button.hover_builder(); // hover on search input
-    wait(1, 4); // random delay
-    button.click_builder().click().await?;
+    button.click().await?;
     wait(3, 5);
     Ok(())
 }
-async fn click_project_in_dropdown(
-    browser: &BrowserConfig,
-    project: &str,
-) -> Result<(), CustomError> {
+async fn click_project_in_dropdown(browser: &WebDriver, project: &str) -> Result<(), CustomError> {
     const LIST_SELECTOR: &str = "ul.artdeco-typeahead__results-list.save-to-project-projects-pill-typeahead__result-list.ember-view";
-    let list_selector = browser.page.query_selector(LIST_SELECTOR).await?;
+    let list_selector = browser.find(By::Css(LIST_SELECTOR)).await;
+
     let list_selector = match list_selector {
-        Some(selector) => selector,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(selector) => selector,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Project selector not found".to_string(),
             ));
@@ -81,24 +94,17 @@ async fn click_project_in_dropdown(
     let id = find_project_id_in_list(html.as_str(), project)?;
     println!("Project ID: {}", id);
     let project_selector = format!("li[id='{}']", id);
-    let list_selector = browser
-        .page
-        .query_selector(project_selector.as_str())
-        .await?;
+    let list_selector = browser.find(By::Css(&project_selector)).await;
+
     let list_selector = match list_selector {
-        Some(selector) => selector,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(selector) => selector,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Project with specific id not found".to_string(),
             ));
         }
     };
-    list_selector.hover_builder();
-    wait(1, 5); // random delay
-    list_selector.click_builder().click().await?;
+    list_selector.click().await?;
     Ok(())
 }
 
@@ -136,79 +142,63 @@ fn find_project_id_in_list(html: &str, project: &str) -> Result<String, CustomEr
         "Project ID is not found  not found".to_string(),
     ));
 }
-async fn search_project_input(browser: &BrowserConfig, project: &str) -> Result<(), CustomError> {
+async fn search_project_input(browser: &WebDriver, project: &str) -> Result<(), CustomError> {
     const SEARCH_INPUT: &str = "input[id=save-to-projects-typeahead]";
-    let search_input = browser.page.query_selector(SEARCH_INPUT).await?;
+    let search_input = browser.find(By::Css(SEARCH_INPUT)).await;
+
     let search_input = match search_input {
-        Some(input) => input,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(input) => input,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Search project input not found".to_string(),
             ));
         }
     };
     search_input.focus().await?; // focus on input for note
-    wait(1, 2); // random delay
-    search_input.fill_builder(project).fill().await?;
+    wait(1, 2); // random dela
+    search_input.send_keys(project).await?;
     wait(3, 5);
     Ok(())
 }
-async fn save_project_button(browser: &BrowserConfig) -> Result<(), CustomError> {
+async fn save_project_button(browser: &WebDriver) -> Result<(), CustomError> {
     const SAVE_BUTTON: &str = "button.artdeco-button.artdeco-button--2.artdeco-button--pro.artdeco-button--secondary.ember-view.profile-item-actions__item";
-    let save_button = browser.page.query_selector(SAVE_BUTTON).await?;
+    let save_button = browser.find(By::Css(SAVE_BUTTON)).await;
+
     let button = match save_button {
-        Some(button) => button,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(button) => button,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Save to project button not found".to_string(),
             ));
         }
     };
-    button.hover_builder(); // hover on search input
-    wait(1, 4); // random delay
-    button.click_builder().click().await?;
+    button.click().await?;
     wait(3, 5);
     Ok(())
 }
-async fn existing_project_boolean(browser: &BrowserConfig) -> Result<(), CustomError> {
+async fn existing_project_boolean(browser: &WebDriver) -> Result<(), CustomError> {
     const BOOLEAN: &str = "label[for=choose-existing-projects]";
-    let boolean = browser.page.query_selector(BOOLEAN).await?;
+    let boolean = browser.find(By::Css(BOOLEAN)).await;
     let boolean = match boolean {
-        Some(boolean) => boolean,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(boolean) => boolean,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Existing project boolean not found".to_string(),
             ));
         }
     };
-    boolean.hover_builder(); // hover on search input
-    wait(1, 4); // random delay
-    boolean.click_builder().click().await?;
+    boolean.click().await?;
     wait(3, 5);
     Ok(())
 }
-async fn get_urn(browser: &BrowserConfig) -> Result<String, CustomError> {
-    let html_body = browser
-        .page
-        .query_selector(
-            "body.render-mode-BIGPIPE.nav-v2.ember-application.icons-loaded.boot-complete",
-        )
-        .await?;
+async fn get_urn(browser: &WebDriver) -> Result<String, CustomError> {
+    const HTML_BODY: &str =
+        "body.render-mode-BIGPIPE.nav-v2.ember-application.icons-loaded.boot-complete";
+    let html_body = browser.find(By::Css(HTML_BODY)).await;
+
     let html = match html_body {
-        Some(body) => body.inner_html().await?,
-        None => {
-            wait(1, 5);
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(body) => body.inner_html().await?,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Body er is not found".to_string(),
             ));
@@ -218,9 +208,6 @@ async fn get_urn(browser: &BrowserConfig) -> Result<String, CustomError> {
     let urn = match urn {
         Some(urn) => urn,
         None => {
-            wait(1, 5);
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
             return Err(CustomError::ButtonNotFound(
                 "Entity urn is not found".to_string(),
             ));

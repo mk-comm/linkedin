@@ -1,0 +1,4006 @@
+
+  <form method="post" class="simple-form">
+  
+    <div class="profile-list__header">
+      <div class="profile-list__bulk-actions-pagination-wrapper profile-list__header-flex-wrap">
+          <span class="profile-list__select-all" data-live-test-select-all="">
+  <input id="select-item-ember2495" class="small-input" type="checkbox">
+  <label for="select-item-ember2495">
+    <span class="a11y-text">
+      Select all 25 profiles
+    </span>
+  </label>
+</span>
+              <span class="profile-list__header-info-text t-14 profile-list__header-info-text--reflow">
+                37K+ results
+              </span>
+            
+<div class="bulk-actions">
+<!----><!---->      <div class="bulk-actions__search-insights-button-container">
+        <button class="artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--tertiary" type="button">
+          See search breakdown
+          <li-icon aria-hidden="true" type="chevron-down-icon" class="bulk-actions__search-insights-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M1 5l7 4.61L15 5v2.39L8 12 1 7.39z"></path>
+    </svg></li-icon>
+        </button>
+      </div>
+      <div class="bulk-actions__lti-container bulk-actions__lti-container-reflow">
+        <div>
+  <span tabindex="-1" id="ember2498" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-left artdeco-hoverable-trigger--is-hoverable ember-view">
+    <span></span>
+    <button id="ember2499" class="artdeco-button artdeco-button--1 artdeco-button--primary ember-view" data-live-test-see-insights=""><!---->
+<span class="artdeco-button__text">
+    View Talent Insights
+</span></button>
+    <div id="artdeco-gen-56" class="ember-view"><div id="ember2501" class="ember-view"></div></div>
+  </span>
+</div>
+      </div>
+</div>
+          <!---->        <div class="profile-list__header-actions--right profile-list__header-actions--right-reflow">
+          
+  <span id="ember2502" class="ember-view  mini-pagination profile-list__mini-pagination" aria-label="Profile list pagination" data-test-ts-pagination="" data-live-test-ts-pagination="" role="navigation">
+<!---->
+      <span data-test-mini-pagination-text="">
+        <span aria-hidden="true">1 – 25</span>
+        <span class="a11y-text">Showing results 1 to 25</span>
+      </span>
+
+        <a href="function () { [native code] }" class="mini-pagination__quick-link link-without-hover-visited" rel="next" title="Go to next page 2" data-test-mini-pagination-next="">
+          <span class="a11y-text">Go to next page 2</span>
+          <li-icon aria-hidden="true" type="chevron-right-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="mercado-match" data-supported-dps="16x16" fill="currentColor" width="16" height="16" focusable="false">
+      <path d="M5 15l4.61-7L5 1h2.39L12 8l-4.61 7z"></path>
+    </svg></li-icon>
+        </a>
+
+  </span>
+
+        </div>
+      </div>
+    </div>
+      
+<div>
+<!----></div>
+      <ol id="ember2504" class="ember-view profile-list" data-test-paginated-list="" data-live-test-paginated-list="">
+      
+        <li id="ember2505" class="ember-view profile-list__border-bottom">
+      
+<!----><!---->          <div id="ember2603" class="ember-view" data-test-paginated-list-item="" data-live-test-paginated-list-item="">
+      
+          <article class="profile-list-item hp-core-temp ">
+              <span class="profile-list-item__selector">
+  <input id="select-item-ember2604" class="small-input" type="checkbox">
+  <label for="select-item-ember2604">
+    <span class="a11y-text">
+      Select Łukasz Siczek
+    </span>
+  </label>
+</span>
+
+              
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+
+    
+  <div class="standard-profile-row">
+  
+<div>
+  <article class="row--vertical row" data-test-row="">
+    <div class="row__top-section">
+      <div class="row__card">
+        <div class="row__top-card">
+          
+<section class="lockup" data-test-row-lockup="">
+  <div id="ember2607" class="artdeco-entity-lockup artdeco-entity-lockup--size-5 ember-view">
+    <div id="ember2608" class="artdeco-entity-lockup__image artdeco-entity-lockup__image--type-circle ember-view lockup__image--profile-size-5" type="circle">
+      <span class="lockup__image-container" data-test-row-lockup-figure="">
+        <img title="Łukasz Siczek" src="https://media.licdn.com/dms/image/v2/C5603AQHbac4WcpijqA/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1517367706674?e=1732752000&amp;v=beta&amp;t=2WVjnxDQpbdUAqLfCBdIf5mU0vyu3QR-ybPSBc-upuI" loading="lazy" alt="Łukasz Siczek" id="ember2609" class="evi-image lazy-image ember-view lockup__image" aria-label="Łukasz Siczek" data-test-lockup-image="">
+      </span>
+    
+</div>
+    <div id="ember2610" class="artdeco-entity-lockup__content SVvZZkkxMTlpqjzOzudIuRZjzaQkabbc ember-view">
+      <span class="CAuRiQTcpvowWLyJkcbpelxlqHndvPvVCxM">
+        <span data-test-row-lockup-full-name="" data-live-test-row-lockup-full-name="">
+          <div id="ember2611" class="artdeco-entity-lockup__title ember-view">
+                  <a href="https://www.linkedin.com/talent/profile/AEMAAAzzgNYBvIPQKU_CQkNrEI2NeZZ3VUDu7Rk?trk=SEARCH_GLOBAL" target="_blank" rel="noopener noreferrer" data-test-link-to-profile-link="true" data-live-test-link-to-profile-link="true">
+      
+                Łukasz Siczek
+              
+    </a>
+
+          
+</div>
+        </span>
+<!---->          <span data-test-lockup-degree="">
+            <div id="ember2612" class="artdeco-entity-lockup__badge ember-view">    <span class="a11y-text">Second degree connection</span>
+  <span class="artdeco-entity-lockup__degree" aria-hidden="true">
+    ·&nbsp;2nd
+  </span>
+<!----><!----></div>
+          </span>
+                
+              
+    
+<div class="IamsZMhMJVvMJmtSvefmmNDyYcBEXWlliee">
+  <div id="ember2613" class="artdeco-entity-lockup artdeco-entity-lockup--size-7 ember-view">
+<!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!---->  
+</div>
+</div>
+<!---->    <!---->
+    <!---->
+  
+            <!---->
+          
+      </span>
+        <div id="ember2614" class="artdeco-entity-lockup__subtitle ember-view">
+          <span data-test-row-lockup-headline="" data-live-test-row-lockup-headline="">
+              Software Enthusiast: Building, Improving, Sharing Knowledge 🌍 <em class="sh">Technical</em> Lead w <em class="sh">Syncron</em>
+          </span>
+        </div>
+      <div class="LdNxiHBVHRbYBrsTSLduzolgtSgcTwOsiXoaA">
+        <div id="ember2615" class="artdeco-entity-lockup__metadata ember-view">
+            <div data-test-row-lockup-location="" data-live-test-row-lockup-location="">
+                 Poland
+            </div>
+            <span data-test-current-employer-industry="" data-live-test-current-employer-industry="">
+                · Software Development
+            </span>
+        </div>
+        
+<!---->            <span class="row-lockup-details" data-test-row-lockup-details-wrapper="">
+  
+              
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+            
+</span>
+          
+      </div>
+    </div>
+  
+</div>
+</section>
+        </div>
+
+<!---->
+          
+<div data-test-history="" class="history">
+  
+            
+<div data-test-history-group="" class="history-group">
+    <div data-test-description-entry-term="" class="history-group__term t-14 t-black t-bold">
+      <span data-test-history-group-definition="" class="history-group__definition" aria-hidden="true">
+        Experience
+      </span>
+      <span class="a11y-text">
+        Profile experience
+      </span>
+    </div>
+
+<!---->
+  <div>
+    
+<!---->            
+    
+    <div class="expandable-list" data-test-expandable-list="">
+      
+      <ol class="history-group__list-items">
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span><em class="sh">Technical</em> Lead at <em class="sh">Syncron</em></span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2024</time> – Present
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Principal Software <em class="sh">Engineer</em> at <em class="sh">Syncron</em></span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2022</time> – <time>2023</time>
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Senior Software <em class="sh">Developer</em> at <em class="sh">Syncron</em></span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2019</time> – <time>2021</time>
+        </span>
+
+<!---->
+<!----></li>
+      </ol>
+    
+        <button data-test-expandable-list-button="" class="expandable-list__button
+            expandable-list__button--r4-visual-refresh
+            " aria-expanded="false" type="button">
+          <span aria-hidden="true">Show all (7)</span>
+          <span class="a11y-text">Show all Profile experience items in this list. Total items: 7</span>
+              <svg role="none" aria-hidden="true" class="expandable-list__button-default-chevron" data-test-expandable-list-button-icon="" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="chevron-down-small">
+<!---->    
+    <use href="#chevron-down-small" width="16" height="16"></use>
+</svg>
+
+        </button>
+    </div>
+  
+  </div>
+</div>
+            
+<div data-test-history-group="" class="history-group">
+    <div data-test-description-entry-term="" class="history-group__term t-14 t-black t-bold">
+      <span data-test-history-group-definition="" class="history-group__definition" aria-hidden="true">
+        Education
+      </span>
+      <span class="a11y-text">
+        Profile education
+      </span>
+    </div>
+
+<!---->
+  <div>
+    
+    
+    <div class="expandable-list" data-test-expandable-list="">
+      
+      <ol class="history-group__list-items">
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>University of Warsaw, Master's degree</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2013</time> – <time>2016</time>
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>University of Warsaw, Bachelor's degree</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2010</time> – <time>2013</time>
+        </span>
+
+<!---->
+<!----></li>
+      </ol>
+    
+<!---->    </div>
+  
+  </div>
+</div>
+            
+            
+          
+</div>
+
+<!---->        
+    <!---->
+<!---->    <!---->
+    
+      
+        
+        
+          <div>
+                
+                    
+<!---->                      <!---->
+
+                
+
+
+                    
+<!---->                      
+<div class="decorations" data-test-decorations="">
+    <div class="decorations__row" data-test-row-decorations__skills-match-insights="">
+      <span class="a11y-text">Profile skills match row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true" data-test-row-decorations__skills-match-insights-title="">
+        Skills Match
+      </label>
+
+<!---->
+        <div class="decorations__skills-match-insights-list" data-test-row-decorations__skills-match-insights-list="">
+            
+        <!---->
+<!---->      <!---->
+      
+<div id="ember3965" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+<!---->      <button aria-label="Front-End Development" tabindex="-1" id="ember3966" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--skillsV2" data-live-test-decoration-type="skillsV2" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Front-End Development
+</span></button>
+    <div id="ember3967" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember3968" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Front-End Development" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-58" id="ember3969" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-58" class="ember-view"><div id="ember3971" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember3965">  <div id="artdeco-hoverable-artdeco-gen-58" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+      
+      
+        
+      <!---->
+      
+      
+      
+      <!---->
+      <!---->
+      
+      
+      
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+
+<!---->        </div>
+    </div>
+
+    <div class="decorations__row" data-test-row-decorations="">
+      <span class="a11y-text">Profile interest row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true">Interest</label>
+
+        <div data-test-interest-row-render="">
+        </div>
+      <div>
+          <span class="t-12 decorations__interest-headline decorations__interest-headline--MEDIUM" data-test-interest-headline="">
+            
+<div id="ember3972" class="base-decoration__link-hoverable" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <div class="base-decoration__link-hoverable-trigger" data-live-test-decoration-type="interestHeadline" data-test-decoration-title="" aria-label="Moderate likelihood of interest" tabindex="-1">
+        Moderate likelihood of interest
+      </div>
+    <div id="ember3973" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember3974" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Moderate likelihood of interest" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-59" id="ember3975" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-59" class="ember-view"><div id="ember3977" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember3972">  <div id="artdeco-hoverable-artdeco-gen-59" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+          </span>
+        <div class="decorations__content">
+            
+        <!---->
+<!---->      <!---->
+      <!---->
+      
+      
+      
+        
+      <!---->
+      
+      
+      
+      
+<div id="ember3978" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="Closer in your network" tabindex="-1" id="ember3979" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--closerInYourNetwork" data-live-test-decoration-type="closerInYourNetwork" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Closer in your network
+</span></button>
+    <div id="ember3980" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember3981" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Closer in your network" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-60" id="ember3982" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-60" class="ember-view"><div id="ember3984" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember3978">  <div id="artdeco-hoverable-artdeco-gen-60" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      <!---->
+      
+      
+      
+<div id="ember3985" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="18 connections" tabindex="-1" id="ember3986" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--connections" data-live-test-decoration-type="connections" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    18 connections
+</span></button>
+    <div id="ember3987" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember3988" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Enter for more details on 18 connections" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-61" id="ember3989" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-61" class="ember-view"><div id="ember3991" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember3985">  <div id="artdeco-hoverable-artdeco-gen-61" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+        </div>
+      </div>
+    </div>
+
+<!---->
+<!---->
+<!----></div>
+
+                
+
+<!---->
+                      </div>
+        
+
+    
+      
+  
+  
+      </div>
+      <div class="row__aside">
+        
+    <!---->
+<!---->    <div class="row-aside row-aside--align-left" data-test-row-aside-wrapper="" data-walkme-id="row-aside-wrapper">
+  
+        
+            <span data-live-test-profile-item-actions="">
+              
+  
+  
+
+    
+        
+        
+          
+  
+            
+              
+  
+                
+                  
+                    
+                      
+                        
+  
+                          
+  
+                            
+                              
+
+                                
+<div>
+  
+                                  
+                                    
+                                      
+
+                                        
+                                          
+                                            
+                                              
+
+                                                
+                                                    
+                                                    
+                                                      
+  <div>
+  
+<ul class="shared-action-buttons">
+  
+    
+
+      <li class="profile-item-actions" data-live-test-profile-item-actions="">
+        <div class="profile-item-actions__act">
+<!----><!---->
+<!---->
+            
+  <button id="ember4010" class="artdeco-button artdeco-button--2 artdeco-button--pro artdeco-button--secondary ember-view profile-item-actions__item" data-live-test-action="save-to-project"><!---->
+<span class="artdeco-button__text">
+    
+      <span aria-hidden="true">Save to project</span>
+      <span class="a11y-text">Save Łukasz to a project</span>
+  
+</span></button>
+
+<!---->
+<!----><!---->
+<!---->        </div>
+        <div class="profile-item-actions__update">
+          
+
+<span tabindex="-1" id="ember4012" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view">
+    <button aria-describedby="artdeco-hoverable-artdeco-gen-62" id="ember4013" class="artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view profile-item-actions__item" data-live-test-component="message-icon-btn" data-walkme-id="profile-message-icon-btn" type="button">    <li-icon aria-hidden="true" type="envelope-icon" class="artdeco-button__icon" size="large"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M2 4v13a3 3 0 003 3h14a3 3 0 003-3V4zm18 2v1.47l-8 5.33-8-5.33V6zm-1 12H5a1 1 0 01-1-1V8.67L12 14l8-5.33V17a1 1 0 01-1 1z"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    Message Łukasz
+</span></button>
+  <div id="artdeco-gen-62" class="ember-view"><div id="ember4015" class="ember-view"></div></div>
+</span>
+<!---->          <div>
+            
+<div id="ember4017" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view more-actions" data-walkme-id="profile-more-actions" data-live-test-profile-more-actions-button="">
+  <button aria-expanded="false" id="0-more-actions-trigger" class="artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view artdeco-button artdeco-button--2 artdeco-button--muted artdeco-button--circle artdeco-button--tertiary more-actions__trigger" type="button" tabindex="0">
+    <span class="a11y-text">More actions</span>
+    <li-icon aria-hidden="true" type="ellipsis-horizontal-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M14 12a2 2 0 11-2-2 2 2 0 012 2zM4 10a2 2 0 102 2 2 2 0 00-2-2zm16 0a2 2 0 102 2 2 2 0 00-2-2z"></path>
+    </svg></li-icon>
+  
+<!----></button>
+  <div tabindex="-1" aria-hidden="true" id="ember4019" class="artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--has-arrow artdeco-dropdown__content--arrow-right artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view more-actions__dropdown-content"><!----></div>
+</div>
+          </div>
+        </div>
+      </li>
+      <li id="profile-item-actions-inline-notification-ember4007" class="profile-item-actions__notification-area"></li>
+    
+  
+</ul>
+</div>
+
+
+  <!---->
+    <!---->
+    <!---->
+  <!---->
+    <!---->
+
+  <!---->
+
+  <!---->
+
+    <!---->
+    <!---->
+
+                                                    
+                                                  
+
+                                                
+                                              
+                                            
+                                          
+                                        
+                                      
+                                    
+                                  
+                                
+</div>
+                              
+                            
+                          
+
+                        
+
+                      
+                    
+                  
+                
+              
+
+            
+          
+
+        
+      
+
+    
+  
+
+
+            </span>
+            
+<!---->
+        
+
+    
+
+<!----></div>
+    <!---->
+  
+      </div>
+    </div>
+
+    
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+  </article>
+</div>
+</div>
+
+
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+  
+          </article>
+        
+  </div>
+
+      
+  </li>
+
+<!---->    
+      
+        <li id="ember2506" class="ember-view profile-list__border-bottom">
+      
+          
+    
+  
+                    
+      <section class="ember-view">
+        
+<!---->
+                          
+<div class=" search-insights-suggestions-container">
+  <div></div>
+  <div class="search-insights-suggestions-container__group">
+      <div class="search-insights-suggestions-container__insight-wrapper">
+        <div class="search-insights-suggestions-container__insight">
+          <h1 class="t-24 t-bold t-black">32%</h1>
+          <p class="t-14 t-black--light">of your current search results are female</p>
+        </div>
+          <button id="ember2618" class="artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view">    <li-icon aria-hidden="true" type="cancel-icon" class="artdeco-button__icon" size="large"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M13.42 12L20 18.58 18.58 20 12 13.42 5.42 20 4 18.58 10.58 12 4 5.42 5.42 4 12 10.58 18.58 4 20 5.42z"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    Dismiss suggestions
+</span></button>
+      </div>
+    <div>
+      <header class="search-insights-suggestions-container__header">
+        <h2 class="t-16 t-bold">Diversity opportunity: Increase the percentage of female candidates by adding these related skills</h2>
+        <p class="t-14 t-black--light">Consider these related skills with a higher percentage of female candidates.</p>
+      </header>
+        <div class="search-insights-suggestions-container__list">
+          <!---->  <div class="search-insights-suggestions-pill">
+    <button role="checkbox" aria-checked="false" aria-label="Add Search to search criteria" id="ember2619" class="artdeco-pill artdeco-pill--slate artdeco-pill--2 artdeco-pill--toggle ember-view" type="button"><span class="artdeco-pill__text">
+    Search
+</span>
+
+<li-icon aria-hidden="true" type="plus-icon" class="artdeco-pill__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 9H9v5H7V9H2V7h5V2h2v5h5z"></path>
+    </svg></li-icon></button>
+</div>
+  <div class="search-insights-suggestions-pill">
+    <button role="checkbox" aria-checked="false" aria-label="Add Marketing Communications to search criteria" id="ember2620" class="artdeco-pill artdeco-pill--slate artdeco-pill--2 artdeco-pill--toggle ember-view" type="button"><span class="artdeco-pill__text">
+    Marketing Communications
+</span>
+
+<li-icon aria-hidden="true" type="plus-icon" class="artdeco-pill__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 9H9v5H7V9H2V7h5V2h2v5h5z"></path>
+    </svg></li-icon></button>
+</div>
+  <div class="search-insights-suggestions-pill">
+    <button role="checkbox" aria-checked="false" aria-label="Add SaaS Sales to search criteria" id="ember2621" class="artdeco-pill artdeco-pill--slate artdeco-pill--2 artdeco-pill--toggle ember-view" type="button"><span class="artdeco-pill__text">
+    SaaS Sales
+</span>
+
+<li-icon aria-hidden="true" type="plus-icon" class="artdeco-pill__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 9H9v5H7V9H2V7h5V2h2v5h5z"></path>
+    </svg></li-icon></button>
+</div>
+
+        </div>
+      <button id="ember2622" class="artdeco-button artdeco-button--2 artdeco-button--secondary ember-view search-insights-suggestions-container__apply-button"><!---->
+<span class="artdeco-button__text">
+    Add all filters to search
+</span></button>
+    </div>
+  </div>
+<!----></div>
+                    
+      </section>
+  
+                    <!---->
+                    <!---->
+                  
+
+
+    
+
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+  
+<!---->          <div id="ember2623" class="ember-view" data-test-paginated-list-item="" data-live-test-paginated-list-item="">
+      
+          <article class="profile-list-item hp-core-temp ">
+              <span class="profile-list-item__selector">
+  <input id="select-item-ember2624" class="small-input" type="checkbox">
+  <label for="select-item-ember2624">
+    <span class="a11y-text">
+      Select Bhavin Gandhi
+    </span>
+  </label>
+</span>
+
+              
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+
+    
+  <div class="standard-profile-row">
+  
+<div>
+  <article class="row--vertical row" data-test-row="">
+    <div class="row__top-section">
+      <div class="row__card">
+        <div class="row__top-card">
+          
+<section class="lockup" data-test-row-lockup="">
+  <div id="ember2627" class="artdeco-entity-lockup artdeco-entity-lockup--size-5 ember-view">
+    <div id="ember2628" class="artdeco-entity-lockup__image artdeco-entity-lockup__image--type-circle ember-view lockup__image--profile-size-5" type="circle">
+      <span class="lockup__image-container" data-test-row-lockup-figure="">
+        <img title="Bhavin Gandhi" src="https://media.licdn.com/dms/image/v2/C5603AQGeZnN0e8EHvg/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1517352974224?e=1732752000&amp;v=beta&amp;t=wcjIvaSwFk5aquUrbLomxorPOnx5lNR_FBALiefXGGo" loading="lazy" alt="Bhavin Gandhi" id="ember2629" class="evi-image lazy-image ember-view lockup__image" aria-label="Bhavin Gandhi is open to work" data-test-lockup-image="">
+      </span>
+    
+</div>
+    <div id="ember2630" class="artdeco-entity-lockup__content SVvZZkkxMTlpqjzOzudIuRZjzaQkabbc ember-view">
+      <span class="CAuRiQTcpvowWLyJkcbpelxlqHndvPvVCxM">
+        <span data-test-row-lockup-full-name="" data-live-test-row-lockup-full-name="">
+          <div id="ember2631" class="artdeco-entity-lockup__title ember-view">
+                  <a href="https://www.linkedin.com/talent/profile/AEMAAA4dYZIBSShSzPCYaxUbgtlXB2NbQRg01lA?trk=SEARCH_GLOBAL" target="_blank" rel="noopener noreferrer" data-test-link-to-profile-link="true" data-live-test-link-to-profile-link="true">
+      
+                Bhavin Gandhi
+              
+    </a>
+
+          
+</div>
+        </span>
+<!---->          <span data-test-lockup-degree="">
+            <div id="ember2632" class="artdeco-entity-lockup__badge ember-view">    <span class="a11y-text">Second degree connection</span>
+  <span class="artdeco-entity-lockup__degree" aria-hidden="true">
+    ·&nbsp;2nd
+  </span>
+<!----><!----></div>
+          </span>
+                
+              
+    
+<div class="IamsZMhMJVvMJmtSvefmmNDyYcBEXWlliee">
+  <div id="ember2633" class="artdeco-entity-lockup artdeco-entity-lockup--size-7 ember-view">
+<!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!---->  
+</div>
+</div>
+<!---->    <!---->
+    <!---->
+  
+            <!---->
+          
+      </span>
+        <div id="ember2634" class="artdeco-entity-lockup__subtitle ember-view">
+          <span data-test-row-lockup-headline="" data-live-test-row-lockup-headline="">
+              <em class="sh">Backend</em> Lead @ <em class="sh">Worldfavor</em> | <em class="sh">Technical</em> Leadership, Systems Design
+          </span>
+        </div>
+      <div class="LdNxiHBVHRbYBrsTSLduzolgtSgcTwOsiXoaA">
+        <div id="ember2635" class="artdeco-entity-lockup__metadata ember-view">
+            <div data-test-row-lockup-location="" data-live-test-row-lockup-location="">
+                 Stockholm, Stockholm County, Sweden
+            </div>
+            <span data-test-current-employer-industry="" data-live-test-current-employer-industry="">
+                · IT Services and IT Consulting
+            </span>
+        </div>
+        
+<!---->            <span class="row-lockup-details" data-test-row-lockup-details-wrapper="">
+  
+              
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+            
+</span>
+          
+      </div>
+    </div>
+  
+</div>
+</section>
+        </div>
+
+<!---->
+          
+<div data-test-history="" class="history">
+  
+            
+<div data-test-history-group="" class="history-group">
+    <div data-test-description-entry-term="" class="history-group__term t-14 t-black t-bold">
+      <span data-test-history-group-definition="" class="history-group__definition" aria-hidden="true">
+        Experience
+      </span>
+      <span class="a11y-text">
+        Profile experience
+      </span>
+    </div>
+
+<!---->
+  <div>
+    
+<!---->            
+    
+    <div class="expandable-list" data-test-expandable-list="">
+      
+      <ol class="history-group__list-items">
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span><em class="sh">Backend</em> Lead at <em class="sh">Worldfavor</em></span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2020</time> – Present
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Senior Software Development <em class="sh">Engineer</em> at EU-Supply</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2018</time> – <time>2020</time>
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Senior Software <em class="sh">Developer</em> at <em class="sh">Rebtel</em></span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2017</time> – <time>2018</time>
+        </span>
+
+<!---->
+<!----></li>
+      </ol>
+    
+        <button data-test-expandable-list-button="" class="expandable-list__button
+            expandable-list__button--r4-visual-refresh
+            " aria-expanded="false" type="button">
+          <span aria-hidden="true">Show all (5)</span>
+          <span class="a11y-text">Show all Profile experience items in this list. Total items: 5</span>
+              <svg role="none" aria-hidden="true" class="expandable-list__button-default-chevron" data-test-expandable-list-button-icon="" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="chevron-down-small">
+<!---->    
+    <use href="#chevron-down-small" width="16" height="16"></use>
+</svg>
+
+        </button>
+    </div>
+  
+  </div>
+</div>
+            
+<div data-test-history-group="" class="history-group">
+    <div data-test-description-entry-term="" class="history-group__term t-14 t-black t-bold">
+      <span data-test-history-group-definition="" class="history-group__definition" aria-hidden="true">
+        Education
+      </span>
+      <span class="a11y-text">
+        Profile education
+      </span>
+    </div>
+
+<!---->
+  <div>
+    
+    
+    <div class="expandable-list" data-test-expandable-list="">
+      
+      <ol class="history-group__list-items">
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Ruia, Bachelor of Science (BSc)</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2010</time> – <time>2013</time>
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Victoria High School, SSC</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>1995</time> – <time>2007</time>
+        </span>
+
+<!---->
+<!----></li>
+      </ol>
+    
+<!---->    </div>
+  
+  </div>
+</div>
+            
+            
+          
+</div>
+
+<!---->        
+    <!---->
+<!---->    <!---->
+    
+      
+        
+        
+          <div>
+                
+                    
+<!---->                      <!---->
+
+                
+
+
+                    
+<!---->                      
+<div class="decorations" data-test-decorations="">
+    <div class="decorations__row" data-test-row-decorations__skills-match-insights="">
+      <span class="a11y-text">Profile skills match row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true" data-test-row-decorations__skills-match-insights-title="">
+        Skills Match
+      </label>
+
+<!---->
+        <div class="decorations__skills-match-insights-list" data-test-row-decorations__skills-match-insights-list="">
+            
+        <!---->
+<!---->      <!---->
+      
+<div id="ember4023" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+<!---->      <button aria-label="Front-End Development" tabindex="-1" id="ember4024" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--skillsV2" data-live-test-decoration-type="skillsV2" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Front-End Development
+</span></button>
+    <div id="ember4025" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4026" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Front-End Development" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-63" id="ember4027" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-63" class="ember-view"><div id="ember4029" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4023">  <div id="artdeco-hoverable-artdeco-gen-63" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+      
+      
+        
+      <!---->
+      
+      
+      
+      <!---->
+      <!---->
+      
+      
+      
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+
+<!---->        </div>
+    </div>
+
+    <div class="decorations__row" data-test-row-decorations="">
+      <span class="a11y-text">Profile interest row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true">Interest</label>
+
+        <div data-test-interest-row-render="">
+        </div>
+      <div>
+          <span class="t-12 decorations__interest-headline decorations__interest-headline--HIGH" data-test-interest-headline="">
+            
+<div id="ember4030" class="base-decoration__link-hoverable" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <div class="base-decoration__link-hoverable-trigger" data-live-test-decoration-type="interestHeadline" data-test-decoration-title="" aria-label="High likelihood of interest" tabindex="-1">
+        High likelihood of interest
+      </div>
+    <div id="ember4031" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4032" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="High likelihood of interest" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-64" id="ember4033" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-64" class="ember-view"><div id="ember4035" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4030">  <div id="artdeco-hoverable-artdeco-gen-64" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+          </span>
+        <div class="decorations__content">
+            
+        <!---->
+<!---->      <!---->
+      <!---->
+      
+      
+      
+        
+<div id="ember4036" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="Recently open to work" tabindex="-1" id="ember4037" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--openToOpportunities" data-live-test-decoration-type="openToOpportunities" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Recently open to work
+</span></button>
+    <div id="ember4038" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4039" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Enter for more details on Recently open to work" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-65" id="ember4040" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-65" class="ember-view"><div id="ember4042" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4036">  <div id="artdeco-hoverable-artdeco-gen-65" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+<div id="ember4043" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="Active talent" tabindex="-1" id="ember4044" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--activeTalent" data-live-test-decoration-type="activeTalent" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Active talent
+</span></button>
+    <div id="ember4045" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4046" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Active talent" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-66" id="ember4047" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-66" class="ember-view"><div id="ember4049" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4043">  <div id="artdeco-hoverable-artdeco-gen-66" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+      
+      
+      <!---->
+      <!---->
+      
+      
+      
+<div id="ember4050" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="1 connection" tabindex="-1" id="ember4051" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--connections" data-live-test-decoration-type="connections" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    1 connection
+</span></button>
+    <div id="ember4052" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4053" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Enter for more details on 1 connection" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-67" id="ember4054" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-67" class="ember-view"><div id="ember4056" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4050">  <div id="artdeco-hoverable-artdeco-gen-67" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+        </div>
+      </div>
+    </div>
+
+<!---->
+<!---->
+<!----></div>
+
+                
+
+<!---->
+                      </div>
+        
+
+    
+      
+  
+  
+      </div>
+      <div class="row__aside">
+        
+    <!---->
+<!---->    <div class="row-aside row-aside--align-left" data-test-row-aside-wrapper="" data-walkme-id="row-aside-wrapper">
+  
+        
+            <span data-live-test-profile-item-actions="">
+              
+  
+  
+
+    
+        
+        
+          
+  
+            
+              
+  
+                
+                  
+                    
+                      
+                        
+  
+                          
+  
+                            
+                              
+
+                                
+<div>
+  
+                                  
+                                    
+                                      
+
+                                        
+                                          
+                                            
+                                              
+
+                                                
+                                                    
+                                                    
+                                                      
+  <div>
+  
+<ul class="shared-action-buttons">
+  
+    
+
+      <li class="profile-item-actions" data-live-test-profile-item-actions="">
+        <div class="profile-item-actions__act">
+<!----><!---->
+<!---->
+            
+  <button id="ember4075" class="artdeco-button artdeco-button--2 artdeco-button--pro artdeco-button--secondary ember-view profile-item-actions__item" data-live-test-action="save-to-project"><!---->
+<span class="artdeco-button__text">
+    
+      <span aria-hidden="true">Save to project</span>
+      <span class="a11y-text">Save Bhavin to a project</span>
+  
+</span></button>
+
+<!---->
+<!----><!---->
+<!---->        </div>
+        <div class="profile-item-actions__update">
+          
+
+<span tabindex="-1" id="ember4077" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view">
+    <button aria-describedby="artdeco-hoverable-artdeco-gen-68" id="ember4078" class="artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view profile-item-actions__item" data-live-test-component="message-icon-btn" data-walkme-id="profile-message-icon-btn" type="button">    <li-icon aria-hidden="true" type="envelope-icon" class="artdeco-button__icon" size="large"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M2 4v13a3 3 0 003 3h14a3 3 0 003-3V4zm18 2v1.47l-8 5.33-8-5.33V6zm-1 12H5a1 1 0 01-1-1V8.67L12 14l8-5.33V17a1 1 0 01-1 1z"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    Message Bhavin
+</span></button>
+  <div id="artdeco-gen-68" class="ember-view"><div id="ember4080" class="ember-view"></div></div>
+</span>
+<!---->          <div>
+            
+<div id="ember4082" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view more-actions" data-walkme-id="profile-more-actions" data-live-test-profile-more-actions-button="">
+  <button aria-expanded="false" id="1-more-actions-trigger" class="artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view artdeco-button artdeco-button--2 artdeco-button--muted artdeco-button--circle artdeco-button--tertiary more-actions__trigger" type="button" tabindex="0">
+    <span class="a11y-text">More actions</span>
+    <li-icon aria-hidden="true" type="ellipsis-horizontal-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M14 12a2 2 0 11-2-2 2 2 0 012 2zM4 10a2 2 0 102 2 2 2 0 00-2-2zm16 0a2 2 0 102 2 2 2 0 00-2-2z"></path>
+    </svg></li-icon>
+  
+<!----></button>
+  <div tabindex="-1" aria-hidden="true" id="ember4084" class="artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--has-arrow artdeco-dropdown__content--arrow-right artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view more-actions__dropdown-content"><!----></div>
+</div>
+          </div>
+        </div>
+      </li>
+      <li id="profile-item-actions-inline-notification-ember4072" class="profile-item-actions__notification-area"></li>
+    
+  
+</ul>
+</div>
+
+
+  <!---->
+    <!---->
+    <!---->
+  <!---->
+    <!---->
+
+  <!---->
+
+  <!---->
+
+    <!---->
+    <!---->
+
+                                                    
+                                                  
+
+                                                
+                                              
+                                            
+                                          
+                                        
+                                      
+                                    
+                                  
+                                
+</div>
+                              
+                            
+                          
+
+                        
+
+                      
+                    
+                  
+                
+              
+
+            
+          
+
+        
+      
+
+    
+  
+
+
+            </span>
+            
+<!---->
+        
+
+    
+
+<!----></div>
+    <!---->
+  
+      </div>
+    </div>
+
+    
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+  </article>
+</div>
+</div>
+
+
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+  
+          </article>
+        
+  </div>
+
+      
+  </li>
+
+<!---->    
+      
+        <li id="ember2507" class="ember-view profile-list__border-bottom">
+      
+<!----><!---->          <div id="ember2637" class="ember-view" data-test-paginated-list-item="" data-live-test-paginated-list-item="">
+      
+          <article class="profile-list-item hp-core-temp ">
+              <span class="profile-list-item__selector">
+  <input id="select-item-ember2638" class="small-input" type="checkbox">
+  <label for="select-item-ember2638">
+    <span class="a11y-text">
+      Select Keijo Erkkilä
+    </span>
+  </label>
+</span>
+
+              
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+
+    
+  <div class="standard-profile-row">
+  
+<div>
+  <article class="row--vertical row" data-test-row="">
+    <div class="row__top-section">
+      <div class="row__card">
+        <div class="row__top-card">
+          
+<section class="lockup" data-test-row-lockup="">
+  <div id="ember2641" class="artdeco-entity-lockup artdeco-entity-lockup--size-5 ember-view">
+    <div id="ember2642" class="artdeco-entity-lockup__image artdeco-entity-lockup__image--type-circle ember-view lockup__image--profile-size-5" type="circle">
+      <span class="lockup__image-container" data-test-row-lockup-figure="">
+        <img title="Keijo Erkkilä" src="https://media.licdn.com/dms/image/v2/C4E03AQHDxxdrCtlDgA/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1516677665058?e=1732752000&amp;v=beta&amp;t=LKVUP_KIMkhVkaYf5OGtWz2aTFY4hmmnuODB7hiZpbM" loading="lazy" alt="Keijo Erkkilä" id="ember2643" class="evi-image lazy-image ember-view lockup__image" aria-label="Keijo Erkkilä" data-test-lockup-image="">
+      </span>
+    
+</div>
+    <div id="ember2644" class="artdeco-entity-lockup__content SVvZZkkxMTlpqjzOzudIuRZjzaQkabbc ember-view">
+      <span class="CAuRiQTcpvowWLyJkcbpelxlqHndvPvVCxM">
+        <span data-test-row-lockup-full-name="" data-live-test-row-lockup-full-name="">
+          <div id="ember2645" class="artdeco-entity-lockup__title ember-view">
+                  <a href="https://www.linkedin.com/talent/profile/AEMAABCchN8BeUZY1LCq5B7E4aPM4R4XvtEi3so?trk=SEARCH_GLOBAL" target="_blank" rel="noopener noreferrer" data-test-link-to-profile-link="true" data-live-test-link-to-profile-link="true">
+      
+                Keijo Erkkilä
+              
+    </a>
+
+          
+</div>
+        </span>
+<!---->          <span data-test-lockup-degree="">
+            <div id="ember2646" class="artdeco-entity-lockup__badge ember-view">    <span class="a11y-text">Second degree connection</span>
+  <span class="artdeco-entity-lockup__degree" aria-hidden="true">
+    ·&nbsp;2nd
+  </span>
+<!----><!----></div>
+          </span>
+                
+              
+    
+<div class="IamsZMhMJVvMJmtSvefmmNDyYcBEXWlliee">
+  <div id="ember2647" class="artdeco-entity-lockup artdeco-entity-lockup--size-7 ember-view">
+<!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!---->  
+</div>
+</div>
+<!---->    <!---->
+    <!---->
+  
+            <!---->
+          
+      </span>
+        <div id="ember2648" class="artdeco-entity-lockup__subtitle ember-view">
+          <span data-test-row-lockup-headline="" data-live-test-row-lockup-headline="">
+              Senior Specialist, SW at <em class="sh">Haltian</em>
+          </span>
+        </div>
+      <div class="LdNxiHBVHRbYBrsTSLduzolgtSgcTwOsiXoaA">
+        <div id="ember2649" class="artdeco-entity-lockup__metadata ember-view">
+            <div data-test-row-lockup-location="" data-live-test-row-lockup-location="">
+                 Finland
+            </div>
+            <span data-test-current-employer-industry="" data-live-test-current-employer-industry="">
+                · Software Development
+            </span>
+        </div>
+        
+<!---->            <span class="row-lockup-details" data-test-row-lockup-details-wrapper="">
+  
+              
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+            
+</span>
+          
+      </div>
+    </div>
+  
+</div>
+</section>
+        </div>
+
+<!---->
+          
+<div data-test-history="" class="history">
+  
+            
+<div data-test-history-group="" class="history-group">
+    <div data-test-description-entry-term="" class="history-group__term t-14 t-black t-bold">
+      <span data-test-history-group-definition="" class="history-group__definition" aria-hidden="true">
+        Experience
+      </span>
+      <span class="a11y-text">
+        Profile experience
+      </span>
+    </div>
+
+<!---->
+  <div>
+    
+<!---->            
+    
+    <div class="expandable-list" data-test-expandable-list="">
+      
+      <ol class="history-group__list-items">
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Senior Specialist, SW at <em class="sh">Haltian</em></span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2023</time> – Present
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Senior Software <em class="sh">Engineer</em> at Enfuce</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2022</time> – <time>2023</time>
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Staff Software <em class="sh">Engineer</em> at Pelion at Pelion</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2020</time> – <time>2022</time>
+        </span>
+
+<!---->
+<!----></li>
+      </ol>
+    
+        <button data-test-expandable-list-button="" class="expandable-list__button
+            expandable-list__button--r4-visual-refresh
+            " aria-expanded="false" type="button">
+          <span aria-hidden="true">Show all (10)</span>
+          <span class="a11y-text">Show all Profile experience items in this list. Total items: 10</span>
+              <svg role="none" aria-hidden="true" class="expandable-list__button-default-chevron" data-test-expandable-list-button-icon="" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="chevron-down-small">
+<!---->    
+    <use href="#chevron-down-small" width="16" height="16"></use>
+</svg>
+
+        </button>
+    </div>
+  
+  </div>
+</div>
+            
+<div data-test-history-group="" class="history-group">
+    <div data-test-description-entry-term="" class="history-group__term t-14 t-black t-bold">
+      <span data-test-history-group-definition="" class="history-group__definition" aria-hidden="true">
+        Education
+      </span>
+      <span class="a11y-text">
+        Profile education
+      </span>
+    </div>
+
+<!---->
+  <div>
+    
+    
+    <div class="expandable-list" data-test-expandable-list="">
+      
+      <ol class="history-group__list-items">
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Raahe Institute of Computer Engineering, Bachelor of Engineering</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>1996</time> – <time>2000</time>
+        </span>
+
+<!---->
+<!----></li>
+      </ol>
+    
+<!---->    </div>
+  
+  </div>
+</div>
+            
+            
+          
+</div>
+
+<!---->        
+    <!---->
+<!---->    <!---->
+    
+      
+        
+        
+          <div>
+                
+                    
+<!---->                      <!---->
+
+                
+
+
+                    
+<!---->                      
+<div class="decorations" data-test-decorations="">
+    <div class="decorations__row" data-test-row-decorations__skills-match-insights="">
+      <span class="a11y-text">Profile skills match row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true" data-test-row-decorations__skills-match-insights-title="">
+        Skills Match
+      </label>
+
+<!---->
+        <div class="decorations__skills-match-insights-list" data-test-row-decorations__skills-match-insights-list="">
+            
+        <!---->
+<!---->      <!---->
+      
+<div id="ember4088" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+<!---->      <button aria-label="Front-End Development" tabindex="-1" id="ember4089" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--skillsV2" data-live-test-decoration-type="skillsV2" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Front-End Development
+</span></button>
+    <div id="ember4090" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4091" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Front-End Development" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-69" id="ember4092" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-69" class="ember-view"><div id="ember4094" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4088">  <div id="artdeco-hoverable-artdeco-gen-69" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+      
+      
+        
+      <!---->
+      
+      
+      
+      <!---->
+      <!---->
+      
+      
+      
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+
+<!---->        </div>
+    </div>
+
+    <div class="decorations__row" data-test-row-decorations="">
+      <span class="a11y-text">Profile interest row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true">Interest</label>
+
+        <div data-test-interest-row-render="">
+        </div>
+      <div>
+          <span class="t-12 decorations__interest-headline decorations__interest-headline--MEDIUM" data-test-interest-headline="">
+            
+<div id="ember4095" class="base-decoration__link-hoverable" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <div class="base-decoration__link-hoverable-trigger" data-live-test-decoration-type="interestHeadline" data-test-decoration-title="" aria-label="Moderate likelihood of interest" tabindex="-1">
+        Moderate likelihood of interest
+      </div>
+    <div id="ember4096" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4097" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Moderate likelihood of interest" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-70" id="ember4098" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-70" class="ember-view"><div id="ember4100" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4095">  <div id="artdeco-hoverable-artdeco-gen-70" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+          </span>
+        <div class="decorations__content">
+            
+        <!---->
+<!---->      <!---->
+      <!---->
+      
+      
+      
+        
+      <!---->
+      
+      
+      
+      
+<div id="ember4101" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="Closer in your network" tabindex="-1" id="ember4102" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--closerInYourNetwork" data-live-test-decoration-type="closerInYourNetwork" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Closer in your network
+</span></button>
+    <div id="ember4103" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4104" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Closer in your network" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-71" id="ember4105" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-71" class="ember-view"><div id="ember4107" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4101">  <div id="artdeco-hoverable-artdeco-gen-71" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      <!---->
+      
+      
+      
+<div id="ember4108" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="36 connections" tabindex="-1" id="ember4109" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--connections" data-live-test-decoration-type="connections" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    36 connections
+</span></button>
+    <div id="ember4110" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4111" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Enter for more details on 36 connections" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-72" id="ember4112" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-72" class="ember-view"><div id="ember4114" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4108">  <div id="artdeco-hoverable-artdeco-gen-72" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+        </div>
+      </div>
+    </div>
+
+<!---->
+<!---->
+<!----></div>
+
+                
+
+<!---->
+                      </div>
+        
+
+    
+      
+  
+  
+      </div>
+      <div class="row__aside">
+        
+    <!---->
+<!---->    <div class="row-aside row-aside--align-left" data-test-row-aside-wrapper="" data-walkme-id="row-aside-wrapper">
+  
+        
+            <span data-live-test-profile-item-actions="">
+              
+  
+  
+
+    
+        
+        
+          
+  
+            
+              
+  
+                
+                  
+                    
+                      
+                        
+  
+                          
+  
+                            
+                              
+
+                                
+<div>
+  
+                                  
+                                    
+                                      
+
+                                        
+                                          
+                                            
+                                              
+
+                                                
+                                                    
+                                                    
+                                                      
+  <div>
+  
+<ul class="shared-action-buttons">
+  
+    
+
+      <li class="profile-item-actions" data-live-test-profile-item-actions="">
+        <div class="profile-item-actions__act">
+<!----><!---->
+<!---->
+            
+  <button id="ember4133" class="artdeco-button artdeco-button--2 artdeco-button--pro artdeco-button--secondary ember-view profile-item-actions__item" data-live-test-action="save-to-project"><!---->
+<span class="artdeco-button__text">
+    
+      <span aria-hidden="true">Save to project</span>
+      <span class="a11y-text">Save Keijo to a project</span>
+  
+</span></button>
+
+<!---->
+<!----><!---->
+<!---->        </div>
+        <div class="profile-item-actions__update">
+          
+
+<span tabindex="-1" id="ember4135" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view">
+    <button aria-describedby="artdeco-hoverable-artdeco-gen-73" id="ember4136" class="artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view profile-item-actions__item" data-live-test-component="message-icon-btn" data-walkme-id="profile-message-icon-btn" type="button">    <li-icon aria-hidden="true" type="envelope-icon" class="artdeco-button__icon" size="large"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M2 4v13a3 3 0 003 3h14a3 3 0 003-3V4zm18 2v1.47l-8 5.33-8-5.33V6zm-1 12H5a1 1 0 01-1-1V8.67L12 14l8-5.33V17a1 1 0 01-1 1z"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    Message Keijo
+</span></button>
+  <div id="artdeco-gen-73" class="ember-view"><div id="ember4138" class="ember-view"></div></div>
+</span>
+<!---->          <div>
+            
+<div id="ember4140" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view more-actions" data-walkme-id="profile-more-actions" data-live-test-profile-more-actions-button="">
+  <button aria-expanded="false" id="2-more-actions-trigger" class="artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view artdeco-button artdeco-button--2 artdeco-button--muted artdeco-button--circle artdeco-button--tertiary more-actions__trigger" type="button" tabindex="0">
+    <span class="a11y-text">More actions</span>
+    <li-icon aria-hidden="true" type="ellipsis-horizontal-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M14 12a2 2 0 11-2-2 2 2 0 012 2zM4 10a2 2 0 102 2 2 2 0 00-2-2zm16 0a2 2 0 102 2 2 2 0 00-2-2z"></path>
+    </svg></li-icon>
+  
+<!----></button>
+  <div tabindex="-1" aria-hidden="true" id="ember4142" class="artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--has-arrow artdeco-dropdown__content--arrow-right artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view more-actions__dropdown-content"><!----></div>
+</div>
+          </div>
+        </div>
+      </li>
+      <li id="profile-item-actions-inline-notification-ember4130" class="profile-item-actions__notification-area"></li>
+    
+  
+</ul>
+</div>
+
+
+  <!---->
+    <!---->
+    <!---->
+  <!---->
+    <!---->
+
+  <!---->
+
+  <!---->
+
+    <!---->
+    <!---->
+
+                                                    
+                                                  
+
+                                                
+                                              
+                                            
+                                          
+                                        
+                                      
+                                    
+                                  
+                                
+</div>
+                              
+                            
+                          
+
+                        
+
+                      
+                    
+                  
+                
+              
+
+            
+          
+
+        
+      
+
+    
+  
+
+
+            </span>
+            
+<!---->
+        
+
+    
+
+<!----></div>
+    <!---->
+  
+      </div>
+    </div>
+
+    
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+  </article>
+</div>
+</div>
+
+
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+  
+          </article>
+        
+  </div>
+
+      
+  </li>
+
+<!---->    
+      
+        <li id="ember2508" class="ember-view profile-list__border-bottom">
+      
+<!----><!---->          <div id="ember2651" class="ember-view" data-test-paginated-list-item="" data-live-test-paginated-list-item="">
+      
+          <article class="profile-list-item hp-core-temp ">
+              <span class="profile-list-item__selector">
+  <input id="select-item-ember2652" class="small-input" type="checkbox">
+  <label for="select-item-ember2652">
+    <span class="a11y-text">
+      Select Mina Cariño
+    </span>
+  </label>
+</span>
+
+              
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+
+    
+  <div class="standard-profile-row">
+  
+<div>
+  <article class="row--vertical row" data-test-row="">
+    <div class="row__top-section">
+      <div class="row__card">
+        <div class="row__top-card">
+          
+<section class="lockup" data-test-row-lockup="">
+  <div id="ember2655" class="artdeco-entity-lockup artdeco-entity-lockup--size-5 ember-view">
+    <div id="ember2656" class="artdeco-entity-lockup__image artdeco-entity-lockup__image--type-circle ember-view lockup__image--profile-size-5" type="circle">
+      <span class="lockup__image-container" data-test-row-lockup-figure="">
+        <img title="Mina Cariño" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" alt="Mina Cariño" id="ember2657" class="evi-image lazy-image ghost-person ember-view lockup__image" aria-label="Mina Cariño is open to work" data-test-lockup-image="">
+      </span>
+    
+</div>
+    <div id="ember2658" class="artdeco-entity-lockup__content SVvZZkkxMTlpqjzOzudIuRZjzaQkabbc ember-view">
+      <span class="CAuRiQTcpvowWLyJkcbpelxlqHndvPvVCxM">
+        <span data-test-row-lockup-full-name="" data-live-test-row-lockup-full-name="">
+          <div id="ember2659" class="artdeco-entity-lockup__title ember-view">
+                  <a href="https://www.linkedin.com/talent/profile/AEMAAAPD2VoBkBRity0aEAl71VKPe8Bl1g3zxFE?trk=SEARCH_GLOBAL" target="_blank" rel="noopener noreferrer" data-test-link-to-profile-link="true" data-live-test-link-to-profile-link="true">
+      
+                Mina Cariño
+              
+    </a>
+
+          
+</div>
+        </span>
+<!---->          <span data-test-lockup-degree="">
+            <div id="ember2660" class="artdeco-entity-lockup__badge ember-view">    <span class="a11y-text">Third degree connection</span>
+  <span class="artdeco-entity-lockup__degree" aria-hidden="true">
+    ·&nbsp;3rd
+  </span>
+<!----><!----></div>
+          </span>
+                
+              
+    
+<div class="IamsZMhMJVvMJmtSvefmmNDyYcBEXWlliee">
+  <div id="ember2661" class="artdeco-entity-lockup artdeco-entity-lockup--size-7 ember-view">
+<!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!---->  
+</div>
+</div>
+<!---->    <!---->
+    <!---->
+  
+            <!---->
+          
+      </span>
+        <div id="ember2662" class="artdeco-entity-lockup__subtitle ember-view">
+          <span data-test-row-lockup-headline="" data-live-test-row-lockup-headline="">
+              Senior Engineering Team Lead
+          </span>
+        </div>
+      <div class="LdNxiHBVHRbYBrsTSLduzolgtSgcTwOsiXoaA">
+        <div id="ember2663" class="artdeco-entity-lockup__metadata ember-view">
+            <div data-test-row-lockup-location="" data-live-test-row-lockup-location="">
+                 Malta
+            </div>
+            <span data-test-current-employer-industry="" data-live-test-current-employer-industry="">
+                · IT Services and IT Consulting
+            </span>
+        </div>
+        
+<!---->            <span class="row-lockup-details" data-test-row-lockup-details-wrapper="">
+  
+              
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+            
+</span>
+          
+      </div>
+    </div>
+  
+</div>
+</section>
+        </div>
+
+<!---->
+          
+<div data-test-history="" class="history">
+  
+            
+<div data-test-history-group="" class="history-group">
+    <div data-test-description-entry-term="" class="history-group__term t-14 t-black t-bold">
+      <span data-test-history-group-definition="" class="history-group__definition" aria-hidden="true">
+        Experience
+      </span>
+      <span class="a11y-text">
+        Profile experience
+      </span>
+    </div>
+
+<!---->
+  <div>
+    
+                  <div data-test-history-group-header="" class="history-group__tertiary t-12 t-black--light">
+<!----><!---->                      
+<div id="resume-details-tooltip-outlet-ember2679">  <div id="artdeco-hoverable-artdeco-gen-57" class="artdeco-hoverable-content resume-details-content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+<!---->      <div class="artdeco-hoverable-content__content">
+        
+    <div class="resume-details-content__header" data-test-resume-details-content-header="">Shared by Mina on August 2024</div>
+    <div data-test-resume-details-content-body="">Get a comprehensive view of the candidate’s experiences, including details from their profile and shared resume.</div>
+    <div class="resume-details-content__footer t-12 t-black--light" data-test-resume-details-content-footer="">To protect the candidate’s data privacy, you’ll not be able to view their resume</div>
+  
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+<span tabindex="-1" id="ember2680" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom artdeco-hoverable-trigger--is-hoverable ember-view resume-details-trigger-container">
+  <button aria-expanded="false" aria-describedby="artdeco-hoverable-artdeco-gen-57" aria-controls="artdeco-hoverable-artdeco-gen-57" id="ember2681" class="artdeco-button artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view resume-details-trigger-text" data-test-resume-details-trigger="" type="button"><!---->
+<span class="artdeco-button__text">
+    Enhanced by resume
+</span></button>
+  <div id="artdeco-gen-57" class="ember-view"><div id="ember2683" class="ember-view"></div></div>
+</span>
+                  </div>
+            
+    
+    <div class="expandable-list" data-test-expandable-list="">
+      
+      <ol class="history-group__list-items">
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Senior Engineering Team Lead at <em class="sh">Betsson</em> Group</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2023</time> – Present
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Team Lead at <em class="sh">Betsson</em> Group</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2021</time> – <time>2023</time>
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Senior Software <em class="sh">Engineer</em> at <em class="sh">Betsson</em> Group</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2018</time> – <time>2021</time>
+        </span>
+
+<!---->
+<!----></li>
+      </ol>
+    
+        <button data-test-expandable-list-button="" class="expandable-list__button
+            expandable-list__button--r4-visual-refresh
+            " aria-expanded="false" type="button">
+          <span aria-hidden="true">Show all (8)</span>
+          <span class="a11y-text">Show all Profile experience items in this list. Total items: 8</span>
+              <svg role="none" aria-hidden="true" class="expandable-list__button-default-chevron" data-test-expandable-list-button-icon="" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="chevron-down-small">
+<!---->    
+    <use href="#chevron-down-small" width="16" height="16"></use>
+</svg>
+
+        </button>
+    </div>
+  
+  </div>
+</div>
+            
+            
+            
+          
+</div>
+
+<!---->        
+    <!---->
+<!---->    <!---->
+    
+      
+        
+        
+          <div>
+                
+                    
+<!---->                      <!---->
+
+                
+
+
+                    
+<!---->                      
+<div class="decorations" data-test-decorations="">
+    <div class="decorations__row" data-test-row-decorations__skills-match-insights="">
+      <span class="a11y-text">Profile skills match row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true" data-test-row-decorations__skills-match-insights-title="">
+        Skills Match
+      </label>
+
+<!---->
+        <div class="decorations__skills-match-insights-list" data-test-row-decorations__skills-match-insights-list="">
+            
+        <!---->
+<!---->      <!---->
+      
+<div id="ember4146" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+<!---->      <button aria-label="Front-End Development" tabindex="-1" id="ember4147" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--skillsV2" data-live-test-decoration-type="skillsV2" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Front-End Development
+</span></button>
+    <div id="ember4148" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4149" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Front-End Development" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-74" id="ember4150" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-74" class="ember-view"><div id="ember4152" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4146">  <div id="artdeco-hoverable-artdeco-gen-74" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+      
+      
+        
+      <!---->
+      
+      
+      
+      <!---->
+      <!---->
+      
+      
+      
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+
+<!---->        </div>
+    </div>
+
+    <div class="decorations__row" data-test-row-decorations="">
+      <span class="a11y-text">Profile interest row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true">Interest</label>
+
+        <div data-test-interest-row-render="">
+        </div>
+      <div>
+          <span class="t-12 decorations__interest-headline decorations__interest-headline--HIGH" data-test-interest-headline="">
+            
+<div id="ember4153" class="base-decoration__link-hoverable" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <div class="base-decoration__link-hoverable-trigger" data-live-test-decoration-type="interestHeadline" data-test-decoration-title="" aria-label="High likelihood of interest" tabindex="-1">
+        High likelihood of interest
+      </div>
+    <div id="ember4154" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4155" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="High likelihood of interest" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-75" id="ember4156" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-75" class="ember-view"><div id="ember4158" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4153">  <div id="artdeco-hoverable-artdeco-gen-75" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+          </span>
+        <div class="decorations__content">
+            
+        <!---->
+<!---->      <!---->
+      <!---->
+      
+      
+      
+        
+<div id="ember4159" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="Open to work" tabindex="-1" id="ember4160" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--openToOpportunities" data-live-test-decoration-type="openToOpportunities" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Open to work
+</span></button>
+    <div id="ember4161" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4162" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Enter for more details on Open to work" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-76" id="ember4163" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-76" class="ember-view"><div id="ember4165" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4159">  <div id="artdeco-hoverable-artdeco-gen-76" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      <!---->
+      
+      
+      
+      <!---->
+      <!---->
+      
+      
+      
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+        </div>
+      </div>
+    </div>
+
+<!---->
+<!---->
+<!----></div>
+
+                
+
+<!---->
+                      </div>
+        
+
+    
+      
+  
+  
+      </div>
+      <div class="row__aside">
+        
+    <!---->
+<!---->    <div class="row-aside row-aside--align-left" data-test-row-aside-wrapper="" data-walkme-id="row-aside-wrapper">
+  
+        
+            <span data-live-test-profile-item-actions="">
+              
+  
+  
+
+    
+        
+        
+          
+  
+            
+              
+  
+                
+                  
+                    
+                      
+                        
+  
+                          
+  
+                            
+                              
+
+                                
+<div>
+  
+                                  
+                                    
+                                      
+
+                                        
+                                          
+                                            
+                                              
+
+                                                
+                                                    
+                                                    
+                                                      
+  <div>
+  
+<ul class="shared-action-buttons">
+  
+    
+
+      <li class="profile-item-actions" data-live-test-profile-item-actions="">
+        <div class="profile-item-actions__act">
+<!----><!---->
+<!---->
+            
+  <button id="ember4184" class="artdeco-button artdeco-button--2 artdeco-button--pro artdeco-button--secondary ember-view profile-item-actions__item" data-live-test-action="save-to-project"><!---->
+<span class="artdeco-button__text">
+    
+      <span aria-hidden="true">Save to project</span>
+      <span class="a11y-text">Save Mina to a project</span>
+  
+</span></button>
+
+<!---->
+<!----><!---->
+<!---->        </div>
+        <div class="profile-item-actions__update">
+          
+
+<span tabindex="-1" id="ember4186" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view">
+    <button aria-describedby="artdeco-hoverable-artdeco-gen-77" id="ember4187" class="artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view profile-item-actions__item" data-live-test-component="message-icon-btn" data-walkme-id="profile-message-icon-btn" type="button">    <li-icon aria-hidden="true" type="envelope-icon" class="artdeco-button__icon" size="large"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M2 4v13a3 3 0 003 3h14a3 3 0 003-3V4zm18 2v1.47l-8 5.33-8-5.33V6zm-1 12H5a1 1 0 01-1-1V8.67L12 14l8-5.33V17a1 1 0 01-1 1z"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    Message Mina
+</span></button>
+  <div id="artdeco-gen-77" class="ember-view"><div id="ember4189" class="ember-view"></div></div>
+</span>
+<!---->          <div>
+            
+<div id="ember4191" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view more-actions" data-walkme-id="profile-more-actions" data-live-test-profile-more-actions-button="">
+  <button aria-expanded="false" id="3-more-actions-trigger" class="artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view artdeco-button artdeco-button--2 artdeco-button--muted artdeco-button--circle artdeco-button--tertiary more-actions__trigger" type="button" tabindex="0">
+    <span class="a11y-text">More actions</span>
+    <li-icon aria-hidden="true" type="ellipsis-horizontal-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M14 12a2 2 0 11-2-2 2 2 0 012 2zM4 10a2 2 0 102 2 2 2 0 00-2-2zm16 0a2 2 0 102 2 2 2 0 00-2-2z"></path>
+    </svg></li-icon>
+  
+<!----></button>
+  <div tabindex="-1" aria-hidden="true" id="ember4193" class="artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--has-arrow artdeco-dropdown__content--arrow-right artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view more-actions__dropdown-content"><!----></div>
+</div>
+          </div>
+        </div>
+      </li>
+      <li id="profile-item-actions-inline-notification-ember4181" class="profile-item-actions__notification-area"></li>
+    
+  
+</ul>
+</div>
+
+
+  <!---->
+    <!---->
+    <!---->
+  <!---->
+    <!---->
+
+  <!---->
+
+  <!---->
+
+    <!---->
+    <!---->
+
+                                                    
+                                                  
+
+                                                
+                                              
+                                            
+                                          
+                                        
+                                      
+                                    
+                                  
+                                
+</div>
+                              
+                            
+                          
+
+                        
+
+                      
+                    
+                  
+                
+              
+
+            
+          
+
+        
+      
+
+    
+  
+
+
+            </span>
+            
+<!---->
+        
+
+    
+
+<!----></div>
+    <!---->
+  
+      </div>
+    </div>
+
+    
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+  </article>
+</div>
+</div>
+
+
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+  
+          </article>
+        
+  </div>
+
+      
+  </li>
+
+<!---->    
+      
+        <li id="ember2509" class="ember-view profile-list__border-bottom">
+      
+<!----><!---->          <div id="ember2665" class="ember-view" data-test-paginated-list-item="" data-live-test-paginated-list-item="">
+      
+          <article class="profile-list-item hp-core-temp ">
+              <span class="profile-list-item__selector">
+  <input id="select-item-ember2666" class="small-input" type="checkbox">
+  <label for="select-item-ember2666">
+    <span class="a11y-text">
+      Select Javier García García
+    </span>
+  </label>
+</span>
+
+              
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+
+    
+  <div class="standard-profile-row">
+  
+<div>
+  <article class="row--vertical row" data-test-row="">
+    <div class="row__top-section">
+      <div class="row__card">
+        <div class="row__top-card">
+          
+<section class="lockup" data-test-row-lockup="">
+  <div id="ember2669" class="artdeco-entity-lockup artdeco-entity-lockup--size-5 ember-view">
+    <div id="ember2670" class="artdeco-entity-lockup__image artdeco-entity-lockup__image--type-circle ember-view lockup__image--profile-size-5" type="circle">
+      <span class="lockup__image-container" data-test-row-lockup-figure="">
+        <img title="Javier García García" src="https://media.licdn.com/dms/image/v2/C5603AQGiwTPveAwtfQ/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1578912946383?e=1732752000&amp;v=beta&amp;t=MxIIogLwU8KyhmRdc911C10bXDP5-VwPvUkj3UKzgI0" loading="lazy" alt="Javier García García" id="ember2671" class="evi-image lazy-image ember-view lockup__image" aria-label="Javier García García" data-test-lockup-image="">
+      </span>
+    
+</div>
+    <div id="ember2672" class="artdeco-entity-lockup__content SVvZZkkxMTlpqjzOzudIuRZjzaQkabbc ember-view">
+      <span class="CAuRiQTcpvowWLyJkcbpelxlqHndvPvVCxM">
+        <span data-test-row-lockup-full-name="" data-live-test-row-lockup-full-name="">
+          <div id="ember2673" class="artdeco-entity-lockup__title ember-view">
+                  <a href="https://www.linkedin.com/talent/profile/AEMAAAZx2UABvuU0zju10BHGAs0ofPy7w6JMA44?trk=SEARCH_GLOBAL" target="_blank" rel="noopener noreferrer" data-test-link-to-profile-link="true" data-live-test-link-to-profile-link="true">
+      
+                Javier García García
+              
+    </a>
+
+          
+</div>
+        </span>
+<!---->          <span data-test-lockup-degree="">
+            <div id="ember2674" class="artdeco-entity-lockup__badge ember-view">    <span class="a11y-text">Second degree connection</span>
+  <span class="artdeco-entity-lockup__degree" aria-hidden="true">
+    ·&nbsp;2nd
+  </span>
+<!----><!----></div>
+          </span>
+                
+              
+    
+<div class="IamsZMhMJVvMJmtSvefmmNDyYcBEXWlliee">
+  <div id="ember2675" class="artdeco-entity-lockup artdeco-entity-lockup--size-7 ember-view">
+<!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!---->  
+</div>
+</div>
+<!---->    <!---->
+    <!---->
+  
+            <!---->
+          
+      </span>
+        <div id="ember2676" class="artdeco-entity-lockup__subtitle ember-view">
+          <span data-test-row-lockup-headline="" data-live-test-row-lockup-headline="">
+              <em class="sh">Technical</em> Lead
+          </span>
+        </div>
+      <div class="LdNxiHBVHRbYBrsTSLduzolgtSgcTwOsiXoaA">
+        <div id="ember2677" class="artdeco-entity-lockup__metadata ember-view">
+            <div data-test-row-lockup-location="" data-live-test-row-lockup-location="">
+                 Greater Málaga Metropolitan Area
+            </div>
+            <span data-test-current-employer-industry="" data-live-test-current-employer-industry="">
+                · IT Services and IT Consulting
+            </span>
+        </div>
+        
+<!---->            <span class="row-lockup-details" data-test-row-lockup-details-wrapper="">
+  
+              
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+            
+</span>
+          
+      </div>
+    </div>
+  
+</div>
+</section>
+        </div>
+
+<!---->
+          
+<div data-test-history="" class="history">
+  
+            
+<div data-test-history-group="" class="history-group">
+    <div data-test-description-entry-term="" class="history-group__term t-14 t-black t-bold">
+      <span data-test-history-group-definition="" class="history-group__definition" aria-hidden="true">
+        Experience
+      </span>
+      <span class="a11y-text">
+        Profile experience
+      </span>
+    </div>
+
+<!---->
+  <div>
+    
+<!---->            
+    
+    <div class="expandable-list" data-test-expandable-list="">
+      
+      <ol class="history-group__list-items">
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span><em class="sh">Technical</em> Lead in AI team at <em class="sh">Pleo</em></span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2024</time> – Present
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Senior Software <em class="sh">Engineer</em> at <em class="sh">Pleo</em></span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2022</time> – <time>2024</time>
+        </span>
+
+<!---->
+<!----></li>
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Lead Java <em class="sh">Developer</em> at Ciklum</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2021</time> – <time>2022</time>
+        </span>
+
+<!---->
+<!----></li>
+      </ol>
+    
+        <button data-test-expandable-list-button="" class="expandable-list__button
+            expandable-list__button--r4-visual-refresh
+            " aria-expanded="false" type="button">
+          <span aria-hidden="true">Show all (10)</span>
+          <span class="a11y-text">Show all Profile experience items in this list. Total items: 10</span>
+              <svg role="none" aria-hidden="true" class="expandable-list__button-default-chevron" data-test-expandable-list-button-icon="" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="chevron-down-small">
+<!---->    
+    <use href="#chevron-down-small" width="16" height="16"></use>
+</svg>
+
+        </button>
+    </div>
+  
+  </div>
+</div>
+            
+<div data-test-history-group="" class="history-group">
+    <div data-test-description-entry-term="" class="history-group__term t-14 t-black t-bold">
+      <span data-test-history-group-definition="" class="history-group__definition" aria-hidden="true">
+        Education
+      </span>
+      <span class="a11y-text">
+        Profile education
+      </span>
+    </div>
+
+<!---->
+  <div>
+    
+    
+    <div class="expandable-list" data-test-expandable-list="">
+      
+      <ol class="history-group__list-items">
+          
+<li data-test-description-description="" class="t-14 t-black t-normal">
+<!---->
+  <span>Universidad de Granada, ingeniero informático</span>
+
+        <span aria-hidden="true">·</span>
+        <span class="description-entry__date-duration" data-test-description-entry-date-duration="">
+          <time>2000</time> – <time>2006</time>
+        </span>
+
+<!---->
+<!----></li>
+      </ol>
+    
+<!---->    </div>
+  
+  </div>
+</div>
+            
+            
+          
+</div>
+
+<!---->        
+    <!---->
+<!---->    <!---->
+    
+      
+        
+        
+          <div>
+                
+                    
+<!---->                      <!---->
+
+                
+
+
+                    
+<!---->                      
+<div class="decorations" data-test-decorations="">
+    <div class="decorations__row" data-test-row-decorations__skills-match-insights="">
+      <span class="a11y-text">Profile skills match row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true" data-test-row-decorations__skills-match-insights-title="">
+        Skills Match
+      </label>
+
+<!---->
+        <div class="decorations__skills-match-insights-list" data-test-row-decorations__skills-match-insights-list="">
+            
+        <!---->
+<!---->      <!---->
+      
+<div id="ember4197" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+<!---->      <button aria-label="Front-End Development" tabindex="-1" id="ember4198" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--skillsV2" data-live-test-decoration-type="skillsV2" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Front-End Development
+</span></button>
+    <div id="ember4199" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4200" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Front-End Development" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-78" id="ember4201" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-78" class="ember-view"><div id="ember4203" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4197">  <div id="artdeco-hoverable-artdeco-gen-78" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+      
+      
+        
+      <!---->
+      
+      
+      
+      <!---->
+      <!---->
+      
+      
+      
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+
+<!---->        </div>
+    </div>
+
+    <div class="decorations__row" data-test-row-decorations="">
+      <span class="a11y-text">Profile interest row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true">Interest</label>
+
+        <div data-test-interest-row-render="">
+        </div>
+      <div>
+          <span class="t-12 decorations__interest-headline decorations__interest-headline--HIGH" data-test-interest-headline="">
+            
+<div id="ember4204" class="base-decoration__link-hoverable" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <div class="base-decoration__link-hoverable-trigger" data-live-test-decoration-type="interestHeadline" data-test-decoration-title="" aria-label="High likelihood of interest" tabindex="-1">
+        High likelihood of interest
+      </div>
+    <div id="ember4205" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4206" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="High likelihood of interest" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-79" id="ember4207" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-79" class="ember-view"><div id="ember4209" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4204">  <div id="artdeco-hoverable-artdeco-gen-79" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+          </span>
+        <div class="decorations__content">
+            
+        <!---->
+<!---->      <!---->
+      <!---->
+      
+      
+      
+        
+      
+<div id="ember4210" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="Active talent" tabindex="-1" id="ember4211" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--activeTalent" data-live-test-decoration-type="activeTalent" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    Active talent
+</span></button>
+    <div id="ember4212" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4213" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Active talent" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-80" id="ember4214" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-80" class="ember-view"><div id="ember4216" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4210">  <div id="artdeco-hoverable-artdeco-gen-80" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+      
+      
+      <!---->
+      <!---->
+      
+      
+      
+<div id="ember4217" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+      <div></div>
+      <button aria-label="29 connections" tabindex="-1" id="ember4218" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--connections" data-live-test-decoration-type="connections" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    29 connections
+</span></button>
+    <div id="ember4219" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4220" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Enter for more details on 29 connections" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-81" id="ember4221" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-81" class="ember-view"><div id="ember4223" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4217">  <div id="artdeco-hoverable-artdeco-gen-81" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      
+        <!---->
+        <!---->
+      <!---->
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+        </div>
+      </div>
+    </div>
+
+    <div class="decorations__row" data-test-row-decorations="">
+      <span class="a11y-text">Profile activity row decorations</span>
+      <label class="decorations__row-title" aria-hidden="true" data-test-row-decorations-activity-title="">Activity</label>
+<!---->
+<!----><!---->
+        
+        <!---->
+<!---->      <!---->
+      <!---->
+      
+      
+      
+        
+      <!---->
+      
+      
+      
+      <!---->
+      <!---->
+      
+      
+      
+      
+        <!---->
+        <!---->
+      
+<div id="ember4224" class="base-decoration" data-test-decoration-item="">
+  <div class="hoverable">
+  
+<!---->      <button aria-label="2 views" tabindex="-1" id="ember4225" class="artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view base-decoration__trigger t-14 base-decoration__trigger--views" data-live-test-decoration-type="views" data-test-decoration-title=""><!---->
+<span class="artdeco-button__text">
+    2 views
+</span></button>
+    <div id="ember4226" data-test-hoverable-content="" class="hoverable-content  hoverable-content--placement-bottom">
+<!----></div>
+
+    <span tabindex="-1" id="ember4227" class="hidden-row-decoration-trigger artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-bottom ember-view">
+
+      <div class="hidden-row-decoration-trigger__outlet">
+        <button role="button" aria-label="Enter for more details on 2 views" aria-expanded="false" aria-controls="artdeco-hoverable-artdeco-gen-82" id="ember4228" class="hidden-row-decoration-trigger__btn artdeco-button artdeco-button--1 artdeco-button--tertiary ember-view" type="button">    <li-icon aria-hidden="true" type="caret-filled-down-icon" class="artdeco-button__icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 11L3 6h10z" fill-rule="evenodd"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    
+</span></button>
+      </div>
+
+      <div id="artdeco-gen-82" class="ember-view"><div id="ember4230" class="ember-view"></div></div>
+
+    </span>
+
+    <div id="content-hoverable-outlet-ember4224">  <div id="artdeco-hoverable-artdeco-gen-82" class="artdeco-hoverable-content hidden-row-decoration-trigger__content artdeco-hoverable-content--inverse-theme artdeco-hoverable-content--open-spacing artdeco-hoverable-content--undefined-placement" tabindex="-1" role="tooltip" aria-hidden="true">
+    <div class="artdeco-hoverable-content__shell">
+        <button class="artdeco-hoverable-content__close-btn" aria-label="Dismiss" type="button">
+          <li-icon aria-hidden="true" type="cancel-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M14 3.41L9.41 8 14 12.59 12.59 14 8 9.41 3.41 14 2 12.59 6.59 8 2 3.41 3.41 2 8 6.59 12.59 2z"></path>
+    </svg></li-icon>
+        </button>
+      <div class="artdeco-hoverable-content__content">
+        
+<!---->      
+      </div>
+    </div>
+    <div class="artdeco-hoverable-content__arrow" aria-hidden="true"></div>
+  </div>
+</div>
+
+  
+</div>
+</div>
+      <!---->
+      <!---->
+      <!---->
+      
+      
+      <!---->
+<!----><!---->  
+    </div>
+
+<!---->
+<!----></div>
+
+                
+
+<!---->
+                      </div>
+        
+
+    
+      
+  
+  
+      </div>
+      <div class="row__aside">
+        
+    <!---->
+<!---->    <div class="row-aside row-aside--align-left" data-test-row-aside-wrapper="" data-walkme-id="row-aside-wrapper">
+  
+        
+            <span data-live-test-profile-item-actions="">
+              
+  
+  
+
+    
+        
+        
+          
+  
+            
+              
+  
+                
+                  
+                    
+                      
+                        
+  
+                          
+  
+                            
+                              
+
+                                
+<div>
+  
+                                  
+                                    
+                                      
+
+                                        
+                                          
+                                            
+                                              
+
+                                                
+                                                    
+                                                    
+                                                      
+  <div>
+  
+<ul class="shared-action-buttons">
+  
+    
+
+      <li class="profile-item-actions" data-live-test-profile-item-actions="">
+        <div class="profile-item-actions__act">
+<!----><!---->
+<!---->
+            
+  <button id="ember4249" class="artdeco-button artdeco-button--2 artdeco-button--pro artdeco-button--secondary ember-view profile-item-actions__item" data-live-test-action="save-to-project"><!---->
+<span class="artdeco-button__text">
+    
+      <span aria-hidden="true">Save to project</span>
+      <span class="a11y-text">Save Javier to a project</span>
+  
+</span></button>
+
+<!---->
+<!----><!---->
+<!---->        </div>
+        <div class="profile-item-actions__update">
+          
+
+<span tabindex="-1" id="ember4251" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view">
+    <button aria-describedby="artdeco-hoverable-artdeco-gen-83" id="ember4252" class="artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view profile-item-actions__item" data-live-test-component="message-icon-btn" data-walkme-id="profile-message-icon-btn" type="button">    <li-icon aria-hidden="true" type="envelope-icon" class="artdeco-button__icon" size="large"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M2 4v13a3 3 0 003 3h14a3 3 0 003-3V4zm18 2v1.47l-8 5.33-8-5.33V6zm-1 12H5a1 1 0 01-1-1V8.67L12 14l8-5.33V17a1 1 0 01-1 1z"></path>
+    </svg></li-icon>
+
+<span class="artdeco-button__text">
+    Message Javier
+</span></button>
+  <div id="artdeco-gen-83" class="ember-view"><div id="ember4254" class="ember-view"></div></div>
+</span>
+<!---->          <div>
+            
+<div id="ember4256" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view more-actions" data-walkme-id="profile-more-actions" data-live-test-profile-more-actions-button="">
+  <button aria-expanded="false" id="4-more-actions-trigger" class="artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view artdeco-button artdeco-button--2 artdeco-button--muted artdeco-button--circle artdeco-button--tertiary more-actions__trigger" type="button" tabindex="0">
+    <span class="a11y-text">More actions</span>
+    <li-icon aria-hidden="true" type="ellipsis-horizontal-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24" fill="currentColor" class="mercado-match" width="24" height="24" focusable="false">
+      <path d="M14 12a2 2 0 11-2-2 2 2 0 012 2zM4 10a2 2 0 102 2 2 2 0 00-2-2zm16 0a2 2 0 102 2 2 2 0 00-2-2z"></path>
+    </svg></li-icon>
+  
+<!----></button>
+  <div tabindex="-1" aria-hidden="true" id="ember4258" class="artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--has-arrow artdeco-dropdown__content--arrow-right artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view more-actions__dropdown-content"><!----></div>
+</div>
+          </div>
+        </div>
+      </li>
+      <li id="profile-item-actions-inline-notification-ember4246" class="profile-item-actions__notification-area"></li>
+    
+  
+</ul>
+</div>
+
+
+  <!---->
+    <!---->
+    <!---->
+  <!---->
+    <!---->
+
+  <!---->
+
+  <!---->
+
+    <!---->
+    <!---->
+
+                                                    
+                                                  
+
+                                                
+                                              
+                                            
+                                          
+                                        
+                                      
+                                    
+                                  
+                                
+</div>
+                              
+                            
+                          
+
+                        
+
+                      
+                    
+                  
+                
+              
+
+            
+          
+
+        
+      
+
+    
+  
+
+
+            </span>
+            
+<!---->
+        
+
+    
+
+<!----></div>
+    <!---->
+  
+      </div>
+    </div>
+
+    
+    <!---->
+<!---->    <!---->
+    <!---->
+  
+  </article>
+</div>
+</div>
+
+
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+  
+          </article>
+        
+  </div>
+
+      
+  </li>
+
+<!---->    
+      
+        <li id="ember2510" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2511" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2512" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2513" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2514" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2515" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2516" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2517" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2518" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2519" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2520" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2521" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2522" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2523" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2524" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2525" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2526" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2527" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2528" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+<!---->    
+      
+        <li id="ember2529" class="ember-view profile-list__occlusion-area profile-list__border-bottom">
+<!---->  </li>
+
+        
+    
+  
+                    <!---->
+                    <!---->
+                    <!---->
+                  
+
+
+    
+
+    
+  
+                    <!---->
+                    
+      <section class="ember-view">
+        
+<!---->                    
+      </section>
+  
+                    <!---->
+                  
+
+  
+    
+  </ol>
+
+    
+  <nav id="ember2531" class="ember-view  pagination profile-list-container__pagination" aria-label="Profile list pagination" data-test-ts-pagination="" data-live-test-ts-pagination="">
+
+        <div class="pagination__quick-link-wrapper">
+<!---->        </div>
+
+        <ol class="pagination__list " data-test-pagination-list="">
+              <li class="pagination__link selected" data-test-pagination-link="" data-test-pagination-link-selected="">
+                <span aria-hidden="true">1</span>
+                <span class="a11y-text">Page 1 (current)</span>
+              </li>
+              <li class="pagination__link" data-test-pagination-link="">
+                <a href="function () { [native code] }" data-test-pagination-anchor="">
+                  <span aria-hidden="true">2</span>
+                  <span class="a11y-text">Page 2</span>
+                </a>
+              </li>
+              <li class="pagination__link" data-test-pagination-link="">
+                <a href="function () { [native code] }" data-test-pagination-anchor="">
+                  <span aria-hidden="true">3</span>
+                  <span class="a11y-text">Page 3</span>
+                </a>
+              </li>
+              <li class="pagination__link" data-test-pagination-link="">
+                <a href="function () { [native code] }" data-test-pagination-anchor="">
+                  <span aria-hidden="true">4</span>
+                  <span class="a11y-text">Page 4</span>
+                </a>
+              </li>
+              <li class="pagination__link" data-test-pagination-link="">
+                <a href="function () { [native code] }" data-test-pagination-anchor="">
+                  <span aria-hidden="true">5</span>
+                  <span class="a11y-text">Page 5</span>
+                </a>
+              </li>
+              <li class="pagination__link" data-test-pagination-link="">
+                <a href="function () { [native code] }" data-test-pagination-anchor="">
+                  <span aria-hidden="true">6</span>
+                  <span class="a11y-text">Page 6</span>
+                </a>
+              </li>
+              <li class="pagination__link" data-test-pagination-link="">
+                <a href="function () { [native code] }" data-test-pagination-anchor="">
+                  <span aria-hidden="true">7</span>
+                  <span class="a11y-text">Page 7</span>
+                </a>
+              </li>
+              <li class="pagination__link" data-test-pagination-link="">
+                <a href="function () { [native code] }" data-test-pagination-anchor="">
+                  <span aria-hidden="true">8</span>
+                  <span class="a11y-text">Page 8</span>
+                </a>
+              </li>
+              <li class="pagination__link" data-test-pagination-link="">
+                <a href="function () { [native code] }" data-test-pagination-anchor="">
+                  <span aria-hidden="true">9</span>
+                  <span class="a11y-text">Page 9</span>
+                </a>
+              </li>
+              <li class="pagination__link" data-test-pagination-link="">
+                <a href="function () { [native code] }" data-test-pagination-anchor="">
+                  <span aria-hidden="true">10</span>
+                  <span class="a11y-text">Page 10</span>
+                </a>
+              </li>
+        </ol>
+
+        <div class="pagination__quick-link-wrapper">
+            <a href="function () { [native code] }" class="pagination__quick-link pagination__quick-link--next link-without-hover-visited" rel="next" aria-label="Go to next page 2" data-test-pagination-next="" data-live-test-pagination-next="">
+              <span>Next</span>
+              <span class="pagination__quick-link-icon">
+                <li-icon aria-hidden="true" type="chevron-right-icon" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="mercado-match" data-supported-dps="16x16" fill="currentColor" width="16" height="16" focusable="false">
+      <path d="M5 15l4.61-7L5 1h2.39L12 8l-4.61 7z"></path>
+    </svg></li-icon>
+              </span>
+            </a>
+        </div>
+  </nav>
+
+  
+</form>

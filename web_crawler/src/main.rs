@@ -14,11 +14,11 @@ use tokio::task;
 use std::net::SocketAddr;
 mod actions;
 mod structs;
+use crate::actions::add_to_project::save_to_project::save;
 use crate::actions::connection::connection;
 use crate::actions::evaluate::eval;
 use crate::actions::keyword_filter::keyword;
 use crate::actions::keyword_filter::EntryKeyword;
-use crate::actions::save_to_project::save;
 use crate::actions::scrap_connections::scrap_connections;
 use crate::actions::scrap_conversations::scrap;
 use crate::actions::scrap_inmails::scrap_inmails;
@@ -317,7 +317,7 @@ async fn add_to_project(json: Json<EntryAddProfilesToProjects>) -> impl IntoResp
             Ok(_) => {
                 let client = reqwest::Client::new();
                 let payload = json!({
-                    "result": "Profile was scrapped",
+                    "result": "Profiles were added to the project",
                     "user_id": user_id,
                     "error": "no",
                 });

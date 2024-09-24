@@ -1,25 +1,77 @@
-use crate::actions::start_browser::start_browser;
+use crate::actions::init_browser::{init_browser, send_screenshot};
+use crate::actions::scrap_recruiter_search::check_recruiter_cookie;
+
 use crate::actions::wait::wait;
-use crate::structs::browser::{BrowserConfig, BrowserInit};
+use crate::structs::browser::BrowserInit;
 use crate::structs::entry::EntryScrapProjects;
 use crate::structs::error::CustomError;
-use playwright::api::ElementHandle;
-use playwright::api::Page;
+use scraper::{Html, Selector};
 use serde::Serialize;
 use serde_json::json;
+use thirtyfour::{By, WebDriver, WebElement};
 use tracing::{error, info};
-
-use scraper::{Html, Selector};
-pub async fn scrap_projects(entry: EntryScrapProjects) -> Result<(), CustomError> {
+#[derive(Debug, Serialize)]
+struct Project {
+    name: String,
+    id: String,
+    archived: bool,
+    order: u32,
+}
+pub async fn scrap_projects(entry: EntryScrapProjects) -> Result<String, CustomError> {
     let target_url = entry.target_url.clone();
     let user_id = entry.user_id.clone();
     let browser = init(entry).await?;
-    open_list_projects(&browser).await?;
-    //clear_all(&browser).await?;
+    let result = run(&browser, &target_url, &user_id).await;
+    match result {
+        Ok(text) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                text.as_str(),
+                &user_id,
+                "Send Inmails",
+            )
+            .await?;
+            browser.quit().await?;
+            return Ok(text);
+        }
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Scrap projects",
+                &user_id,
+                "Scrap projects",
+            )
+            .await?;
+            return Err(error);
+        }
+    }
+}
+
+async fn run(browser: &WebDriver, target_url: &str, user_id: &str) -> Result<String, CustomError> {
+    open_list_projects(browser).await?;
+    wait(10, 15);
+    let recruiter_session_cookie_check = check_recruiter_cookie(&browser).await?;
+    if !recruiter_session_cookie_check {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = check_recruiter_cookie(&browser).await?;
+        if !cookie_second_try {
+            return Err(CustomError::RecruiterSessionCookieExpired);
+        }
+    }
+    let zoom_script = "document.body.style.zoom = '50.0%';";
+    browser.execute(&zoom_script, vec![]).await?;
+    let mut order = 0;
     loop {
-        scroll(&browser.page).await?;
+        wait(2, 4);
+        scroll(&browser).await?;
         let container = find_list_container(&browser).await?;
-        let projects = scrap_list(container.inner_html().await?.as_str())?;
+        let projects = scrap_list(container.inner_html().await?.as_str(), &mut order)?;
         send_urls(projects, &target_url, &user_id).await?;
         let next_button = find_next_button(&browser).await;
         if next_button.is_err() {
@@ -27,13 +79,14 @@ pub async fn scrap_projects(entry: EntryScrapProjects) -> Result<(), CustomError
             break;
         } else {
             wait(11, 13);
-            move_scroll_top(&browser.page).await?;
+            move_scroll_top(&browser).await?;
         }
     }
-    Ok(())
+
+    Ok("Scraping projects finished successfuly".to_string())
 }
 
-async fn init(entry: EntryScrapProjects) -> Result<BrowserConfig, CustomError> {
+async fn init(entry: EntryScrapProjects) -> Result<WebDriver, CustomError> {
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -49,43 +102,39 @@ async fn init(entry: EntryScrapProjects) -> Result<BrowserConfig, CustomError> {
         jsessionid: entry.cookies.jsessionid,
     };
 
-    let browser = start_browser(browser_info).await?;
+    let browser = init_browser(&browser_info).await?;
     wait(7, 10); // random delay
     Ok(browser)
 }
-async fn move_scroll(page: &Page) -> Result<(), CustomError> {
+async fn move_scroll(page: &WebDriver) -> Result<(), CustomError> {
     let scroll_code = r#"
-    function() {
-        let totalHeight = document.body.scrollHeight;
         let scrollDistance = 365;
         window.scrollBy(0, scrollDistance);
-    }
     "#;
-
-    page.evaluate(scroll_code, ()).await?;
+    page.execute(scroll_code, vec![]).await?;
 
     wait(1, 2);
     Ok(())
 }
 
-async fn move_scroll_top(page: &Page) -> Result<(), CustomError> {
+async fn move_scroll_top(page: &WebDriver) -> Result<(), CustomError> {
     let scroll_code = r#"
-    function() {
-    window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'smooth'
-    });
-}
-    "#;
+    (function() {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth'
+        });
+    })();
+"#;
 
-    page.evaluate(scroll_code, ()).await?;
+    page.execute(scroll_code, vec![]).await?;
 
     wait(1, 2);
     Ok(())
 }
 
-async fn scroll(page: &Page) -> Result<(), CustomError> {
+async fn scroll(page: &WebDriver) -> Result<(), CustomError> {
     let mut x = 0;
 
     while x < 25 {
@@ -95,30 +144,37 @@ async fn scroll(page: &Page) -> Result<(), CustomError> {
 
     Ok(())
 }
-async fn find_next_button(browser: &BrowserConfig) -> Result<ElementHandle, CustomError> {
+async fn find_next_button(browser: &WebDriver) -> Result<WebElement, CustomError> {
     const ID: &str = "span.pagination__quick-link-icon>li-icon[type=chevron-right-icon]";
-
-    let next_button = browser.page.query_selector(ID).await?;
+    const NEXT: &str =
+        "href.pagination__quick-link.pagination__quick-link--next.link-without-hover-visited";
+    let next_button = browser.find(By::Css(ID)).await;
     match next_button {
-        Some(button) => {
-            button.click_builder().click().await?;
+        Ok(button) => {
+            button.click().await?;
             Ok(button)
         }
-        None => {
-            return Err(CustomError::ButtonNotFound(
-                "Next button is not found".to_string(),
-            ))
-        }
+        Err(_) => match browser.find(By::Css(NEXT)).await {
+            Ok(button) => {
+                button.click().await?;
+                Ok(button)
+            }
+            Err(_) => {
+                return Err(CustomError::ButtonNotFound(
+                    "Next button is not found".to_string(),
+                ))
+            }
+        },
     }
 }
 
-async fn find_list_container(browser: &BrowserConfig) -> Result<ElementHandle, CustomError> {
+async fn find_list_container(browser: &WebDriver) -> Result<WebElement, CustomError> {
     const ID: &str = "ol.ember-view.projects-list-layout__list";
 
-    let list_container = browser.page.query_selector(ID).await?;
+    let list_container = browser.find(By::Css(ID)).await;
     match list_container {
-        Some(container) => Ok(container),
-        None => {
+        Ok(container) => Ok(container),
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Container list is not found".to_string(),
             ))
@@ -126,31 +182,14 @@ async fn find_list_container(browser: &BrowserConfig) -> Result<ElementHandle, C
     }
 }
 
-async fn clear_all(browser: &BrowserConfig) -> Result<(), CustomError> {
-    let clear_all_button = browser
-        .page
-        .query_selector("button.artdeco-button.artdeco-button--muted.artdeco-button--1.artdeco-button--tertiary.ember-view")
-        .await?;
-    match clear_all_button {
-        Some(button) => {
-            button.hover_builder();
-            wait(1, 3);
-            button.click_builder().click().await?;
-            wait(9, 12);
-        }
-        None => (),
-    };
-    Ok(())
-}
-
-async fn open_list_projects(browser: &BrowserConfig) -> Result<(), CustomError> {
+async fn open_list_projects(browser: &WebDriver) -> Result<(), CustomError> {
     const URL: &str = "https://www.linkedin.com/talent/projects";
-    let _projects_page = browser.page.goto_builder(URL).goto().await?;
+    let _projects_page = browser.goto(URL).await?;
     wait(10, 14);
     Ok(())
 }
 
-fn scrap_list(body: &str) -> Result<Vec<Project>, CustomError> {
+fn scrap_list(body: &str, order: &mut u32) -> Result<Vec<Project>, CustomError> {
     let document = Html::parse_document(&body);
     let mut projects = Vec::new();
     let project_selector = Selector::parse("li[data-test-paginated-list-item]").unwrap();
@@ -167,6 +206,7 @@ fn scrap_list(body: &str) -> Result<Vec<Project>, CustomError> {
             .unwrap_or_default()
             .trim()
             .to_string();
+        let name = name.replace("<!---->", "").trim().to_string();
 
         let id = project_element
             .select(&url_selector)
@@ -183,26 +223,18 @@ fn scrap_list(body: &str) -> Result<Vec<Project>, CustomError> {
             Some(_) => true,
             None => false,
         };
-        projects.push(Project { name, id, archived });
+        projects.push(Project {
+            name,
+            id,
+            archived,
+            order: *order,
+        });
+        *order += 1;
     }
-
-    // Print or process the projects
-    for project in &projects {
-        println!("{:?}", project);
-    }
-
-    // Optionally, serialize the projects to JSON and print
     let projects_json = serde_json::to_string_pretty(&projects)?;
     println!("{}", projects_json);
 
     Ok(projects)
-}
-
-#[derive(Debug, Serialize)]
-struct Project {
-    name: String,
-    id: String,
-    archived: bool,
 }
 
 async fn send_urls(

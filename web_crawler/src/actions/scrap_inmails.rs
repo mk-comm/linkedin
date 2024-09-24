@@ -1,6 +1,5 @@
-use crate::actions::start_browser::start_browser;
 use crate::actions::wait::wait;
-use crate::structs::browser::{BrowserConfig, BrowserInit};
+use crate::structs::browser::BrowserInit;
 use crate::structs::entry::EntryRecruiter;
 use crate::structs::error::CustomError;
 use crate::structs::fullname::FullName;
@@ -9,7 +8,11 @@ use scraper::{Html, Selector};
 use serde_json::json;
 use std::collections::HashMap;
 
-pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
+use crate::actions::init_browser::{init_browser, send_screenshot, session_cookie_is_valid};
+use crate::actions::scrap_recruiter_search::check_recruiter_cookie;
+use thirtyfour::{By, WebDriver};
+
+pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<String, CustomError> {
     let recruiter = entry.recruiter;
     let api_key = entry.user_id.clone();
     let stage_interested = entry.recruiter_stage_interested.clone();
@@ -29,47 +32,103 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         fidcookie: entry.cookies.fidcookie,
         jsessionid: entry.cookies.jsessionid,
     };
+    let browser = init_browser(&browser_info).await?;
+    //wait(10000, 10000);
+    let result = scrap(
+        &browser,
+        api_key.as_str(),
+        recruiter,
+        stage_interested,
+        stage_not_interested,
+    )
+    .await;
+    match result {
+        Ok(text) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                text.as_str(),
+                &api_key,
+                "Scrap Inmails",
+            )
+            .await?;
+            browser.quit().await?;
+            return Ok(text);
+        }
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                error.to_string().as_str(),
+                &api_key,
+                "Send Inmails",
+            )
+            .await?;
+            return Err(error);
+        }
+    }
+}
+async fn scrap(
+    browser: &WebDriver,
+    api_key: &str,
+    recruiter: bool,
+    stage_interested: String,
+    stage_not_interested: String,
+) -> Result<String, CustomError> {
+    const INMAIL_URL:&str = "https://www.linkedin.com/talent/inbox/0/main/id/2-MTBiZjJhZTMtNTNlNi00NDRjLddWJmZGQtYTg5MTk4ZjA5MWExXzAxMg==";
+    let go_to = browser.goto(INMAIL_URL).await;
 
-    let browser = start_browser(browser_info).await?;
-    wait(7, 10); // random delay
-                 // go to candidate page
-    browser
-        .page
-        .goto_builder("https://www.linkedin.com/talent/inbox/0/main/id/2-MTBiZjJhZTMtNTNlNi00NDRjLddWJmZGQtYTg5MTk4ZjA5MWExXzAxMg==")
-        .goto()
-        .await?;
+    let mut x = 0;
+    if go_to.is_err() {
+        while x <= 3 {
+            wait(3, 6);
+            let build = browser.goto(INMAIL_URL).await;
+            if build.is_ok() {
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(3, 6);
+                return Err(CustomError::ButtonNotFound(
+                    "Candidate page is not loading/Inmail_regular".to_string(),
+                ));
+            }
+            x += 1;
+        }
+        wait(1, 3);
+    }
+    wait(15, 17);
 
-    wait(7, 12);
-
-    let nav_bar = browser
-        .page
-        .query_selector("div[class='global-nav__right']")
-        .await?;
-
-    match &nav_bar {
-        Some(_) => {}
-        None => {
-            wait(1, 3);
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            return Err(CustomError::RecruiterSessionCookieExpired); // if error when session cookie expired
+    let cookie = session_cookie_is_valid(&browser).await?;
+    if !cookie {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
+        if !cookie_second_try {
+            return Err(CustomError::SessionCookieExpired);
         }
     }
 
-    let conversation_list = match browser
-        .page
-        .query_selector("div.thread-list.visible")
-        .await?
-    {
-        Some(conversation_list) => conversation_list,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?; // close browser
+    let recruiter_session_cookie_check = check_recruiter_cookie(&browser).await?;
+    if !recruiter_session_cookie_check {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = check_recruiter_cookie(&browser).await?;
+        if !cookie_second_try {
+            return Err(CustomError::RecruiterSessionCookieExpired);
+        }
+    }
+    const CONVERSATION_LIST: &str = "div.thread-list.visible";
+    let conversation_list = browser.find(By::Css(CONVERSATION_LIST)).await;
+
+    let conversation_list = match conversation_list {
+        Ok(conversation_list) => conversation_list,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Conversation list inmails not found".to_string(),
             ));
-        } // if search input is not found, means page was not loaded and sessuion cookie is not valid
+        }
     };
 
     wait(3, 5);
@@ -90,13 +149,11 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
                 .iter()
                 .find_map(|(_, conv)| if !conv.unread { Some(conv) } else { None })
         {
-            if let Ok(Some(conv_element)) = conversation_list
-                .query_selector(&format!("a[id='{}']", conversation.id))
+            if let Ok(conv_element) = conversation_list
+                .find(By::Css(&format!("a[id='{}']", conversation.id)))
                 .await
             {
-                conv_element.hover_builder();
-                wait(1, 3);
-                conv_element.click_builder().click().await?;
+                conv_element.click().await?;
                 wait(5, 9);
                 scrap_stage(&browser, &api_key).await?;
             }
@@ -109,16 +166,14 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         wait(3, 7);
 
         match conversation_list
-            .query_selector(format!("a[id='{}']", conversation.id).as_str())
-            .await?
+            .find(By::Css(&format!("a[id='{}']", conversation.id)))
+            .await
         {
-            Some(conversation) => {
-                conversation.hover_builder();
-                wait(1, 3);
-                conversation.click_builder().click().await?;
+            Ok(conversation) => {
+                conversation.click().await?;
                 wait(5, 12);
             }
-            None => {
+            Err(_) => {
                 return Err(CustomError::ButtonNotFound(
                     "Conversation not found".to_string(),
                 ))
@@ -127,25 +182,25 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
            //
         if conversation.unread {
             match conversation_list
-                .query_selector(format!("a[id='{}']", conversation.id).as_str())
-                .await?
+                .find(By::Css(&format!("a[id='{}']", conversation.id)))
+                .await
             {
-                Some(conversation) => {
-                    conversation.hover_builder();
-                    wait(1, 3);
-                    conversation.click_builder().click().await?;
+                Ok(conversation) => {
+                    conversation.click().await?;
                     wait(5, 12);
 
-                    let conversation_id = "div[class='_card-container_z8knzq _active_z8knzq']";
-                    let conversation_block =
-                        browser.page.query_selector(conversation_id).await?.unwrap();
-                    let unread_button = conversation_block.query_selector
-            ("button[class='ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _flat_1aegh9 a11y-conversation-button']")
-        .await?.unwrap();
-                    unread_button.click_builder().click().await?;
-                    // // ("button unread was pressed");
+                    const CONVERSATION_ID: &str =
+                        "div[class='_card-container_z8knzq _active_z8knzq']";
+                    let conversation_block = browser
+                        .find(By::Css(&format!("a[id='{}']", CONVERSATION_ID)))
+                        .await?;
+                    const UNREAD_BUTTON:&str ="button[class='ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _flat_1aegh9 a11y-conversation-button']";
+                    let unread_button = conversation_block
+                        .find(By::Css(&format!("a[id='{}']", CONVERSATION_ID)))
+                        .await?;
+                    unread_button.click().await?;
                 }
-                None => {
+                Err(_) => {
                     return Err(CustomError::ButtonNotFound(
                         "Conversation not found".to_string(),
                     ))
@@ -155,16 +210,10 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
         let _fragment = true;
         //// ("unread {}", conversation.unread);
         // needs to be fixed for broken characters
-        let messages_container = match browser
-            .page
-            .query_selector("div._messages-container_1j60am._divider_lvf5de")
-            .await?
-        {
-            Some(conversation_list) => conversation_list,
-            None => {
-                wait(1, 5); // random delay
-                browser.page.close(Some(false)).await?;
-                browser.browser.close().await?; // close browser
+        const MESSAGE_CONTAINER: &str = "div._messages-container_1j60am._divider_lvf5de";
+        let messages_container = match browser.find(By::Css(MESSAGE_CONTAINER)).await {
+            Ok(conversation_list) => conversation_list,
+            Err(_) => {
                 return Err(CustomError::ButtonNotFound(
                     "Messaging container inmails not found".to_string(),
                 ));
@@ -196,11 +245,8 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<(), CustomError> {
             }
         }
     }
-    wait(3, 7); // random delay
 
-    browser.page.close(Some(false)).await?;
-    browser.browser.close().await?;
-    Ok(())
+    Ok("Inmail Messages were scraped".to_string())
 }
 struct InmailMessage {
     message_text: String,
@@ -218,9 +264,10 @@ fn scrap_message(
     let message_id_selector = Selector::parse("._message-list-item_1gj1uc").unwrap();
     let sender_name_selector = Selector::parse("._headingText_e3b563").unwrap();
     let timestamp_selector = Selector::parse("time").unwrap();
+    //let message_text_selector =
+    //Selector::parse("._message-data-wrapper_1gj1uc div div div").unwrap();
     let message_text_selector =
-        Selector::parse("._message-data-wrapper_1gj1uc div div div").unwrap();
-
+        Selector::parse("article[class=messaging-attributed-text-renderer]").unwrap();
     let mut full_text = String::new();
     let mut messages: Vec<InmailMessage> = Vec::new();
     for message_element in document.select(&message_id_selector) {
@@ -298,64 +345,64 @@ async fn create_message(message: &InmailMessage) -> Result<(), CustomError> {
     //// ("payload: {:?}", payload);
     let res = client
         .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive_inmail")
+        //.post("https://webhook.site/56d11347-8dd9-4a06-b365-4791b9faf62b")
         .json(&payload)
         .send()
         .await?;
-    let _json_response: serde_json::Value = res.json().await?; //here is lays the response
+    //let _json_response: serde_json::Value = res.json().await?; //here is lays the response
     Ok(())
 }
-async fn change_stage(stage: &str, browser: &BrowserConfig) -> Result<(), CustomError> {
+async fn change_stage(stage: &str, browser: &WebDriver) -> Result<(), CustomError> {
     wait(5, 6);
     // ("changing stage: {:?}", stage);
-    let button_dropdown = browser.page.query_selector("div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-right.ember-view").await?;
-    if button_dropdown.is_some() {
-        button_dropdown.unwrap().click_builder().click().await?;
+    const BUTTON_DROPDOWN: &str = "div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-right.ember-view";
+    let button_dropdown = browser.find(By::Css(BUTTON_DROPDOWN)).await;
+    if button_dropdown.is_ok() {
+        button_dropdown.unwrap().click().await?;
         wait(2, 3);
+        const DROPDOWN_LIST: &str = "div.artdeco-dropdown__item";
 
-        let dropdown_list = browser
-            .page
-            .query_selector_all("div.artdeco-dropdown__item")
-            .await?;
+        let dropdown_list = browser.find(By::Css(DROPDOWN_LIST)).await;
 
         for item in dropdown_list {
-            let span_item = item
-                .query_selector("span[data-live-test-change-stage-list-item='true']")
-                .await?;
+            const SPAN_ITEMS: &str = "span[data-live-test-change-stage-list-item='true']";
+            let span_item = item.find(By::Css(SPAN_ITEMS)).await;
+
             match span_item {
-                Some(span) => {
-                    let text = span.inner_text().await?;
+                Ok(span) => {
+                    let text = span.text().await?;
                     if text.trim() == stage.trim() {
                         // ("stage was found");
-                        item.click_builder().click().await?;
+                        item.click().await?;
                         // ("stage was clicked");
                         break;
                     }
                 }
-                None => (), // ("stage was not found"),
+                Err(_) => (), // ("stage was not found"),
             }
         }
     }
     Ok(())
 }
 
-async fn scrap_stage(browser: &BrowserConfig, api_key: &str) -> Result<(), CustomError> {
-    let button_dropdown = browser.page.query_selector("div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-right.ember-view").await?;
-    if button_dropdown.is_some() {
-        button_dropdown.unwrap().click_builder().click().await?;
+async fn scrap_stage(browser: &WebDriver, api_key: &str) -> Result<(), CustomError> {
+    const BUTTON_DROPDOWN: &str = "div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-right.ember-view";
+
+    let button_dropdown = browser.find(By::Css(BUTTON_DROPDOWN)).await;
+    if button_dropdown.is_ok() {
+        button_dropdown.unwrap().click().await?;
         wait(2, 3);
 
-        let dropdown_list = browser
-            .page
-            .query_selector_all("div.artdeco-dropdown__item")
-            .await?;
+        const DROPDOWN_LIST: &str = "div.artdeco-dropdown__item";
+
+        let dropdown_list = browser.find(By::Css(DROPDOWN_LIST)).await;
 
         for item in dropdown_list {
-            let span_item = item
-                .query_selector("span[data-live-test-change-stage-list-item='true']")
-                .await?;
+            const SPAN_ITEMS: &str = "span[data-live-test-change-stage-list-item='true']";
+            let span_item = item.find(By::Css(SPAN_ITEMS)).await;
             match span_item {
-                Some(span) => {
-                    let text = span.inner_text().await?;
+                Ok(span) => {
+                    let text = span.text().await?;
                     let client = reqwest::Client::new();
                     let payload = json!({
                                     "api_key": api_key,
@@ -369,7 +416,7 @@ async fn scrap_stage(browser: &BrowserConfig, api_key: &str) -> Result<(), Custo
                         .await
                         .unwrap();
                 }
-                None => (),
+                Err(_) => (),
             }
         }
     }

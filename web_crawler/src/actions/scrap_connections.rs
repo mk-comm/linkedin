@@ -1,5 +1,6 @@
-use crate::actions::start_browser::start_browser;
+use crate::actions::init_browser::{init_browser, send_screenshot, session_cookie_is_valid};
 use crate::actions::wait::wait;
+
 use crate::structs::browser::BrowserInit;
 use crate::structs::connection::Connection;
 use crate::structs::entry::EntryScrapConnection;
@@ -7,9 +8,9 @@ use crate::structs::error::CustomError;
 use crate::structs::fullname::FullName;
 use scraper::{Html, Selector};
 use serde_json::json;
+use thirtyfour::{By, WebDriver};
 
-use crate::actions::start_browser::send_screenshot;
-pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), CustomError> {
+pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<String, CustomError> {
     let api_key = entry.user_id.clone();
 
     let browser_info = BrowserInit {
@@ -26,81 +27,83 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
         fidcookie: entry.cookies.fidcookie,
         jsessionid: entry.cookies.jsessionid,
     };
-    let user_id = browser_info.user_id.clone();
-    let browser = start_browser(browser_info).await?;
-
-    wait(7, 12);
-
-    let my_network_button = browser
-        .page
-        .query_selector("a[href='https://www.linkedin.com/mynetwork/?']")
-        .await?;
-
-    match my_network_button {
-        Some(button) => {
-            button.hover_builder();
-            wait(1, 3);
-            button.click_builder().click().await?;
-            wait(1, 3);
-        }
-        None => {
-            let screenshot = browser.page.screenshot_builder().screenshot().await?;
-
+    let browser = init_browser(&browser_info).await?;
+    let result = scrap(&browser, &api_key).await;
+    match result {
+        Ok(text) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
             send_screenshot(
                 screenshot,
-                &user_id,
-                "Network button is missing",
-                "Scrap connection",
+                &browser_info.user_id,
+                text.as_str(),
+                &browser_info.user_id,
+                "Scrap connections",
             )
             .await?;
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?; // close browser
-            return Err(CustomError::ButtonNotFound(
-                "Network button is missing".to_string(),
-            ));
+
+            return Ok(text);
+        }
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                error.to_string().as_str(),
+                &browser_info.user_id,
+                "Scrap connections",
+            )
+            .await?;
+            return Err(error);
         }
     }
+}
+pub async fn scrap(browser: &WebDriver, api_key: &str) -> Result<String, CustomError> {
+    const NETWORK_TAB: &str = "https://www.linkedin.com/mynetwork/invite-connect/connections/";
+    let go_to = browser.goto(NETWORK_TAB).await;
 
-    wait(12, 17);
-
-    const URL: &str = "https://www.linkedin.com/mynetwork/invite-connect/connections/";
-
-    let button = browser
-        .page
-        .query_selector("div.mn-community-summary__entity-info")
-        .await?;
-    match button {
-        Some(button) => {
-            button.hover_builder();
-            wait(1, 3);
-            button.click_builder().click().await?;
-            wait(8, 12);
-        }
-        None => {
-            let build = browser.page.goto_builder(URL).goto().await;
-            match build {
-                Ok(_) => (),
-                Err(_) => {
-                    return Err(CustomError::ButtonNotFound(
-                        "Connection page is not opening".to_string(),
-                    ))
-                }
+    let mut x = 0;
+    if go_to.is_err() {
+        while x <= 3 {
+            wait(3, 6);
+            let build = browser.goto(NETWORK_TAB).await;
+            if build.is_ok() {
+                break;
+            } else if build.is_err() && x == 3 {
+                wait(3, 6);
+                return Err(CustomError::ButtonNotFound(
+                    "Network page is not loading/Scrap connections".to_string(),
+                ));
             }
-            wait(11, 16);
-            /*
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?; // close browser
-            return Err(CustomError::ButtonNotFound(
-                "Connections button is missing".to_string(),
-            ));
-            */
+            x += 1;
+        }
+        wait(1, 3);
+    }
+    wait(12, 17);
+    let cookie = session_cookie_is_valid(&browser).await?;
+    if !cookie {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
+        if !cookie_second_try {
+            wait(1, 3);
+            return Err(CustomError::SessionCookieExpired);
         }
     }
+    const MAIN_FRAME: &str = "div.scaffold-finite-scroll__content";
+    let main_frame = browser.find(By::Css(MAIN_FRAME)).await;
+    let main_frame = match main_frame {
+        Ok(list) => list,
+        Err(_) => {
+            return Err(CustomError::ButtonNotFound(
+                "Project list not found/Change stage".to_string(),
+            ));
+        }
+    };
 
-    let connections = scrap_each_connection(&browser.page.content().await?);
+    let connections = scrap_each_connection(&main_frame.inner_html().await?);
     if connections.len() == 0 {
-        browser.page.close(Some(false)).await?;
-        browser.browser.close().await?; // close browser
         return Err(CustomError::ButtonNotFound(
             "Connections vec is zero, double check".to_string(),
         ));
@@ -118,14 +121,13 @@ pub async fn scrap_connections(entry: EntryScrapConnection) -> Result<(), Custom
         });
         let _res = client
             .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_connections")
+            //.post("https://webhook.site/c7bac898-bab7-4a36-8874-9dbcf72c01f5")
             .json(&payload)
             .send()
             .await;
     }
 
-    browser.page.close(Some(false)).await?;
-    browser.browser.close().await?; // close browser
-    Ok(())
+    Ok("Connections was scraped".to_string())
 }
 
 fn scrap_each_connection(html: &str) -> Vec<Connection> {

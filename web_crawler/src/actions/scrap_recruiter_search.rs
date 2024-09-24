@@ -5,6 +5,9 @@ use crate::structs::browser::BrowserInit;
 use crate::structs::entry::EntryScrapSearchRecruiter;
 use crate::structs::error::CustomError;
 use reqwest;
+use tracing_subscriber::fmt::format;
+use std::fs::File;
+use std::io::Write;
 use scraper::{Html, Selector};
 use serde_json::json;
 use thirtyfour::By;
@@ -106,6 +109,8 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     let mut pages_number = 0;
     let mut pages_left = true;
     let mut number = entry.urls_scraped;
+    let zoom_script = "document.body.style.zoom = '10.0%';";
+    browser.execute(&zoom_script, vec![]).await?;
     while pages_left {
         pages_number += 1;
         let page_scraped = format!("Started scraping page {}", pages_number);
@@ -132,10 +137,36 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         let search_container_inside = search_container_inside.unwrap();
         scroll(&browser).await?;
         wait(5, 7);
-        let _scrap = scrap(
+         let html = search_container_inside.inner_html().await?;
+        let mut file = File::create(format!("page{}.txt",pages_number)).unwrap();
+        file.write_all(html.as_bytes()).unwrap();
+        
+        let scrap = scrap(
             search_container_inside.inner_html().await?.as_str(),
             &mut url_list,
         );
+                match scrap {
+            Ok(_) => (),
+            Err(error) => {
+let screenshot = browser.screenshot_as_png().await?;
+        send_screenshot(
+            screenshot,
+            &user_id,
+            "Error scraping",
+            "scrap recruiter search",
+        )
+        .await?;
+                return Err(error)},
+        };
+        
+        let screenshot = browser.screenshot_as_png().await?;
+        send_screenshot(
+            screenshot,
+            &user_id,
+            "URL SENT",
+            "Scrap recruiter search",
+        )
+        .await?;
         let result = send_urls(
             url_list,
             &entry.result_url,
@@ -185,12 +216,10 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                     wait(40, 45);
                 } else {
                     println!("next page is empty");
-
                     let _ = send_search_status("This was the last page", ai_search).await;
                     pages_left = false;
                 }
-                println!("next page not found");
-                //break;
+                
             }
         }
     }
@@ -237,7 +266,6 @@ async fn move_scroll(page: &WebDriver) -> Result<(), CustomError> {
         window.scrollBy(0, scrollDistance);
     "#;
     let scrolling = page.execute(scroll_code, vec![]).await?;
-    println!("scroll: {:?}", scrolling);
 
     wait(1, 2);
     Ok(())

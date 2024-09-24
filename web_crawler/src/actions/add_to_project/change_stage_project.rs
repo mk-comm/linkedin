@@ -1,36 +1,34 @@
 use crate::actions::wait::wait;
-use crate::structs::browser::BrowserConfig;
 use crate::structs::error::CustomError;
 use scraper::{Html, Selector};
 
-pub async fn change_stage(
-    browser: &BrowserConfig,
-    stage: &str,
-    project_name: &str,
-) -> Result<(), CustomError> {
+use thirtyfour::{By, WebDriver};
+pub async fn change_stage(browser: &WebDriver, project_name: &str) -> Result<String, CustomError> {
     let html_project_list = projects_list(&browser).await?;
     let id = find_project_id(&html_project_list, project_name)?;
     find_and_click_element_by_id(&browser, &id).await?;
     wait(7, 9);
+    let current_stage = current_stage(&browser).await?;
+    if current_stage != "uncontacted" {
+        return Ok("Candidate in stage above contacted".to_string());
+    }
     find_and_click_change_stage_dropdown(browser).await?;
     wait(6, 9);
     find_and_click_contacted_stage(browser).await?;
-    return Ok(());
-    let html_stages_list = find_stages_list(&browser).await?;
-    let selector = find_stage_selector(&html_stages_list, &stage)?;
-    find_and_click_stage_by_selector(&browser, &selector).await?;
-    Ok(())
+    //let html_stages_list = find_stages_list(&browser).await?;
+    //let selector = find_stage_selector(&html_stages_list, &stage)?;
+    //find_and_click_stage_by_selector(&browser, &selector).await?;
+
+    Ok("Candidate was moved to the stage".to_string())
 }
 
-async fn projects_list(browser: &BrowserConfig) -> Result<String, CustomError> {
+async fn projects_list(browser: &WebDriver) -> Result<String, CustomError> {
     const LIST: &str = "div[class='topcard-requisitions topcard-condensed__requisitions']";
-    let list = browser.page.query_selector(LIST).await?;
+    let list = browser.find(By::Css(LIST)).await;
+
     let list = match list {
-        Some(list) => list,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(list) => list,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Project list not found/Change stage".to_string(),
             ));
@@ -39,6 +37,23 @@ async fn projects_list(browser: &BrowserConfig) -> Result<String, CustomError> {
     let html = list.inner_html().await?;
 
     Ok(html)
+}
+
+async fn current_stage(browser: &WebDriver) -> Result<String, CustomError> {
+    const STAGE: &str = "p.t-14.t-black--light:has(span.t-black.t-bold) > span.t-black.t-bold";
+    let stage = browser.find(By::Css(STAGE)).await;
+
+    let stage = match stage {
+        Ok(list) => list,
+        Err(_) => {
+            return Err(CustomError::ButtonNotFound(
+                "Current stage is not found/Change stage".to_string(),
+            ));
+        }
+    };
+    let stage = stage.text().await?;
+    println!("CURRENT STAGE {}", stage);
+    Ok(stage)
 }
 
 fn find_project_id(html_content: &str, project_name: &str) -> Result<String, CustomError> {
@@ -71,59 +86,50 @@ fn find_project_id(html_content: &str, project_name: &str) -> Result<String, Cus
 }
 
 async fn find_and_click_element_by_id(
-    browser: &BrowserConfig,
+    browser: &WebDriver,
     element_id: &str,
 ) -> Result<(), CustomError> {
-    let link = browser
-        .page
-        .query_selector(&format!("#{}", element_id))
-        .await?;
+    let link = browser.find(By::Css(&format!("#{}", element_id))).await;
+
     let link = match link {
-        Some(link) => link,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(link) => link,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Can't find link based on url/Change stage".to_string(),
             ));
         }
     };
 
-    link.click_builder().click().await?;
+    link.click().await?;
 
     Ok(())
 }
 
-async fn find_and_click_change_stage_dropdown(browser: &BrowserConfig) -> Result<(), CustomError> {
+async fn find_and_click_change_stage_dropdown(browser: &WebDriver) -> Result<(), CustomError> {
     const DROPDOWN: &str = "button[id='requisition-actions_move-to-pipeline']";
-    let dropdown = browser.page.query_selector(DROPDOWN).await?;
+    let dropdown = browser.find(By::Css(DROPDOWN)).await;
+
     let dropdown = match dropdown {
-        Some(dropdown) => dropdown,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(dropdown) => dropdown,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Can't find dropdown/Change stage".to_string(),
             ));
         }
     };
 
-    dropdown.click_builder().click().await?;
+    dropdown.click().await?;
 
     Ok(())
 }
 
-async fn find_stages_list(browser: &BrowserConfig) -> Result<String, CustomError> {
+async fn _find_stages_list(browser: &WebDriver) -> Result<String, CustomError> {
     const LIST: &str = "ol[class='requisition-pipeline-activity__stages']";
-    let list = browser.page.query_selector(LIST).await?;
+    let list = browser.find(By::Css(LIST)).await;
+
     let list = match list {
-        Some(list) => list,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(list) => list,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Can't find dropdown/Change stage".to_string(),
             ));
@@ -135,7 +141,7 @@ async fn find_stages_list(browser: &BrowserConfig) -> Result<String, CustomError
     Ok(html)
 }
 
-fn find_stage_selector(html_content: &str, stage_name: &str) -> Result<String, CustomError> {
+fn _find_stage_selector(html_content: &str, stage_name: &str) -> Result<String, CustomError> {
     println!("html_content: {}", html_content);
     let document = Html::parse_document(html_content);
     let stage_selector =
@@ -164,57 +170,41 @@ fn find_stage_selector(html_content: &str, stage_name: &str) -> Result<String, C
     ));
 }
 
-async fn find_and_click_stage_by_selector(
-    browser: &BrowserConfig,
+async fn _find_and_click_stage_by_selector(
+    browser: &WebDriver,
     element_id: &str,
 ) -> Result<(), CustomError> {
-    let link = browser
-        .page
-        .query_selector(&format!("#{}", element_id))
-        .await?;
+    let link = browser.find(By::Css(&format!("#{}", element_id))).await;
+
     let link = match link {
-        Some(link) => link,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(link) => link,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Can't find stage based on selector/Change stage".to_string(),
             ));
         }
     };
 
-    link.click_builder().click().await?;
+    link.click().await?;
 
     Ok(())
 }
 
-async fn find_and_click_contacted_stage(browser: &BrowserConfig) -> Result<(), CustomError> {
+async fn find_and_click_contacted_stage(browser: &WebDriver) -> Result<(), CustomError> {
     const DROPDOWN: &str = "div[class=artdeco-dropdown__content-inner] > ol > li:nth-of-type(2)";
-    let dropdown = browser.page.query_selector(DROPDOWN).await?;
+    let dropdown = browser.find(By::Css(DROPDOWN)).await;
     let dropdown = match dropdown {
-        Some(dropdown) => dropdown,
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+        Ok(dropdown) => dropdown,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Can't find contacted dropdown/Change stage".to_string(),
             ));
         }
     };
+    //const ANOTHER_DROPDOWN: &str = "div[class=artdeco-dropdown__content-inner]";
+    //let another_dropdown = browser.find(By::Css(ANOTHER_DROPDOWN)).await;
 
-    let dropdown1 = browser
-        .page
-        .query_selector("div[class=artdeco-dropdown__content-inner]")
-        .await?;
-    println!("dropdown: {:#?}", dropdown1.unwrap().inner_html().await?);
-
-    println!("dropdown: {:#?}", dropdown.inner_html().await?);
-    dropdown.hover_builder();
-
-    dropdown.click_builder().click().await?;
-    println!("Clicked contacted stage");
+    dropdown.click().await?;
 
     Ok(())
 }

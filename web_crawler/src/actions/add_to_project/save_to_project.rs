@@ -1,28 +1,64 @@
-use crate::actions::change_stage_project::change_stage;
-use crate::actions::start_browser::start_browser;
+use crate::actions::add_to_project::change_stage_project::change_stage;
 
-use crate::actions::save_each_to_project::save_each;
+use crate::actions::add_to_project::save_each_to_project::save_each;
 use crate::actions::wait::wait;
-use crate::structs::browser::{BrowserConfig, BrowserInit};
+use crate::structs::browser::BrowserInit;
+use crate::structs::entry::CandidateUrl;
 use crate::structs::entry::EntryAddProfilesToProjects;
 use crate::structs::error::CustomError;
 use serde_json::json;
+use thirtyfour::{By, WebDriver};
 use tracing::{error, info};
+
+use crate::actions::init_browser::{init_browser, send_screenshot};
 
 pub async fn save(entry: EntryAddProfilesToProjects) -> Result<(), CustomError> {
     let target_url = entry.target_url.clone();
+    let user_id = entry.user_id.clone();
     let candidates = entry.candidates.clone();
     let browser = init(entry).await?;
+    let result = init_save(candidates, &browser, &target_url).await;
+    match result {
+        Ok(text) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Candidate added to the project",
+                &user_id,
+                "Save to project",
+            )
+            .await?;
+            browser.quit().await?;
+            return Ok(text);
+        }
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                error.to_string().as_str(),
+                &user_id,
+                "Save to project",
+            )
+            .await?;
+            return Err(error);
+        }
+    }
+}
+
+pub async fn init_save(
+    candidates: Vec<CandidateUrl>,
+    browser: &WebDriver,
+    target_url: &str,
+) -> Result<(), CustomError> {
     for candidate in candidates {
         let candidate_linkedin = candidate.url;
         save_each(&browser, &candidate_linkedin, candidate.project.as_str()).await?;
+        wait(3, 5);
         if candidate.stage != "1. uncontacted" {
-            change_stage(
-                &browser,
-                candidate.stage.as_str(),
-                candidate.project.as_str(),
-            )
-            .await?;
+            change_stage(&browser, candidate.project.as_str()).await?;
         }
 
         send_urls(&target_url, candidate.id.as_str()).await?;
@@ -31,7 +67,7 @@ pub async fn save(entry: EntryAddProfilesToProjects) -> Result<(), CustomError> 
     Ok(())
 }
 
-async fn init(entry: EntryAddProfilesToProjects) -> Result<BrowserConfig, CustomError> {
+async fn init(entry: EntryAddProfilesToProjects) -> Result<WebDriver, CustomError> {
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -47,7 +83,7 @@ async fn init(entry: EntryAddProfilesToProjects) -> Result<BrowserConfig, Custom
         jsessionid: entry.cookies.jsessionid,
     };
 
-    let browser = start_browser(browser_info).await?;
+    let browser = init_browser(&browser_info).await?;
     wait(7, 10); // random delay
     Ok(browser)
 }
