@@ -17,7 +17,7 @@ pub async fn save(entry: EntryAddProfilesToProjects) -> Result<(), CustomError> 
     let user_id = entry.user_id.clone();
     let candidates = entry.candidates.clone();
     let browser = init(entry).await?;
-    let result = init_save(candidates, &browser, &target_url).await;
+    let result = init_save(candidates, &browser, &target_url, &user_id).await;
     match result {
         Ok(text) => {
             let screenshot = browser.screenshot_as_png().await?;
@@ -52,13 +52,43 @@ pub async fn init_save(
     candidates: Vec<CandidateUrl>,
     browser: &WebDriver,
     target_url: &str,
+    user_id: &str,
 ) -> Result<(), CustomError> {
     for candidate in candidates {
         let candidate_linkedin = candidate.url;
-        save_each(&browser, &candidate_linkedin, candidate.project.as_str()).await?;
+        let result = save_each(&browser, &candidate_linkedin, candidate.project.as_str()).await;
+        match result {
+            Ok(_) => (),
+            Err(err) => {
+                let screenshot = browser.screenshot_as_png().await?;
+                send_screenshot(
+                    screenshot,
+                    &user_id,
+                    &err.to_string(),
+                    &candidate_linkedin,
+                    "Save to project",
+                )
+                .await?;
+            }
+        }
+
         wait(3, 5);
         if candidate.stage != "1. uncontacted" {
-            change_stage(&browser, candidate.project.as_str()).await?;
+            let result = change_stage(&browser, candidate.project.as_str()).await;
+            match result {
+                Ok(_) => (),
+                Err(err) => {
+                    let screenshot = browser.screenshot_as_png().await?;
+                    send_screenshot(
+                        screenshot,
+                        &user_id,
+                        &err.to_string(),
+                        &candidate_linkedin,
+                        "Save to project",
+                    )
+                    .await?;
+                }
+            }
         }
 
         send_urls(&target_url, candidate.id.as_str()).await?;

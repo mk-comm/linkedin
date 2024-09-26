@@ -30,7 +30,7 @@ pub async fn scrap_projects(entry: EntryScrapProjects) -> Result<String, CustomE
                 &user_id,
                 text.as_str(),
                 &user_id,
-                "Send Inmails",
+                "Scrap projects",
             )
             .await?;
             browser.quit().await?;
@@ -72,6 +72,19 @@ async fn run(browser: &WebDriver, target_url: &str, user_id: &str) -> Result<Str
         scroll(&browser).await?;
         let container = find_list_container(&browser).await?;
         let projects = scrap_list(container.inner_html().await?.as_str(), &mut order)?;
+        for project in &projects {
+            if project.name.is_empty() {
+                let screenshot = browser.screenshot_as_png().await?;
+                send_screenshot(
+                    screenshot,
+                    &user_id,
+                    "Each page",
+                    &user_id,
+                    "Scrap projects",
+                )
+                .await?;
+            }
+        }
         send_urls(projects, &target_url, &user_id).await?;
         let next_button = find_next_button(&browser).await;
         if next_button.is_err() {

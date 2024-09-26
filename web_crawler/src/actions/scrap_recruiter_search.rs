@@ -5,7 +5,6 @@ use crate::structs::browser::BrowserInit;
 use crate::structs::entry::EntryScrapSearchRecruiter;
 use crate::structs::error::CustomError;
 use reqwest;
-use tracing_subscriber::fmt::format;
 use std::fs::File;
 use std::io::Write;
 use scraper::{Html, Selector};
@@ -138,8 +137,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         scroll(&browser).await?;
         wait(5, 7);
          let html = search_container_inside.inner_html().await?;
-        let mut file = File::create(format!("page{}.txt",pages_number)).unwrap();
-        file.write_all(html.as_bytes()).unwrap();
+        
         
         let scrap = scrap(
             search_container_inside.inner_html().await?.as_str(),
@@ -167,6 +165,10 @@ let screenshot = browser.screenshot_as_png().await?;
             "Scrap recruiter search",
         )
         .await?;
+        if url_list.len() < 25 {
+        let mut file = File::create(format!("ai_search{} page{}.txt",ai_search,pages_number)).unwrap();
+        file.write_all(html.as_bytes()).unwrap();
+        };
         let result = send_urls(
             url_list,
             &entry.result_url,
@@ -213,7 +215,7 @@ let screenshot = browser.screenshot_as_png().await?;
 
                 if next_page.is_ok() {
                     next_page.unwrap().click().await?;
-                    wait(40, 45);
+                    wait(60, 65);
                 } else {
                     println!("next page is empty");
                     let _ = send_search_status("This was the last page", ai_search).await;
@@ -232,21 +234,25 @@ let screenshot = browser.screenshot_as_png().await?;
 }
 
 pub async fn check_recruiter_cookie(page: &WebDriver) -> Result<bool, CustomError> {
-    let sign_in_text = page
+    const SING_IN_TEXT_HEADER:&str = "h1.header__content__heading";
+    let sign_in_text_header = page
         .find(By::Css(
-            "input[data-tracking-control-name='seo-authwall-base_join-form-email-or-phone']",
+            SING_IN_TEXT_HEADER
         ))
         .await;
-    match sign_in_text {
-        Ok(sign_in_text) => {
-            if sign_in_text.text().await?.trim() == "Sign in to LinkedIn Talent Solutions" {
-                Ok(false)
-            } else {
-                Ok(true)
-            }
-        }
-        Err(_) => Ok(true),
-    }
+     if sign_in_text_header.is_ok() {
+if sign_in_text_header.unwrap().text().await?.trim() == "Sign in to LinkedIn Talent Solutions" {
+    return Ok(false)
+} else {
+    Ok(true)
+}
+} else {
+    Ok(true)
+}
+     
+  
+
+
 }
 
 async fn scroll(page: &WebDriver) -> Result<(), CustomError> {

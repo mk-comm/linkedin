@@ -108,10 +108,38 @@ pub async fn inmail(
         ));
     }
     let entity_urn = find_entity_urn(&main_container.unwrap().inner_html().await?);
+    println!("entity_urn {:?}", entity_urn);
+    const MAIN_BOX: &str = "main.scaffold-layout__main";
+    let main_box = browser.find(By::Css(MAIN_BOX)).await?;
 
+    const MORE_BUTTON: &str =
+        "button.artdeco-dropdown__trigger.artdeco-dropdown__trigger--placement-bottom.ember-view.pvs-profile-actions__action.artdeco-button.artdeco-button--secondary.artdeco-button--muted.artdeco-button--2";
+    const MORE_BUTTON_ANOTHER: &str = "div.artdeco-dropdown.artdeco-dropdown--placement-bottom.artdeco-dropdown--justification-left.ember-view:has(>button[aria-label='More actions'].artdeco-dropdown__trigger):nth-child(3)";
+    let more_option = main_box.find(By::Css(MORE_BUTTON)).await;
+    let more_option_another = main_box.find(By::Css(MORE_BUTTON_ANOTHER)).await;
+    let more_option = match more_option {
+        Ok(option) => option,
+        Err(_s) => match more_option_another {
+            Ok(option) => option,
+            Err(_s) => {
+                return Err(CustomError::ButtonNotFound(
+                    "More button not found".to_string(),
+                ));
+            }
+        },
+    };
+    match more_option.click().await {
+        Ok(_) => (),
+        Err(_) => {
+            return Err(CustomError::ButtonNotFound(
+                "More button is not clickable".to_string(),
+            ));
+        }
+    };
+    wait(2, 3);
     // ("entity_urn: {:?}", entity_urn);
     const VIEW_IN_RECRUITER: &str = "button[class='artdeco-button artdeco-button--2 artdeco-button--secondary ember-view pvs-profile-actions__action']";
-    const VIEW_IN_RECRUITER_DROPDOWN: &str = "div.artdeco-dropdown__item.ember-view.full-width.display-flex.align-items-center[aria-label*='profile in Recruiter']";
+    const VIEW_IN_RECRUITER_DROPDOWN: &str = "(//*[contains(@class, 'artdeco-dropdown__item') and contains(@class, 'ember-view') and contains(@class, 'full-width') and contains(@class, 'display-flex') and contains(@class, 'align-items-center') and contains(@aria-label, 'profile in Recruiter')])[2]";
     if entity_urn.is_some() {
         let url = format!(
             "https://www.linkedin.com/talent/profile/{}?trk=FLAGSHIP_VIEW_IN_RECRUITER",
@@ -138,8 +166,10 @@ pub async fn inmail(
     } else {
         let view_in_recruiter_button = browser.find(By::Css(VIEW_IN_RECRUITER)).await;
         match view_in_recruiter_button {
-            Ok(button) => button.click().await?,
-            Err(_) => match browser.find(By::Css(VIEW_IN_RECRUITER_DROPDOWN)).await {
+            Ok(button) => {
+                button.click().await?;
+            }
+            Err(_) => match browser.find(By::XPath(VIEW_IN_RECRUITER_DROPDOWN)).await {
                 Ok(button) => button.click().await?,
                 Err(_e) => {
                     return Err(CustomError::ButtonNotFound(
@@ -165,6 +195,13 @@ pub async fn inmail(
 
     wait(2, 4);
     const SEND_BUTTON: &str = "button[class='artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view profile-item-actions__item']";
+    const DISABLED_BUTTON:&str = "button.artdeco-button.artdeco-button--circle.artdeco-button--muted.artdeco-button--2.artdeco-button--tertiary.ember-view.profile-item-actions__item:disabled";
+
+    let disabled_button = browser.find(By::Css(DISABLED_BUTTON)).await;
+    if disabled_button.is_ok() {
+        return Ok("Sending Inmails is disabled for this account".to_string());
+    };
+
     let send_button = browser.find(By::Css(SEND_BUTTON)).await;
 
     match send_button {
@@ -227,7 +264,6 @@ pub async fn inmail(
             ));
         }
     };
-
     const FIRST_BUTTON: &str =
         "button[class='artdeco-button artdeco-button--2 artdeco-button--primary ember-view']";
     const SECOND_BUTTON: &str =
@@ -267,17 +303,34 @@ fn find_entity_urn(html: &str) -> Option<String> {
     for link in document.select(&link_selector) {
         let href = link.value().attr("href").unwrap_or_default();
         if href.contains("profileUrn=") {
+            // First attempt: Split on "?profileUrn=urn%3Ali%3Afsd_profile%3A"
             let parts: Vec<&str> = href
                 .split("?profileUrn=urn%3Ali%3Afsd_profile%3A")
                 .collect();
             if parts.len() > 1 {
-                entity_urn = parts[1].split("&").collect::<Vec<&str>>()[0].to_string();
+                entity_urn = parts[1].split('&').collect::<Vec<&str>>()[0].to_string();
                 if entity_urn.is_empty() {
                     let parts: Vec<&str> = href
                         .split("?profileUrn=urn%3Ali%3Afs_normalized_profile%3A")
                         .collect();
                     if parts.len() > 1 {
-                        entity_urn = parts[1].split("&").collect::<Vec<&str>>()[0].to_string();
+                        entity_urn = parts[1].split('&').collect::<Vec<&str>>()[0].to_string();
+                    }
+                }
+            } else {
+                // Additional if branch: Split on "&profileUrn=urn%3Ali%3Afsd_profile%3A"
+                let parts: Vec<&str> = href
+                    .split("&profileUrn=urn%3Ali%3Afsd_profile%3A")
+                    .collect();
+                if parts.len() > 1 {
+                    entity_urn = parts[1].split('&').collect::<Vec<&str>>()[0].to_string();
+                    if entity_urn.is_empty() {
+                        let parts: Vec<&str> = href
+                            .split("&profileUrn=urn%3Ali%3Afs_normalized_profile%3A")
+                            .collect();
+                        if parts.len() > 1 {
+                            entity_urn = parts[1].split('&').collect::<Vec<&str>>()[0].to_string();
+                        }
                     }
                 }
             }

@@ -73,7 +73,6 @@ async fn final_save(browser: &WebDriver) -> Result<(), CustomError> {
         }
         Err(_) => (),
     };
-    //wait(100000, 500000); // random delay
     button.click().await?;
     wait(3, 5);
     Ok(())
