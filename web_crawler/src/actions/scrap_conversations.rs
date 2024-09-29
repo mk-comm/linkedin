@@ -1,18 +1,19 @@
-use crate::actions::start_browser::start_browser;
+use crate::actions::init_browser::{init_browser, send_screenshot, session_cookie_is_valid};
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::conversation::Conversation;
 use crate::structs::entry::EntryRegular;
 use crate::structs::error::CustomError;
 use scraper::{Html, Selector};
+
 use std::collections::HashMap;
+use thirtyfour::{By, WebDriver};
 
 use crate::actions::scrap_messages::scrap_message;
 
-pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
+pub async fn scrap(entry: EntryRegular) -> Result<String, CustomError> {
     let api_key = entry.user_id.clone();
     let regular = entry.regular;
-
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -27,76 +28,88 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
         fidcookie: entry.cookies.fidcookie,
         jsessionid: entry.cookies.jsessionid,
     };
-
-    let browser = start_browser(browser_info).await?;
-    wait(3, 11);
-    /*
-    let messaging_button = browser
-        .page
-        .query_selector("a.global-nav__primary-link:has-text('Messaging')")
-        .await
-        .unwrap();
-    match messaging_button {
-        Some(messaging_button) => {
-            messaging_button.click_builder().click().await.unwrap();
+    let browser = init_browser(&browser_info).await?;
+    //wait(10000, 10000);
+    let result = start_scrap(&browser, regular, api_key.as_str()).await;
+    match result {
+        Ok(text) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                text.as_str(),
+                &api_key,
+                "Scrap Inmails",
+            )
+            .await?;
+            browser.quit().await?;
+            return Ok(text);
         }
-        None => {
-            wait(1, 5); // random delay
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
-            return Err(CustomError::ButtonNotFound("Messaging button not found".to_string()));
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                error.to_string().as_str(),
+                &api_key,
+                "Scrap Inmails",
+            )
+            .await?;
+            return Err(error);
         }
     }
-    */
-
+}
+pub async fn start_scrap(
+    browser: &WebDriver,
+    regular: bool,
+    api_key: &str,
+) -> Result<String, CustomError> {
     wait(1, 12);
+    const CONVERSATION_URL:&str = "https://www.linkedin.com/messaging/thread/2-NjhlODRmMzUtZTZkYi00MDNjLThmNzMtMDJlNm44RmMjU1NDY2XzAxMw==/";
+    let go_to = browser.goto(CONVERSATION_URL).await;
 
-    let build = browser.page.goto_builder("https://www.linkedin.com/messaging/thread/2-NjhlODRmMzUtZTZkYi00MDNjLThmNzMtMDJlNm44RmMjU1NDY2XzAxMw==/");
-    wait(1, 8);
-    let go_to = build.goto().await;
     let mut x = 0;
     if go_to.is_err() {
         while x <= 3 {
             wait(3, 6);
-            let build = browser.page.goto_builder("https://www.linkedin.com/messaging/thread/2-NjhlODRmMzUNm44RmMjU1NDY2XzAxMw==/")
-            .goto().await;
+            let build = browser.goto(CONVERSATION_URL).await;
             if build.is_ok() {
                 break;
             } else if build.is_err() && x == 3 {
-                wait(1, 3);
-                browser.page.close(Some(false)).await?;
-                browser.browser.close().await?;
+                wait(3, 6);
                 return Err(CustomError::ButtonNotFound(
-                    "Conversation page is not loading".to_string(),
-                )); // if error means page is not loading
+                    "Conversation page is not loading/Scrap conversation".to_string(),
+                ));
             }
             x += 1;
-            //println!("retrying to load page")
         }
-        wait(6, 9);
+        wait(1, 3);
     }
-    wait(6, 9);
-    let focused = browser
-        .page
-        .query_selector("div.artdeco-tabs.artdeco-tabs--size-t-40.artdeco-tabs--centered.ember-view.msg-focused-inbox-tabs")
-        .await?;
+    wait(15, 17);
+
+    let cookie = session_cookie_is_valid(&browser).await?;
+    if !cookie {
+        browser.refresh().await?;
+        wait(7, 14);
+        let cookie_second_try = session_cookie_is_valid(&browser).await?;
+        if !cookie_second_try {
+            return Err(CustomError::SessionCookieExpired);
+        }
+    }
+    const FOCUSED:&str = "div.artdeco-tabs.artdeco-tabs--size-t-40.artdeco-tabs--centered.ember-view.msg-focused-inbox-tabs";
+
+    let focused = browser.find(By::Css(FOCUSED)).await;
 
     let focused_inbox = match focused {
-        Some(_) => true,
-        None => false,
+        Ok(_) => true,
+        Err(_) => false,
     };
-
-    let conversation_list = match browser
-        .page
-        .query_selector(
-            "ul[class='list-style-none msg-conversations-container__conversations-list']",
-        )
-        .await?
-    {
-        Some(conversation_list) => conversation_list,
-        None => {
-            browser.page.close(Some(false)).await?;
-            browser.browser.close().await?;
+    const CONVERSATION_LIST: &str =
+        "ul[class='list-style-none msg-conversations-container__conversations-list']";
+    let conversation_list = match browser.find(By::Css(CONVERSATION_LIST)).await {
+        Ok(list) => list,
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Conversation list not found".to_string(),
             ));
@@ -107,12 +120,10 @@ pub async fn scrap(entry: EntryRegular) -> Result<(), CustomError> {
         scrap_conversation_to_list(&conversation_list.inner_html().await?, &api_key, regular);
 
     for conversation in conversations.values() {
-        scrap_message(conversation, &browser.page, focused_inbox, &browser).await?;
+        scrap_message(conversation, focused_inbox, &browser).await?;
     }
 
-    browser.page.close(Some(false)).await?;
-    browser.browser.close().await?;
-    Ok(())
+    Ok("Messages were scrapped successfully".to_string())
 }
 
 fn scrap_conversation_to_list(

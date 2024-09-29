@@ -1,22 +1,17 @@
-use crate::actions::init_browser::session_cookie_is_valid;
+use crate::actions::init_browser::{send_screenshot, session_cookie_is_valid};
 use crate::actions::scrap_profile::misc::serialize_option_string;
 use crate::actions::scrap_profile::scrap_education::parse_education;
 use crate::actions::scrap_profile::scrap_education::Education;
-use crate::actions::scrap_profile::scrap_experience_new_tab::{parse_experience, Experience};
-use crate::structs::entry::Url;
+use crate::actions::scrap_profile::scrap_experience_new_tab::Experience;
 use crate::structs::error::CustomError;
-use playwright::api::browser;
 use serde::{Deserialize, Serialize};
 use thirtyfour::{By, WebDriver};
 
-use crate::actions::start_browser::send_screenshot;
 use crate::actions::wait::wait;
 #[allow(deprecated)]
-use base64::encode;
 use scraper::{Html, Selector};
 use serde_json::json;
-use std::sync::Arc;
-use tokio::sync::RwLock;
+
 use tracing::{error, info};
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, Serialize)]
@@ -95,6 +90,7 @@ pub async fn scrap_each_profile_main(
             "aisearch",
             "Page does not exist",
             "scrap each profile",
+            "Scrap each profile,",
         )
         .await?;
         return Err(CustomError::ButtonNotFound(
@@ -115,6 +111,7 @@ pub async fn scrap_each_profile_main(
                 "Scrap each profile",
                 "Session cookie expired",
                 "Scrap each profile",
+                "Scrap each profile,",
             )
             .await?;
             return Err(CustomError::SessionCookieExpired);
@@ -135,6 +132,7 @@ pub async fn scrap_each_profile_main(
                 "aisearch",
                 "Body HTML is not found",
                 "scrap each profile",
+                "Scrap each profile,",
             )
             .await?;
             return Err(CustomError::ButtonNotFound(

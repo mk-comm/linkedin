@@ -1,5 +1,4 @@
-use crate::actions::init_browser::init_browser;
-use crate::actions::start_browser::send_screenshot;
+use crate::actions::init_browser::{init_browser,send_screenshot};
 use crate::actions::wait::wait;
 use crate::structs::browser::BrowserInit;
 use crate::structs::entry::EntryScrapSearchRecruiter;
@@ -50,6 +49,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 &user_id,
                 "Recruiter Session cookie expired",
                 "Start Browser",
+                "Scrap Recruiter Search"
             )
             .await?;
             return Err(CustomError::RecruiterSessionCookieExpired);
@@ -72,6 +72,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             &user_id,
             "Search list of candidates not found/Recruiter search",
             "scrap recruiter search",
+            "Scrap Recruiter Search"
         )
         .await?;
         return Err(CustomError::ButtonNotFound(
@@ -126,6 +127,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 &user_id,
                 "Search container not found/Scrap Recruiter Search",
                 "scrap recruter search",
+                "Scrap Recruiter Search"
             )
             .await?;
 
@@ -152,6 +154,8 @@ let screenshot = browser.screenshot_as_png().await?;
             &user_id,
             "Error scraping",
             "scrap recruiter search",
+            "Scrap Recruiter Search"
+
         )
         .await?;
                 return Err(error)},
@@ -163,6 +167,8 @@ let screenshot = browser.screenshot_as_png().await?;
             &user_id,
             "URL SENT",
             "Scrap recruiter search",
+            "Scrap Recruiter Search"
+
         )
         .await?;
         if url_list.len() < 25 {
@@ -271,7 +277,7 @@ async fn move_scroll(page: &WebDriver) -> Result<(), CustomError> {
         let scrollDistance = 365;
         window.scrollBy(0, scrollDistance);
     "#;
-    let scrolling = page.execute(scroll_code, vec![]).await?;
+    page.execute(scroll_code, vec![]).await?;
 
     wait(1, 2);
     Ok(())

@@ -1,5 +1,5 @@
 use super::misc::split_around_dot;
-use crate::actions::init_browser::session_cookie_is_valid;
+use crate::actions::init_browser::{send_screenshot, session_cookie_is_valid};
 use crate::actions::scrap_profile::misc::get_date;
 use crate::actions::scrap_profile::misc::serialize_option_i64;
 use crate::actions::scrap_profile::misc::serialize_option_string;
@@ -7,7 +7,6 @@ use scraper::ElementRef;
 use serde::{Deserialize, Serialize};
 use thirtyfour::{By, WebDriver};
 
-use crate::actions::start_browser::send_screenshot;
 use crate::actions::wait::wait;
 use crate::structs::error::CustomError;
 #[allow(deprecated)]
@@ -84,6 +83,7 @@ pub async fn get_experience(
                     "aisearch",
                     "Experience is not loading within 30 sec",
                     "scrap each profile",
+                    "Scrap each experience",
                 )
                 .await?;
                 return Err(CustomError::ButtonNotFound(
@@ -110,6 +110,7 @@ pub async fn get_experience(
                 "Scrap each profile",
                 "Session cookie expired",
                 "Scrap each profile",
+                "Scrap each experience",
             )
             .await?;
             return Err(CustomError::SessionCookieExpired);
@@ -128,6 +129,7 @@ pub async fn get_experience(
                 "aisearch",
                 "Body experience is not found",
                 "scrap each profile",
+                "Scrap each experience",
             )
             .await?;
 

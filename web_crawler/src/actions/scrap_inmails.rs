@@ -64,7 +64,7 @@ pub async fn scrap_inmails(entry: EntryRecruiter) -> Result<String, CustomError>
                 &browser_info.user_id,
                 error.to_string().as_str(),
                 &api_key,
-                "Send Inmails",
+                "Scrap Inmails",
             )
             .await?;
             return Err(error);

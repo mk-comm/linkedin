@@ -1,32 +1,29 @@
 use crate::actions::wait::wait;
-use crate::structs::browser::BrowserConfig;
 use crate::structs::conversation::Conversation;
 use crate::structs::error::CustomError;
 use crate::structs::fullname::FullName;
 use crate::structs::message::Message;
-use playwright::api::ElementHandle;
-use playwright::api::Page;
+
 use scraper::{Html, Selector};
 use serde_json::json;
 use std::collections::HashMap;
+use thirtyfour::{By, WebDriver, WebElement};
 
 pub async fn scrap_message(
     conversation: &Conversation,
-    page: &Page,
     focused_inbox: bool,
-    browser: &BrowserConfig,
+    browser: &WebDriver,
 ) -> Result<(), CustomError> {
-    let conversation_select = match page
-        .query_selector(format!("li[id='{}']", conversation.id).as_str())
-        .await?
+    let conversation_select = match browser
+        .find(By::Css(format!("li[id='{}']", conversation.id).as_str()))
+        .await
     {
-        Some(conversation) => {
-            conversation.hover_builder();
+        Ok(conversation) => {
             wait(1, 7);
-            conversation.click_builder().click().await?;
+            conversation.click().await?;
             conversation
         }
-        None => {
+        Err(_) => {
             return Err(CustomError::ButtonNotFound(
                 "Conversation select not found".to_string(),
             ))
@@ -34,23 +31,16 @@ pub async fn scrap_message(
     }; // select the conversation
 
     wait(7, 19);
-
-    let message_container = if let Some(container) = page
-        .query_selector("ul[class='msg-s-message-list-content list-style-none full-width mbA']")
-        .await?
-    {
-        container
-    } else {
-        return Ok(()); // if there is no message container return
+    const MESSAGE_CONTAINER: &str =
+        "ul[class='msg-s-message-list-content list-style-none full-width mbA']";
+    let message_container = match browser.find(By::Css(MESSAGE_CONTAINER)).await {
+        Ok(container) => container,
+        Err(_) => return Ok(()),
     };
     // select the message container
-
-    let owner_container = page
-        .clone()
-        .query_selector("div[class='msg-title-bar global-title-container shared-title-bar']")
-        .await
-        .unwrap()
-        .unwrap();
+    const OWNER_CONTAINER: &str =
+        "div[class='msg-title-bar global-title-container shared-title-bar']";
+    let owner_container = browser.find(By::Css(OWNER_CONTAINER)).await?;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     let mut full_text = String::new(); // Conversation text to push to AI
@@ -68,10 +58,9 @@ pub async fn scrap_message(
         &conversation.api_key,
     )
     .await?; // check if candidate is in sequence
-
-    conversation_select.hover_builder();
-    wait(1, 9);
-    conversation_select.click_builder().click().await?;
+    let pages = browser.windows().await?;
+    browser.switch_to_window(pages[0].clone()).await?;
+    conversation_select.click().await?;
 
     // checks if the message is new or was scraped before
 
@@ -99,9 +88,7 @@ pub async fn scrap_message(
             MessageCategory::Interested => {
                 mark_star(&conversation_select, focused_inbox).await?;
                 if conversation.unread == true {
-                    conversation_select.hover_builder();
-                    wait(1, 7);
-                    conversation_select.click_builder().click().await?;
+                    conversation_select.click().await?;
                     wait(3, 5);
                     mark_unread(&conversation_select, focused_inbox).await?;
                     //// ("Marked as unread/Interested");
@@ -121,9 +108,7 @@ pub async fn scrap_message(
     }
 
     if conversation.enable_ai == true && conversation.unread == true && new_message == false {
-        conversation_select.hover_builder();
-        wait(1, 3);
-        conversation_select.click_builder().click().await?;
+        conversation_select.click().await?;
         mark_unread(&conversation_select, focused_inbox).await?;
     }
 
@@ -145,8 +130,11 @@ async fn create_message(message: &Message, conversation: &Conversation) {
             "api_key": conversation.api_key,
     });
     // ("payload :{}", _payload);
+    const CREATE_MESSAGE_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive";
+    //const CREATE_MESSAGE_URL: &str = "https://webhook.site/c58568dc-6357-4aa4-96c2-79d6f22c1ede";
+
     let _res = _client
-        .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_receive")
+        .post(CREATE_MESSAGE_URL)
         .json(&_payload)
         .send()
         .await
@@ -218,148 +206,110 @@ async fn get_prompt() -> String {
     json_response["response"]["prompt"].to_string()
 }
 
-#[allow(dead_code)]
-async fn send_message(page: &Page, message: String) -> Result<(), CustomError> {
-    const INPUT_SELECTOR: &str =
-        "div[class='msg-form__msg-content-container--scrollable scrollable relative']";
-    let text_input = page.query_selector(INPUT_SELECTOR).await?;
-    match text_input {
-        Some(input) => {
-            input.click_builder().click().await?;
-            input.fill_builder(message.as_str()).fill().await?;
-            // ("{}", message) // fill input for note;
-        }
-        None => (),
-    }
-
-    Ok(())
-}
-
-#[allow(dead_code)]
-
-async fn get_reply(message: String, conversation: &Conversation, full_name: FullName) -> String {
-    let client = reqwest::Client::new();
-    let payload = json!({
-            "message_text": message,
-            "api_key": conversation.api_key,
-            "first": full_name.first_name,
-            "last": full_name.last_name,
-    });
-    let res = client
-        .post("https://overview.tribe.xyz/version-test/api/1.1/wf/tribe_api_get_reply")
-        .json(&payload)
-        .send()
-        .await
-        .unwrap();
-    let json_response: serde_json::Value = res.json().await.unwrap(); //here is lays the
-
-    json_response["response"]["reply"].to_string()
-}
 async fn mark_unread(
-    conversation_element: &ElementHandle,
+    conversation_element: &WebElement,
     focused_inbox: bool,
 ) -> Result<(), CustomError> {
-    let dropdown = conversation_element
-        .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
-        .await?; // find 3 dots button
+    const DROPDOWN: &str = "div[class='msg-conversation-card__inbox-shortcuts']";
+    let dropdown = conversation_element.find(By::Css(DROPDOWN)).await;
 
     // click the dropdown
     match dropdown {
-        Some(dropdown) => {
-            dropdown.hover_builder();
-            wait(1, 3);
-            match dropdown.click_builder().click().await {
+        Ok(dropdown) => {
+            match dropdown.click().await {
                 Ok(_) => (),
                 Err(_) => return Ok(()),
             };
             wait(1, 3)
         }
-        None => (),
+        Err(_) => (),
     }
 
+    const INNER_CONTAINER: &str = "div[class=artdeco-dropdown__content-inner]";
+
+    let inner_container = conversation_element.find(By::Css(DROPDOWN)).await;
     //find container for the buttons inside dropdown
-    let inner_container = conversation_element
-        .query_selector("div[class=artdeco-dropdown__content-inner]")
-        .await?;
+
     let inner_container = match inner_container {
-        Some(inner_container) => inner_container,
-        None => return Ok(()),
+        Ok(inner_container) => inner_container,
+        Err(_) => return Ok(()),
     };
 
     //find mark unread button;
+    const UNREAD_FOCUSED:&str = "div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(2)";
+    const UNREAD_NOT_FOCUSED:&str = "div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(1)";
 
     let mark_unread_button = if focused_inbox == true {
-        inner_container.query_selector("div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(2)").await?
+        inner_container.find(By::Css(UNREAD_FOCUSED)).await
     } else {
-        inner_container.query_selector("div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(1)").await?
+        inner_container.find(By::Css(UNREAD_NOT_FOCUSED)).await
     };
-
     //click mark unread button
     match mark_unread_button {
-        Some(button) => {
+        Ok(button) => {
             wait(1, 3);
-            button.click_builder().click().await?;
+            button.click().await?;
             Ok(())
         }
-        None => Err(CustomError::ButtonNotFound(
+        Err(_) => Err(CustomError::ButtonNotFound(
             "Unread button in dropdown not found".to_string(),
         )),
     }
 }
 
 async fn mark_star(
-    conversation_element: &ElementHandle,
+    conversation_element: &WebElement,
     focused_inbox: bool,
 ) -> Result<(), CustomError> {
-    let dropdown = conversation_element
-        .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
-        .await?; // find 3 dots button
+    const DROPDOWN: &str = "div[class='msg-conversation-card__inbox-shortcuts']";
+    let dropdown = conversation_element.find(By::Css(DROPDOWN)).await;
 
     // click the dropdown
     match dropdown {
-        Some(dropdown) => {
-            dropdown.hover_builder();
-            wait(1, 3);
-            match dropdown.click_builder().click().await {
+        Ok(dropdown) => {
+            match dropdown.click().await {
                 Ok(_) => (),
                 Err(_) => return Ok(()),
             };
             wait(1, 3)
         }
-        None => (),
+        Err(_) => (),
     }
 
+    const INNER_CONTAINER: &str = "div[class=artdeco-dropdown__content-inner]";
+
+    let inner_container = conversation_element.find(By::Css(DROPDOWN)).await;
     //find container for the buttons inside dropdown
-    let inner_container = conversation_element
-        .query_selector("div[class=artdeco-dropdown__content-inner]")
-        .await?;
+
     let inner_container = match inner_container {
-        Some(inner_container) => inner_container,
-        None => return Ok(()),
+        Ok(inner_container) => inner_container,
+        Err(_) => return Ok(()),
     };
 
     //find mark unread button;
+    const MARK_STAR_FOCUSED:&str = "div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(3)";
+    const MARK_STAR_NOT_FOCUSED:&str = "div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(2)";
 
     let mark_star_button = if focused_inbox == true {
-        inner_container.query_selector("div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(3)").await?
+        inner_container.find(By::Css(MARK_STAR_FOCUSED)).await
     } else {
-        inner_container.query_selector("div.msg-thread-actions__dropdown-option.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view:nth-child(2)").await?
+        inner_container.find(By::Css(MARK_STAR_NOT_FOCUSED)).await
     };
 
     //click mark unread button
     match mark_star_button {
-        Some(button) => {
+        Ok(button) => {
             wait(1, 3);
-            button.click_builder().click().await?;
+            button.click().await?;
             Ok(())
         }
-        None => Err(CustomError::ButtonNotFound(
+        Err(_) => Err(CustomError::ButtonNotFound(
             "Unread button in dropdown not found".to_string(),
         )),
     }
 }
-
-async fn _move_other(conversation_element: &ElementHandle) -> Result<(), CustomError> {
+/*
+async fn move_other(conversation_element: &ElementHandle) -> Result<(), CustomError> {
     let dropdown = conversation_element
         .query_selector("div[class='msg-conversation-card__inbox-shortcuts']")
         .await?; // find 3 dots button
@@ -401,44 +351,49 @@ async fn _move_other(conversation_element: &ElementHandle) -> Result<(), CustomE
         )),
     }
 }
-
+*/
 async fn scrap_profile(
-    browser: &BrowserConfig,
+    browser: &WebDriver,
     entity_urn: &str,
     api_key: &str,
 ) -> Result<Option<bool>, CustomError> {
-    let page = browser.context.new_page().await?;
+    let page = browser.new_tab().await?;
+    browser.switch_to_window(page).await?;
+    let go_to = browser.goto(&entity_urn).await;
+
     let mut x = 0;
-    if page.goto_builder(&entity_urn).goto().await.is_err() {
+    if go_to.is_err() {
         while x <= 3 {
             wait(3, 6);
-            let build = page.goto_builder(&entity_urn).goto().await;
+            let build = browser.goto(&entity_urn).await;
             if build.is_ok() {
                 break;
             } else if build.is_err() && x == 3 {
-                wait(1, 7);
-                page.close(Some(false)).await?;
-                return Ok(None); // if error means page is not loading
+                wait(3, 6);
+                return Err(CustomError::ButtonNotFound(
+                    "Candidate page is not loading/Scrap messages".to_string(),
+                ));
             }
             x += 1;
         }
+        wait(1, 3);
     }
 
     wait(5, 12);
+    const CONTACT_INFO: &str = "a#top-card-text-details-contact-info";
+    let contact_info = browser.find(By::Css(CONTACT_INFO)).await?;
 
-    let contact_info = page
-        .query_selector("a#top-card-text-details-contact-info")
-        .await?
-        .unwrap();
-    let url = contact_info.get_attribute("href").await?;
+    let url = contact_info.attr("href").await?;
 
     let client = reqwest::Client::new();
     let payload = json!({
             "entity_urn": entity_urn,
             "linkedin": url,
     });
+    const ENTITY_URN_URL: &str = "https://overview.tribe.xyz/api/1.1/wf/update_entity_urn";
+
     let _res = client
-        .post("https://overview.tribe.xyz/api/1.1/wf/update_entity_urn")
+        .post(ENTITY_URN_URL)
         .json(&payload)
         .send()
         .await
@@ -449,8 +404,11 @@ async fn scrap_profile(
             "api_key": api_key,
             "linkedin": url,
     });
+
+    const CHECK_SEQUENCE_URL: &str =
+        "https://overview.tribe.xyz/api/1.1/wf/tribe_api_check_sequence";
     let res = client
-        .post("https://overview.tribe.xyz/api/1.1/wf/tribe_api_check_sequence")
+        .post(CHECK_SEQUENCE_URL)
         .json(&payload)
         .send()
         .await
@@ -460,8 +418,7 @@ async fn scrap_profile(
     let candidate_part_of_sequence = json_response["response"]["part_of_sequence"]
         .as_bool()
         .unwrap();
-
-    page.close(Some(false)).await?;
+    browser.close_window().await?;
     Ok(Some(candidate_part_of_sequence))
 }
 

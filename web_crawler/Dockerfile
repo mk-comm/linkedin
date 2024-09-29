@@ -7,18 +7,6 @@ RUN cargo build --release --target=x86_64-unknown-linux-gnu
 # Second stage - Ubuntu setup
 FROM ubuntu:22.04
 
-# Install Node.js
-RUN apt-get update && apt-get install -y curl
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get install -y nodejs
-
-# Install Playwright and dependencies
-RUN npm install -g playwright && \
-    playwright install-deps
-
-# Install Chromium, WebKit, and Firefox using Playwright
-RUN npx playwright install chromium webkit firefox
-
 # Add Google's official GPG key and set up the stable repository
 RUN curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
@@ -57,19 +45,11 @@ RUN apt-get update && \
     libcairo2 \
     wget
 
-# Install OpenSSL 1.1 if needed (be careful with version conflicts)
+# Install OpenSSL 1.1 
 RUN wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1-1ubuntu2.1~18.04.23_amd64.deb && \
     dpkg -i libssl1.1_1.1.1-1ubuntu2.1~18.04.23_amd64.deb && \
     rm -f libssl1.1_1.1.1-1ubuntu2.1~18.04.23_amd64.deb
 
-# Install Rust in the runtime environment (if needed)
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
-    echo "source $HOME/.cargo/env" >> ~/.bashrc && \
-    /bin/bash -c "source ~/.bashrc" && \
-    /root/.cargo/bin/rustup install stable && \
-    /root/.cargo/bin/rustup default stable && \
-    /root/.cargo/bin/rustup update && \
-    apt-get install -y cargo
 
 # Copy the compiled app from the builder stage
 COPY --from=builder /usr/src/app/target/x86_64-unknown-linux-gnu/release/web_crawler /app/web_crawler

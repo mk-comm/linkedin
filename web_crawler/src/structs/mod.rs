@@ -7,4 +7,3 @@ pub mod error;
 pub mod fullname;
 pub mod inmail_conversation;
 pub mod message;
-pub mod user;

@@ -1,16 +1,5 @@
-use playwright::api::{
-    Browser, BrowserContext, BrowserType, Page, Playwright, ProxySettings, Response,
-};
-use serde::{Deserialize, Deserializer, Serialize};
-pub struct BrowserConfig {
-    pub proxy: Option<ProxySettings>,
-    pub playwright: Playwright,
-    pub browser_type: BrowserType,
-    pub browser: Browser,
-    pub context: BrowserContext,
-    pub page: Page,
-    pub build: Response,
-}
+use serde::{Deserialize, Serialize};
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BrowserInit {
     pub ip: String,
@@ -25,12 +14,4 @@ pub struct BrowserInit {
     pub fcookie: Option<String>,
     pub fidcookie: Option<String>,
     pub jsessionid: Option<String>,
-}
-
-pub struct BrowserConfigNew {
-    pub proxy: Option<ProxySettings>,
-    pub playwright: Playwright,
-    pub browser_type: BrowserType,
-    pub browser: Browser,
-    pub context: BrowserContext,
 }
