@@ -6,7 +6,11 @@ RUN cargo build --release --target=x86_64-unknown-linux-gnu
 
 # Second stage - Ubuntu setup
 FROM ubuntu:22.04
-
+# Step 1: Update package lists and install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
 # Add Google's official GPG key and set up the stable repository
 RUN curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list

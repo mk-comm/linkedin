@@ -45,7 +45,7 @@ pub fn parse_education(html_content: &str) -> Vec<Education> {
         let schoolName = if let Some(school_element) = element
             .select(
                 &Selector::parse(
-                    "div[class='display-flex flex-wrap align-items-center full-height']",
+                    "div[class='display-flex flex-wrap align-items-center full-height'] > div > div > div > span",
                 )
                 .unwrap(),
             )
@@ -170,6 +170,7 @@ fn find_education(html: &str) -> Option<String> {
         if section.select(&education_div_selector).next().is_some() {
             // Found the section containing the education div, print its HTML
             //println!("found sections {}", section.html());
+
             return Some(section.html());
         }
     }

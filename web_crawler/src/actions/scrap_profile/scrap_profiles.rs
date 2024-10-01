@@ -1,5 +1,3 @@
-
-
 use crate::actions::init_browser::init_browser;
 use crate::actions::scrap_profile::scrap_each_profile::scrap_each_profile_main;
 use crate::actions::scrap_profile::scrap_each_profile::send_search_status;
@@ -43,14 +41,21 @@ pub async fn scrap_profile(entry: EntryScrapProfile) -> Result<(), CustomError> 
 
     for chunk in chunks {
         let urls = chunk.to_vec();
-        let result = start_scraping(&browser, aisearch.clone(), &batch, urls, job.clone(), sourcer.clone(), search_url.clone()).await;
+        let result = start_scraping(
+            &browser,
+            aisearch.clone(),
+            &batch,
+            urls,
+            job.clone(),
+            sourcer.clone(),
+            search_url.clone(),
+        )
+        .await;
         if let Err(error) = result {
             browser.quit().await?;
             return Err(error);
         };
-
     }
-    
 
     Ok(())
 }
@@ -141,7 +146,12 @@ async fn scrap_experience_to_profile(
             ..profile
         };
         send_url_chromedata_viewed(&profile_new).await?;
-        send_url_update(&profile_new.profile_url_id, &profile_new.linkedin, &profile_new).await?;
+        send_url_update(
+            &profile_new.profile_url_id,
+            &profile_new.linkedin,
+            &profile_new,
+        )
+        .await?;
         profiles_new.push(profile_new);
     }
     Ok(profiles_new)
@@ -166,7 +176,8 @@ async fn send_url_chromedata_viewed(profile: &Profile) -> Result<(), CustomError
 
 async fn send_url_update(
     url_id: &str,
-    linkedin_url: &Option<String>, profile: &Profile
+    linkedin_url: &Option<String>,
+    profile: &Profile,
 ) -> Result<(), reqwest::Error> {
     let serialized = serde_json::to_vec(&profile).unwrap();
     let encoded = encode(&serialized);
@@ -180,7 +191,7 @@ async fn send_url_update(
     });
     let target_url = "https://overview.tribe.xyz/api/1.1/wf/tribe_scrap_search_update_url";
 
-    //let target_url = "https://webhook.site/edf0826d-61e4-4de5-bdd1-678d485785a9";
+    //let target_url = "https://webhook.site/1ba54cc5-40c4-4688-963b-0078582b6718";
     let mut retries = 0;
     loop {
         let response = client.post(target_url).json(&urls_json).send().await;

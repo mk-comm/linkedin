@@ -119,6 +119,7 @@ pub async fn scrap_each_profile_main(
 
         println!("checking if cookie is valid{}", cookie_second_try);
     }
+    wait(5, 7);
     const HTML_BODY: &str =
         "body.render-mode-BIGPIPE.nav-v2.ember-application.icons-loaded.boot-complete";
     let html_body = browser.find(By::Css(HTML_BODY)).await;

@@ -29,14 +29,7 @@ pub async fn scrap_regular_search(entry: EntryScrapSearchRegular) -> Result<(), 
         jsessionid: entry.cookies.jsessionid,
     };
     let browser = init_browser(&browser_info).await?;
-    let result = start_scrap(
-        &browser,
-        &url,
-        &ai_search,
-        &url_list_id,
-        &result_url,
-    )
-    .await;
+    let result = start_scrap(&browser, &url, &ai_search, &url_list_id, &result_url).await;
     match result {
         Ok(text) => {
             browser.quit().await?;
@@ -62,7 +55,7 @@ pub async fn start_scrap(
     browser: &WebDriver,
     url: &str,
     ai_search: &str,
-      url_list_id: &str,
+    url_list_id: &str,
     result_url: &str,
 ) -> Result<(), CustomError> {
     let go_to = browser.goto(url).await;
