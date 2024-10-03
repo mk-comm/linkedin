@@ -58,27 +58,37 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
 
         println!("checking if cookie is valid{}", cookie_second_try);
     }
-    wait(60, 65);
+    wait(20, 35);
     let url_list_id = entry.url_list_id.to_string();
     let _ = send_search_status("Page opened", ai_search).await;
 
     const SEARCH_CONTAINER: &str = "div.hp-core-temp.profile-list.profile-list-container";
     let search_container = browser.find(By::Css(SEARCH_CONTAINER)).await;
     if search_container.is_err() {
-        error!("search container not found");
+        browser.refresh().await?;
+        wait(20, 35);
+        let search_container = browser.find(By::Css(SEARCH_CONTAINER)).await;
+        if search_container.is_err() {
+            browser.refresh().await?;
+            wait(20, 35);
+            let search_container = browser.find(By::Css(SEARCH_CONTAINER)).await;
+            if search_container.is_err() {
+                error!("search container not found");
 
-        let screenshot = browser.screenshot_as_png().await?;
-        send_screenshot(
-            screenshot,
-            &user_id,
-            "Search list of candidates not found/Recruiter search",
-            &ai_search,
-            "Scrap Recruiter Search",
-        )
-        .await?;
-        return Err(CustomError::ButtonNotFound(
-            "Search list of candidates not found/Recruiter search".to_string(),
-        ));
+                let screenshot = browser.screenshot_as_png().await?;
+                send_screenshot(
+                    screenshot,
+                    &user_id,
+                    "Search list of candidates not found/Recruiter search",
+                    &ai_search,
+                    "Scrap Recruiter Search",
+                )
+                .await?;
+                return Err(CustomError::ButtonNotFound(
+                    "Search list of candidates not found/Recruiter search".to_string(),
+                ));
+            }
+        }
     }
 
     let _ = send_search_status("Counting candidates", ai_search).await;
@@ -118,20 +128,30 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
 
         let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
         if search_container_inside.is_err() {
-            error!("search container not found");
-            let screenshot = browser.screenshot_as_png().await?;
-            send_screenshot(
-                screenshot,
-                &user_id,
-                "Search container not found/Scrap Recruiter Search",
-                &ai_search,
-                "Scrap Recruiter Search",
-            )
-            .await?;
+            browser.refresh().await?;
+            wait(20, 35);
+            let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
+            if search_container_inside.is_err() {
+                browser.refresh().await?;
+                wait(20, 35);
+                let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
+                if search_container_inside.is_err() {
+                    error!("search container not found");
 
-            return Err(CustomError::ButtonNotFound(
-                "Search container not found/Scrap Recruiter Search".to_string(),
-            ));
+                    let screenshot = browser.screenshot_as_png().await?;
+                    send_screenshot(
+                        screenshot,
+                        &user_id,
+                        "Search list of candidates inside not found/Recruiter search",
+                        &ai_search,
+                        "Scrap Recruiter Search",
+                    )
+                    .await?;
+                    return Err(CustomError::ButtonNotFound(
+                        "Search list of candidates inside not found/Recruiter search".to_string(),
+                    ));
+                }
+            }
         }
         let search_container_inside = search_container_inside.unwrap();
         scroll(&browser).await?;
@@ -154,7 +174,20 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         }
         let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
         let search_container_inside = search_container_inside.unwrap();
+        let empty_profile = search_container_inside.find(By::Css(EMPTY_PROFILE)).await;
+        if empty_profile.is_ok() {
+            let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "Second Less than 25 urls",
+                &ai_search,
+                "Scrap Recruiter Search",
+            )
+            .await?;
 
+            wait(30, 31);
+        }
         let html = search_container_inside.inner_html().await?;
 
         let scrap = scrap(
