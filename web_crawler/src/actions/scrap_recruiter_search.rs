@@ -8,7 +8,6 @@ use scraper::{Html, Selector};
 use serde_json::json;
 use std::fs::File;
 use std::io::Write;
-use thirtyfour::fantoccini::wait;
 use thirtyfour::By;
 use thirtyfour::WebDriver;
 use tracing::{error, info};
