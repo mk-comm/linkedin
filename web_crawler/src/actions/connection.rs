@@ -151,23 +151,35 @@ pub async fn send_connection(
             ));
         }
     };
+
     wait(2, 3);
+    const IN_CONNECTION_POOL_ICON:&str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center > svg[data-test-icon=remove-connection-medium]";
     const IN_CONNECTION_POOL: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Remove your connection']";
     let in_connection_pool = browser.find(By::Css(IN_CONNECTION_POOL)).await;
-    if in_connection_pool.is_ok() {
+    let in_connection_pool_icon = browser.find(By::Css(IN_CONNECTION_POOL_ICON)).await;
+
+    if in_connection_pool.is_ok() || in_connection_pool_icon.is_ok() {
         return Ok("Candidate in connection pool".to_string());
     }
-
+    const PENDING_ON_THE_PAGE_ICON:&str = "button.artdeco-button.artdeco-button--2.artdeco-button--secondary.ember-view.pvs-profile-actions__action>svg[data-test-icon=clock-small]";
+    const PENDING_DROPDOWN_ICON:&str =    "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center>svg[data-test-icon=clock-medium]";
     const PENDING_ON_THE_PAGE: &str = "button.artdeco-button.artdeco-button--2.artdeco-button--secondary.ember-view.pvs-profile-actions__action[aria-label*='Pending']";
     const PENDING_DROPDOWN: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Pending']";
 
     let pending_on_the_page = browser.find(By::Css(PENDING_ON_THE_PAGE)).await;
     let pending_dropdown = browser.find(By::Css(PENDING_DROPDOWN)).await;
 
-    if pending_on_the_page.is_ok() || pending_dropdown.is_ok() {
+    let pending_on_the_page_icon = browser.find(By::Css(PENDING_ON_THE_PAGE_ICON)).await;
+    let pending_dropdown_icon = browser.find(By::Css(PENDING_DROPDOWN_ICON)).await;
+    if pending_on_the_page.is_ok()
+        || pending_dropdown.is_ok()
+        || pending_on_the_page_icon.is_ok()
+        || pending_dropdown_icon.is_ok()
+    {
         return Ok("Connection pending".to_string());
     }
-
+    const CONNECT_ON_THE_PAGE_ICON:&str = "button.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.pvs-profile-actions__action>svg[data-test-icon=connect-small]";
+    const CONNECT_DROPDOWN_ICON: &str = "div>svg[data-test-icon=connect-medium]";
     const CONNECT_ON_THE_PAGE:&str = "button.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.pvs-profile-actions__action[aria-label*='connect']";
     const CONNECT_DROPDOWN:&str = "
 (//div[contains(@class, 'artdeco-dropdown__item') and contains(@class, 'artdeco-dropdown__item--is-dropdown') and contains(@class, 'ember-view') and contains(@class, 'full-width') and contains(@class, 'display-flex') and contains(@class, 'align-items-center') and contains(@aria-label, 'connect')])[2]
@@ -175,9 +187,15 @@ pub async fn send_connection(
 
     let connect_on_the_page = browser.find(By::Css(CONNECT_ON_THE_PAGE)).await;
     let connect_dropdown = browser.find(By::XPath(CONNECT_DROPDOWN)).await;
+    let connect_dropdown_icon = main_box.find(By::Css(CONNECT_DROPDOWN_ICON)).await;
+    let connect_on_the_page_icon = browser.find(By::Css(CONNECT_ON_THE_PAGE_ICON)).await;
     let connect_button = if let Ok(button) = connect_on_the_page {
         button
     } else if let Ok(button) = connect_dropdown {
+        button
+    } else if let Ok(button) = connect_on_the_page_icon {
+        button
+    } else if let Ok(button) = connect_dropdown_icon {
         button
     } else {
         return Err(CustomError::ButtonNotFound(
@@ -186,7 +204,6 @@ pub async fn send_connection(
     };
 
     connect_button.click().await?;
-
     wait(3, 4);
     //check if popup to choose "How do you know"
     const POPUP_HOW: &str = "button[aria-label='Other']";
@@ -230,14 +247,20 @@ pub async fn send_connection(
     let pending_on_the_page = browser.find(By::Css(PENDING_ON_THE_PAGE)).await;
     let pending_dropdown = browser.find(By::Css(PENDING_DROPDOWN)).await;
 
-    if pending_on_the_page.is_ok() || pending_dropdown.is_ok() {
+    let pending_on_the_page_icon = browser.find(By::Css(PENDING_ON_THE_PAGE_ICON)).await;
+    let pending_dropdown_icon = browser.find(By::Css(PENDING_DROPDOWN_ICON)).await;
+    if pending_on_the_page.is_ok()
+        || pending_dropdown.is_ok()
+        || pending_on_the_page_icon.is_ok()
+        || pending_dropdown_icon.is_ok()
+    {
         return Ok("Connection was sent".to_string());
     }
 
     wait(3, 7);
-    const CONNNECTION_LIMIT: &str =
+    const CONNECTION_LIMIT: &str =
         "div[class='artdeco-modal artdeco-modal--layer-default ip-fuse-limit-alert']";
-    let connection_limit = browser.find(By::Css(CONNNECTION_LIMIT)).await;
+    let connection_limit = browser.find(By::Css(CONNECTION_LIMIT)).await;
 
     match connection_limit {
         Ok(_) => {

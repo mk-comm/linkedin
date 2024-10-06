@@ -135,20 +135,26 @@ pub async fn message(
         },
     };
     const IN_CONNECTION_POOL: &str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center[aria-label*='Remove your connection']";
+    const IN_CONNECTION_POOL_ICON:&str = "div.artdeco-dropdown__item.artdeco-dropdown__item--is-dropdown.ember-view.full-width.display-flex.align-items-center > svg[data-test-icon=remove-connection-medium]";
     let in_connection_pool = browser.find(By::Css(IN_CONNECTION_POOL)).await;
+    let in_connection_pool_icon = browser.find(By::Css(IN_CONNECTION_POOL_ICON)).await;
     if in_connection_pool.is_err() {
-        return Ok("Candidate is not in connection pool to send messages".to_string());
+        if in_connection_pool_icon.is_err() {
+            return Ok("Candidate is not in connection pool to send messages".to_string());
+        }
     }
+    const MESSAGE_BUTTON_ICON:&str = "button.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.pvs-profile-actions__action>svg[data-test-icon=send-privately-small]";
     const MESSAGE_BUTTON: &str = "button.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.pvs-profile-actions__action[aria-label*='Message']";
     let message_button = browser.find(By::Css(MESSAGE_BUTTON)).await;
-
-    let message_button = match message_button {
-        Ok(button) => button,
-        Err(_e) => {
-            return Err(CustomError::ButtonNotFound(
-                "Message button not found".to_string(),
-            ));
-        } // means there is no message button
+    let message_button_icon = browser.find(By::Css(MESSAGE_BUTTON_ICON)).await;
+    let message_button = if let Ok(button) = message_button {
+        button
+    } else if let Ok(button) = message_button_icon {
+        button
+    } else {
+        return Err(CustomError::ButtonNotFound(
+            "Message button not found".to_string(),
+        ));
     };
 
     message_button.click().await?;
@@ -399,8 +405,8 @@ async fn send_current_page(
             Some(conversation)
         }
         Err(_s) => {
-            let convesation_linkedin_nick = browser.find(By::Css(&conversation_selector)).await;
-            match convesation_linkedin_nick {
+            let conversation_linkedin_nick = browser.find(By::Css(&conversation_selector)).await;
+            match conversation_linkedin_nick {
                 Ok(conversation) => Some(conversation),
                 Err(_s) => {
                     return Err(CustomError::ButtonNotFound(
