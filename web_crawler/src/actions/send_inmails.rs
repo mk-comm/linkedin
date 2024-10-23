@@ -17,6 +17,12 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<String, CustomError>
         .chars()
         .filter(|&c| c as u32 <= 0xFFFF)
         .collect();
+    let subject: String = entry
+        .subject
+        .clone()
+        .chars()
+        .filter(|&c| c as u32 <= 0xFFFF)
+        .collect();
     let candidate = Candidate::new(entry.fullname.clone(), entry.linkedin.clone(), message_text);
     let browser_info = BrowserInit {
         ip: entry.ip,
@@ -33,7 +39,7 @@ pub async fn send_inmails(entry: EntrySendInmail) -> Result<String, CustomError>
         jsessionid: entry.cookies.jsessionid,
     };
     let browser = init_browser(&browser_info).await?;
-    let result = inmail(&browser, &candidate, &entry.subject).await;
+    let result = inmail(&browser, &candidate, &subject).await;
     match result {
         Ok(text) => {
             let screenshot = browser.screenshot_as_png().await?;
