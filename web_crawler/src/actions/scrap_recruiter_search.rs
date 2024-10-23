@@ -6,14 +6,16 @@ use crate::structs::error::CustomError;
 use reqwest;
 use scraper::{Html, Selector};
 use serde_json::json;
-use std::fs::File;
-use std::io::Write;
 use thirtyfour::By;
 use thirtyfour::WebDriver;
 use tracing::{error, info};
 
-pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<(), CustomError> {
+pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<String, CustomError> {
     let user_id = entry.user_id.clone();
+    let url = entry.url;
+    let url_scraped = entry.urls_scraped;
+    let url_list_id = entry.url_list_id;
+    let result_url = entry.result_url;
     let browser_info = BrowserInit {
         ip: entry.ip,
         username: entry.username,
@@ -31,34 +33,68 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
     let ai_search = entry.aisearch.as_str();
     let _ = send_search_status("Starting the browser", ai_search).await;
     let browser = init_browser(&browser_info).await?;
+
+    let result = scrap_recruiter(&browser, &user_id, &ai_search,&url, &url_list_id, url_scraped, &result_url).await;
+        match result {
+        Ok(text) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                text.as_str(),
+                &ai_search,
+                "Scrap Recruiter Search",
+            )
+            .await?;
+            return Ok(text);
+        }
+        Err(error) => {
+            let screenshot = browser.screenshot_as_png().await?;
+            browser.quit().await?;
+            send_screenshot(
+                screenshot,
+                &browser_info.user_id,
+                error.to_string().as_str(),
+                &ai_search,
+                "Scrap Recruiter Search",
+            )
+            .await?;
+            return Err(error);
+        }
+    }
+
+}
+pub async fn scrap_recruiter(browser: &WebDriver, user_id:&str, ai_search: &str, url:&str, url_list_id: &str, url_scraped: i32, result_url: &str) -> Result<String, CustomError> {
     let _ = send_search_status("Connected to Linkedin", ai_search).await;
     let _ = send_search_status("Opening the search page", ai_search).await;
-    browser.goto(&entry.url).await?;
+    browser.goto(&url).await?;
+    const SESSIONS_SCREEN:&str = "main[id=sessions-container]";
+    let sessions_screen = browser.find(By::Css(SESSIONS_SCREEN)).await;
+    if sessions_screen.is_ok() {
+        const BUTTON_CONTINUE:&str = "button.artdeco-button.artdeco-button--primary";
+        let button_continue = browser.find(By::Css(BUTTON_CONTINUE)).await;
+        match button_continue  {
+            Ok(button) => {button.click().await?;
+            wait(10, 12);},
+            Err(_) => return Err(CustomError::ButtonNotFound("Button continue not found on the multiple sessions screen".to_string())),
+        }
+    }
+
     let recruiter_session_cookie_check = check_recruiter_cookie(&browser).await?;
     if !recruiter_session_cookie_check {
         browser.refresh().await?;
         wait(7, 14);
         let cookie_second_try = check_recruiter_cookie(&browser).await?;
         if !cookie_second_try {
-            wait(1, 3);
-            let screenshot = browser.screenshot_as_png().await?;
-            browser.quit().await?;
-
-            send_screenshot(
-                screenshot,
-                &user_id,
-                "Recruiter Session cookie expired",
-                "Start Browser",
-                "Scrap Recruiter Search",
-            )
-            .await?;
             return Err(CustomError::RecruiterSessionCookieExpired);
         }
 
         println!("checking if cookie is valid{}", cookie_second_try);
     }
+
     wait(20, 35);
-    let url_list_id = entry.url_list_id.to_string();
+    let url_list_id = url_list_id;
     let _ = send_search_status("Page opened", ai_search).await;
 
     const SEARCH_CONTAINER: &str = "div.hp-core-temp.profile-list.profile-list-container";
@@ -74,15 +110,6 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             if search_container.is_err() {
                 error!("search container not found");
 
-                let screenshot = browser.screenshot_as_png().await?;
-                send_screenshot(
-                    screenshot,
-                    &user_id,
-                    "Search list of candidates not found/Recruiter search",
-                    &ai_search,
-                    "Scrap Recruiter Search",
-                )
-                .await?;
                 return Err(CustomError::ButtonNotFound(
                     "Search list of candidates not found/Recruiter search".to_string(),
                 ));
@@ -110,16 +137,16 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 numeric_text.trim().parse::<i32>().unwrap_or(1002)
             };
             total_candidates = result;
-            send_search_number(result, &entry.aisearch).await?
+            send_search_number(result, &ai_search).await?
         }
-        Err(_) => send_search_number(1003, &entry.aisearch).await?,
+        Err(_) => send_search_number(1003, &ai_search).await?,
     };
     let total_candidates = format!("Total candidates: {}", total_candidates);
     let _ = send_search_status(total_candidates.as_str(), ai_search).await;
     let mut pages_number = 1;
     let mut pages_left = true;
-    let mut number = entry.urls_scraped;
-    let zoom_script = "document.body.style.zoom = '30.0%';";
+    let mut number = url_scraped;
+    let zoom_script = "document.body.style.zoom = '70.0%';";
     browser.execute(&zoom_script, vec![]).await?;
     while pages_left {
         let mut url_list: Vec<String> = Vec::new();
@@ -136,29 +163,22 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
                 if search_container_inside.is_err() {
                     error!("search container not found");
-
-                    let screenshot = browser.screenshot_as_png().await?;
-                    send_screenshot(
-                        screenshot,
-                        &user_id,
-                        "Search list of candidates inside not found/Recruiter search",
-                        &ai_search,
-                        "Scrap Recruiter Search",
-                    )
-                    .await?;
                     return Err(CustomError::ButtonNotFound(
                         "Search list of candidates inside not found/Recruiter search".to_string(),
                     ));
                 }
             }
         }
+        scroll(&browser, ScrollDirection::Top).await?;
+        scroll(&browser, ScrollDirection::Bottom).await?;
+        let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
         let search_container_inside = search_container_inside.unwrap();
-        scroll(&browser).await?;
         wait(15, 17);
         const EMPTY_PROFILE: &str =
             "li.ember-view.profile-list__occlusion-area.profile-list__border-bottom";
         let empty_profile = search_container_inside.find(By::Css(EMPTY_PROFILE)).await;
         if empty_profile.is_ok() {
+            info!("EMPTY PROFILE FOUND");
             let screenshot = browser.screenshot_as_png().await?;
             send_screenshot(
                 screenshot,
@@ -169,7 +189,21 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             )
             .await?;
 
-            wait(30, 31);
+            wait(15, 21);
+        scroll(&browser, ScrollDirection::Top).await?;
+                        let screenshot = browser.screenshot_as_png().await?;
+            send_screenshot(
+                screenshot,
+                &user_id,
+                "First Less than 25 urls TOP",
+                &ai_search,
+                "Scrap Recruiter Search",
+            )
+            .await?;
+
+        wait(5,10);
+        scroll(&browser, ScrollDirection::Bottom).await?;
+
         }
         let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
         let search_container_inside = search_container_inside.unwrap();
@@ -186,8 +220,10 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             .await?;
 
             wait(30, 31);
+            scroll(&browser, ScrollDirection::Top).await?;
+            wait(5, 10);
+            scroll(&browser, ScrollDirection::Bottom).await?;
         }
-        let html = search_container_inside.inner_html().await?;
 
         let scrap = scrap(
             search_container_inside.inner_html().await?.as_str(),
@@ -196,15 +232,6 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         match scrap {
             Ok(_) => (),
             Err(error) => {
-                let screenshot = browser.screenshot_as_png().await?;
-                send_screenshot(
-                    screenshot,
-                    &user_id,
-                    "Error scraping",
-                    &ai_search,
-                    "Scrap Recruiter Search",
-                )
-                .await?;
                 return Err(error);
             }
         };
@@ -219,15 +246,12 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
                 "Scrap Recruiter Search",
             )
             .await?;
-            let mut file =
-                File::create(format!("ai_search{} page{}.txt", ai_search, pages_number)).unwrap();
-            file.write_all(html.as_bytes()).unwrap();
         };
         let result = send_urls(
             url_list,
-            &entry.result_url,
-            &entry.aisearch,
-            &entry.url_list_id,
+            &result_url,
+            &ai_search,
+            &url_list_id,
         )
         .await;
 
@@ -252,7 +276,7 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
             }
         };
         number += 25;
-        update_url_list(url_list_id.as_str(), number).await?;
+        update_url_list(url_list_id, number).await?;
         let _ = send_search_status("Opening next page", ai_search).await;
         const NEXT_ICON: &str = ".mini-pagination__quick-link[rel='next']";
 
@@ -261,15 +285,14 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         match next_page {
             Ok(next_page) => {
                 next_page.click().await?;
-                wait(40, 45);
-                wait(3, 5);
+                wait(15, 25);
             }
             Err(_) => {
                 let next_page = browser.find(By::Css(NEXT_ICON)).await;
 
                 if next_page.is_ok() {
                     next_page.unwrap().click().await?;
-                    wait(60, 65);
+                wait(15, 25);
                 } else {
                     println!("next page is empty");
                     let _ = send_search_status("This was the last page", ai_search).await;
@@ -279,14 +302,14 @@ pub async fn scrap_recruiter_search(entry: EntryScrapSearchRecruiter) -> Result<
         }
         pages_number += 1;
         let page_scraped = format!("Started scraping page {}", pages_number);
+        move_scroll_top(&browser).await?;
         let _ = send_search_status(page_scraped.as_str(), ai_search).await;
     }
 
     wait(5, 12);
 
-    browser.quit().await?;
     let _ = send_search_status("Search scraped successfully", ai_search).await;
-    Ok(())
+    Ok("Scraping recruiter search was successful!".to_string())
 }
 
 pub async fn check_recruiter_cookie(page: &WebDriver) -> Result<bool, CustomError> {
@@ -305,32 +328,52 @@ pub async fn check_recruiter_cookie(page: &WebDriver) -> Result<bool, CustomErro
     }
 }
 
-async fn scroll(page: &WebDriver) -> Result<(), CustomError> {
+async fn scroll(page: &WebDriver, direction: ScrollDirection ) -> Result<(), CustomError> {
     let mut x = 0;
 
-    while x < 25 {
-        move_scroll(page).await?;
+    while x < 30 {
+        move_scroll(page,&direction).await?;
         x += 1;
     }
 
     Ok(())
 }
-
-async fn move_scroll(page: &WebDriver) -> Result<(), CustomError> {
-    let scroll_code = r#"
+enum ScrollDirection {
+    Top,
+    Bottom,
+}
+async fn move_scroll(page: &WebDriver, direction: &ScrollDirection ) -> Result<(), CustomError> {
+    let scroll_code = match direction {
+        ScrollDirection::Top => r#"
+        let currentPosition = window.scrollY; 
+        let scrollDistance = 365;
+        let newPosition = currentPosition - scrollDistance; 
+        window.scrollTo(0, newPosition); 
+    "#,
+        ScrollDirection::Bottom => r#"
         let scrollDistance = 365;
         window.scrollBy(0, scrollDistance);
-    "#;
+    "#,
+    };
+    
     page.execute(scroll_code, vec![]).await?;
 
-    wait(1, 2);
+    Ok(())
+}
+async fn move_scroll_top(page: &WebDriver) -> Result<(), CustomError> {
+    let scroll_code =  r#"
+        window.scrollBy(0, 0);
+    "#;
+    
+    page.execute(scroll_code, vec![]).await?;
+
+    wait(1, 1);
     Ok(())
 }
 
 fn scrap(html: &str, url_list: &mut Vec<String>) -> Result<(), CustomError> {
     let document = Html::parse_document(html);
 
-    // Define a selector for the LinkedIn URLs
     let a_selector = Selector::parse("a[data-test-link-to-profile-link='true']");
 
     if a_selector.is_err() {
@@ -340,14 +383,12 @@ fn scrap(html: &str, url_list: &mut Vec<String>) -> Result<(), CustomError> {
     }
     let a_selector = a_selector.unwrap();
 
-    // Extract LinkedIn URLs
     let linkedin_urls: Vec<String> = document
         .select(&a_selector)
         .filter_map(|el| el.value().attr("href"))
         .map(String::from)
         .collect();
 
-    // Print the results
     for url in &linkedin_urls {
         let urn = extract_part_from_url(url);
         let complete_url = format!("https://www.linkedin.com/in/{}", urn.unwrap());

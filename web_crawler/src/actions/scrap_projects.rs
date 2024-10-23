@@ -7,8 +7,6 @@ use crate::structs::error::CustomError;
 use scraper::{Html, Selector};
 use serde::Serialize;
 use serde_json::json;
-use std::fs::File;
-use std::io::Write;
 use thirtyfour::{By, WebDriver, WebElement};
 use tracing::{error, info};
 #[derive(Debug, Serialize)]
@@ -75,9 +73,6 @@ async fn run(browser: &WebDriver, target_url: &str, user_id: &str) -> Result<Str
         let projects = scrap_list(container.inner_html().await?.as_str(), &mut order)?;
         for project in &projects {
             if project.name.is_empty() {
-                let html = container.clone().inner_html().await?;
-                let mut file = File::create(format!("project order{}.txt", order)).unwrap();
-                file.write_all(html.as_str().as_bytes()).unwrap();
                 let screenshot = browser.screenshot_as_png().await?;
                 send_screenshot(
                     screenshot,
@@ -100,7 +95,7 @@ async fn run(browser: &WebDriver, target_url: &str, user_id: &str) -> Result<Str
         }
     }
 
-    Ok("Scraping projects finished successfuly".to_string())
+    Ok("Scraping projects finished successfully".to_string())
 }
 
 async fn init(entry: EntryScrapProjects) -> Result<WebDriver, CustomError> {

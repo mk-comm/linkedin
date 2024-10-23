@@ -10,14 +10,22 @@ pub async fn chrome(
     proxy: String,
     user_agent: String,
 ) -> Result<WebDriver, Box<dyn std::error::Error>> {
-    if std::path::Path::new("chromedriver").exists() {
+    let os = std::env::consts::OS;
+    if std::path::Path::new("chromedriver").exists()
+        || std::path::Path::new("chromedriver.exe").exists()
+    {
         println!("ChromeDriver already exists!");
     } else {
         println!("ChromeDriver does not exist! Fetching...");
         let client = reqwest::Client::new();
         fetch_chromedriver(&client).await.unwrap();
     }
-    let chromedriver_executable = "chromedriver_PATCHED";
+    let chromedriver_executable = match os {
+        "linux" => "chromedriver_PATCHED",
+        "macos" => "chromedriver_PATCHED",
+        "windows" => "chromedriver_PATCHED.exe",
+        _ => panic!("Unsupported OS!"),
+    };
     patch_driver(chromedriver_executable).await;
 
     let port = start_driver(chromedriver_executable).await;
@@ -64,7 +72,11 @@ async fn patch_driver(chromedriver_executable: &str) {
     match !std::path::Path::new(chromedriver_executable).exists() {
         true => {
             println!("Starting ChromeDriver executable patch...");
-            let file_name = "chromedriver";
+            let file_name = if cfg!(windows) {
+                "chromedriver.exe"
+            } else {
+                "chromedriver"
+            };
             let f = std::fs::read(file_name).unwrap();
             let mut new_chromedriver_bytes = f.clone();
             let mut total_cdc = String::from("");

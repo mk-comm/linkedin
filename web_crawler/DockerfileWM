@@ -1,0 +1,47 @@
+# First stage - Rust build
+FROM mcr.microsoft.com/windows/servercore:ltsc2019 AS builder
+
+# Install Chocolatey
+RUN @powershell -NoProfile -ExecutionPolicy Bypass -Command " \
+    Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
+
+# Install Rust
+RUN choco install -y rust
+
+# Update PATH for Rust
+RUN setx /M PATH "%PATH%;C:\Users\ContainerAdministrator\.cargo\bin"
+
+# Set working directory
+WORKDIR C:\app
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN cargo build --release --target x86_64-pc-windows-msvc
+
+# Second stage - Runtime
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
+
+# Install Chocolatey
+RUN @powershell -NoProfile -ExecutionPolicy Bypass -Command " \
+    Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
+
+# Install Google Chrome
+RUN choco install -y googlechrome
+
+# Install OpenSSL if needed
+RUN choco install -y openssl.light
+
+# Copy the compiled application
+COPY --from=builder C:\app\target\x86_64-pc-windows-msvc\release\web_crawler.exe C:\app\web_crawler.exe
+
+# Set the working directory
+WORKDIR C:\app
+
+# Set the entrypoint
+ENTRYPOINT ["C:\\app\\web_crawler.exe"]
