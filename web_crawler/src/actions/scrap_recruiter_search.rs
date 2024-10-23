@@ -357,7 +357,7 @@ async fn move_scroll(page: &WebDriver, direction: &ScrollDirection ) -> Result<(
     };
     
     page.execute(scroll_code, vec![]).await?;
-
+wait(1, 1);
     Ok(())
 }
 async fn move_scroll_top(page: &WebDriver) -> Result<(), CustomError> {
