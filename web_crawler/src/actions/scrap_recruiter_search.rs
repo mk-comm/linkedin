@@ -116,7 +116,7 @@ pub async fn scrap_recruiter(browser: &WebDriver, user_id:&str, ai_search: &str,
             }
         }
     }
-
+//wait(10000,10000);
     let _ = send_search_status("Counting candidates", ai_search).await;
     const CANDIDATE_NUMBER: &str =
         "span[class='profile-list__header-info-text t-14 profile-list__header-info-text--reflow']";
@@ -169,15 +169,17 @@ pub async fn scrap_recruiter(browser: &WebDriver, user_id:&str, ai_search: &str,
                 }
             }
         }
-        scroll(&browser, ScrollDirection::Top).await?;
-        scroll(&browser, ScrollDirection::Bottom).await?;
-        let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
-        let search_container_inside = search_container_inside.unwrap();
+        //scroll(&browser, ScrollDirection::Top).await?;
+        //scroll(&browser, ScrollDirection::Bottom).await?;
+        let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await?;
         wait(15, 17);
         const EMPTY_PROFILE: &str =
             "li.ember-view.profile-list__occlusion-area.profile-list__border-bottom";
-        let empty_profile = search_container_inside.find(By::Css(EMPTY_PROFILE)).await;
-        if empty_profile.is_ok() {
+        while search_container_inside.find(By::Css(EMPTY_PROFILE)).await.is_ok() {
+           search_container_inside.find(By::Css(EMPTY_PROFILE)).await?.scroll_into_view().await?;
+           wait(2, 3);
+        }
+        if search_container_inside.find(By::Css(EMPTY_PROFILE)).await.is_ok() {
             info!("EMPTY PROFILE FOUND");
             let screenshot = browser.screenshot_as_png().await?;
             send_screenshot(
@@ -190,8 +192,8 @@ pub async fn scrap_recruiter(browser: &WebDriver, user_id:&str, ai_search: &str,
             .await?;
 
             wait(15, 21);
-        scroll(&browser, ScrollDirection::Top).await?;
-                        let screenshot = browser.screenshot_as_png().await?;
+            scroll(&browser, ScrollDirection::Top).await?;
+            let screenshot = browser.screenshot_as_png().await?;
             send_screenshot(
                 screenshot,
                 &user_id,
@@ -205,8 +207,7 @@ pub async fn scrap_recruiter(browser: &WebDriver, user_id:&str, ai_search: &str,
         scroll(&browser, ScrollDirection::Bottom).await?;
 
         }
-        let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await;
-        let search_container_inside = search_container_inside.unwrap();
+        let search_container_inside = browser.find(By::Css(SEARCH_CONTAINER)).await?;
         let empty_profile = search_container_inside.find(By::Css(EMPTY_PROFILE)).await;
         if empty_profile.is_ok() {
             let screenshot = browser.screenshot_as_png().await?;
