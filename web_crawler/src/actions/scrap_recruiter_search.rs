@@ -116,7 +116,6 @@ pub async fn scrap_recruiter(browser: &WebDriver, user_id:&str, ai_search: &str,
             }
         }
     }
-//wait(10000,10000);
     let _ = send_search_status("Counting candidates", ai_search).await;
     const CANDIDATE_NUMBER: &str =
         "span[class='profile-list__header-info-text t-14 profile-list__header-info-text--reflow']";

@@ -237,7 +237,7 @@ pub async fn inmail(
         button.click().await?;
         wait(2, 3);
     }
-    const SUBJECT_INPUT: &str = "input[class='compose-subject__input']";
+    const SUBJECT_INPUT: &str = "input.compose-subject__input";
 
     let subject_input = browser.find(By::Css(SUBJECT_INPUT)).await;
 
